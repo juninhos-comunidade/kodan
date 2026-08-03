@@ -16,6 +16,7 @@
 /out/
 /build/
 /dist/
+/storybook-static/
 .vinxi
 .output
 .react-router/
@@ -53,6 +54,7 @@ next-env.d.ts
 
 # Other
 dev-dist
+src/stories/assets/
 
 .wrangler
 .dev.vars*
