@@ -13,6 +13,10 @@ describe("challenge serializers", () => {
       code: "const value = 1;",
       question: "Explique o problema.",
       solution: "Resposta secreta",
+      evaluationRubricJson: JSON.stringify({
+        version: "1.0.0",
+        centralAnswer: "Resposta ainda mais secreta",
+      }),
       tags: "react-hooks",
       attempts: [],
       createdAt: new Date("2026-01-01T00:00:00.000Z"),
@@ -20,8 +24,30 @@ describe("challenge serializers", () => {
     });
 
     expect(serialized).not.toHaveProperty("solution");
+    expect(serialized).not.toHaveProperty("evaluationRubricJson");
+    expect(serialized.evaluationAvailable).toBe(true);
     expect(serialized.question).toBe("Explique o problema.");
     expect(() => challengeDetailSchema.parse(serialized)).not.toThrow();
+  });
+
+  test("informa indisponibilidade sem expor detalhes quando nao existe rubrica", () => {
+    const serialized = serializeChallengeDetail({
+      id: "challenge-without-rubric",
+      title: "Em revisão",
+      difficulty: "EASY",
+      recommendedElo: 1000,
+      code: "const value = 1;",
+      question: "Explique.",
+      solution: "Segredo",
+      evaluationRubricJson: null,
+      tags: "react",
+      attempts: [],
+      createdAt: new Date("2026-01-01T00:00:00.000Z"),
+      updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+    });
+
+    expect(serialized.evaluationAvailable).toBe(false);
+    expect(serialized).not.toHaveProperty("evaluationRubricJson");
   });
 
   test("preserva o estado da sessão ao serializar uma tentativa", () => {

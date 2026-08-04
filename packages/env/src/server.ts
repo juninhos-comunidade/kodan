@@ -21,6 +21,9 @@ export const env = createEnv({
     CORS_ORIGIN: z.url(),
     OPENROUTER_API_KEY: z.string().min(1).optional(),
     OPENROUTER_MODEL: z.string().min(1).optional(),
+    EVALUATION_V2_ENABLED: z.enum(["true", "false"])
+      .default("true")
+      .transform((value) => value === "true"),
     NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   },
   runtimeEnv: process.env,

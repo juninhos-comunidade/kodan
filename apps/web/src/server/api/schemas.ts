@@ -4,6 +4,7 @@ import {
   challengeSummarySchema,
   difficultySchema,
 } from "./challenge-contract";
+import { validateTrainingAnswer } from "@/lib/training-input-guard";
 
 export {
   challengeAttemptSummarySchema,
@@ -15,6 +16,10 @@ export {
 export const apiErrorSchema = z.object({
   success: z.literal(false),
   error: z.string(),
+  code: z.literal("EVALUATION_UNAVAILABLE").optional(),
+  reason: z.string().optional(),
+  retryable: z.boolean().optional(),
+  preserveAnswer: z.boolean().optional(),
 });
 
 export const userSchema = z.object({
@@ -41,15 +46,37 @@ export const listChallengesQuerySchema = z.object({
 });
 
 export const feedbackSchema = z.object({
+  schemaVersion: z.literal(2).optional(),
   score: z.number().min(0).max(10),
+  level: z.enum([
+    "INCORRECT",
+    "RELATED_BUT_INCORRECT",
+    "PARTIALLY_CORRECT",
+    "CORRECT",
+    "PRECISE",
+  ]).optional(),
   summary: z.string(),
   strengths: z.array(z.string()),
   blindspots: z.array(z.string()),
+  points: z.array(z.union([
+    z.object({ kind: z.literal("MATCHED"), conceptId: z.string(), label: z.string() }),
+    z.object({ kind: z.literal("HIDDEN"), slot: z.string(), label: z.literal("???") }),
+    z.object({ kind: z.literal("REVEALED"), conceptId: z.string(), label: z.string() }),
+    z.object({ kind: z.literal("COMPLEMENT"), conceptId: z.string(), label: z.string() }),
+  ])).optional(),
+  corrections: z.array(z.string()).optional(),
+  reflectionPrompt: z.string().optional(),
+  detailedReviewAvailable: z.boolean().optional(),
   seniorSolution: z.string(),
 });
 
 export const submitAttemptSchema = z.object({
-  userAnswer: z.string().trim().min(30),
+  userAnswer: z.string().superRefine((answer, context) => {
+    const validation = validateTrainingAnswer(answer);
+    if (!validation.valid) {
+      context.addIssue({ code: "custom", message: validation.error });
+    }
+  }),
   usedHint: z.boolean().optional().default(false),
 });
 

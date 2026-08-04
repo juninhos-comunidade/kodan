@@ -5,10 +5,21 @@ import {
 } from "@/lib/attempt-session-rules";
 
 export type ArenaFeedback = {
+  schemaVersion?: 2;
   score: number;
+  level?: "INCORRECT" | "RELATED_BUT_INCORRECT" | "PARTIALLY_CORRECT" | "CORRECT" | "PRECISE";
   summary: string;
   strengths: string[];
   blindspots: string[];
+  points?: Array<
+    | { kind: "MATCHED"; conceptId: string; label: string }
+    | { kind: "HIDDEN"; slot: string; label: "???" }
+    | { kind: "REVEALED"; conceptId: string; label: string }
+    | { kind: "COMPLEMENT"; conceptId: string; label: string }
+  >;
+  corrections?: string[];
+  reflectionPrompt?: string;
+  detailedReviewAvailable?: boolean;
   seniorSolution: string;
 };
 
@@ -73,10 +84,15 @@ export function restoreAttemptSession(
     };
   }
 
-  const canRetry = attempt.sessionStatus === "RETRY_AVAILABLE";
+  const canRetry =
+    attempt.attemptNumber < MAX_EVALUATED_ATTEMPTS &&
+    (attempt.sessionStatus === "RETRY_AVAILABLE" ||
+      (attempt.sessionStatus === "SOLVED" &&
+        feedback.score < 10 &&
+        feedback.seniorSolution.length === 0));
   const canRevealSolution =
-    attempt.sessionStatus === "RETRY_AVAILABLE" ||
-    attempt.sessionStatus === "ELO_EXHAUSTED";
+    attempt.sessionStatus !== "REVEALED" &&
+    feedback.seniorSolution.length === 0;
   const result: ArenaAttemptResult = {
     score: attempt.score,
     eloChange: attempt.eloChange,
@@ -90,7 +106,9 @@ export function restoreAttemptSession(
       MAX_EVALUATED_ATTEMPTS - attempt.attemptNumber,
     ),
     nextEloPotentialPercent: canRetry
-      ? getNextEloPotentialPercent(attempt.attemptNumber)
+      ? attempt.sessionStatus === "SOLVED"
+        ? 100
+        : getNextEloPotentialPercent(attempt.attemptNumber)
       : 0,
     eloFinalized: !canRetry,
     feedback,
@@ -108,7 +126,14 @@ export function restoreAttemptSession(
 
 function parsePersistedFeedback(serialized: string): ArenaFeedback | null {
   try {
-    const value = JSON.parse(serialized) as Partial<ArenaFeedback>;
+    const stored = JSON.parse(serialized) as Partial<ArenaFeedback> & {
+      schemaVersion?: unknown;
+      publicFeedback?: unknown;
+    };
+    const value = stored.schemaVersion === 2
+      ? stored.publicFeedback as Partial<ArenaFeedback>
+      : stored;
+    if (!value || typeof value !== "object") return null;
     return typeof value.score === "number" &&
       typeof value.summary === "string" &&
       Array.isArray(value.strengths) &&

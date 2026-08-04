@@ -22,8 +22,21 @@ export async function POST(
 
   if (!result.success || !result.data) {
     const error = result.error ?? "Erro ao enviar tentativa";
-    const status = error === "Unauthorized" ? 401 : error === "Desafio não encontrado" ? 404 : 500;
-    return jsonFailure(error, status);
+    const status = result.code === "EVALUATION_UNAVAILABLE"
+      ? 503
+      : error === "Unauthorized"
+        ? 401
+        : error === "Desafio não encontrado"
+          ? 404
+          : 500;
+    return jsonFailure(error, status, result.code === "EVALUATION_UNAVAILABLE"
+      ? {
+          code: result.code,
+          reason: result.reason,
+          retryable: result.retryable,
+          preserveAnswer: result.preserveAnswer,
+        }
+      : {});
   }
 
   return jsonSuccess(result.data, { status: 201 });

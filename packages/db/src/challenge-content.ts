@@ -39,6 +39,9 @@ async function upsertChallenge(prisma: PrismaClient, challenge: ChallengeContent
     question: challenge.question,
     solution: challenge.solution,
     tags: challenge.tags.join(","),
+    evaluationRubricJson: challenge.evaluationRubric
+      ? JSON.stringify(challenge.evaluationRubric)
+      : null,
   };
   await prisma.challenge.upsert({
     where: { id: challenge.id },

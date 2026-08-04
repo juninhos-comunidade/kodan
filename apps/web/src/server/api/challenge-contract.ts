@@ -8,6 +8,7 @@ export type ChallengeRecord = {
   code: string;
   question: string;
   solution: string;
+  evaluationRubricJson?: string | null;
   tags: string;
   createdAt: Date;
   updatedAt: Date;
@@ -51,6 +52,7 @@ export const challengeSummarySchema = z.object({
 export const challengeDetailSchema = challengeSummarySchema.extend({
   code: z.string(),
   question: z.string(),
+  evaluationAvailable: z.boolean(),
 });
 
 export function serializeChallengeSummary(challenge: ChallengeRecord) {
@@ -78,5 +80,6 @@ export function serializeChallengeDetail(challenge: ChallengeRecord) {
     ...serializeChallengeSummary(challenge),
     code: challenge.code,
     question: challenge.question,
+    evaluationAvailable: Boolean(challenge.evaluationRubricJson),
   };
 }

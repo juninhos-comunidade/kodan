@@ -35,6 +35,7 @@ export type TrainingChallenge = {
   code: string;
   question: string;
   solution: string;
+  evaluationRubricJson?: string | null;
   uniquePractitionerCount?: number;
   createdAt: Date;
   updatedAt: Date;

@@ -3,10 +3,12 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
+  challengeEvaluationRubricSchema,
   challengeIndexSchema,
   challengeLegacySchema,
   challengeSplitMetaSchema,
   type ChallengeIndexEntry,
+  type ChallengeEvaluationRubric,
   type ChallengeLegacy,
   type ChallengeSplitMeta,
 } from "./challenge-schemas";
@@ -20,6 +22,7 @@ export type ChallengeContentEntry = {
   question: string;
   solution: string;
   tags: string[];
+  evaluationRubric?: ChallengeEvaluationRubric;
 };
 
 type ChallengeLoadResult = {
@@ -59,6 +62,18 @@ export async function readPromotedChallengeCatalog(options: { root?: string } = 
 
 export async function readChallengesFromContent(options: { root?: string } = {}) {
   return (await readPromotedChallengeCatalog(options)).challenges;
+}
+
+export function findActiveChallengesWithoutEvaluationRubric(
+  catalog: Pick<Awaited<ReturnType<typeof readPromotedChallengeCatalog>>, "challenges" | "index">,
+) {
+  const challengeById = new Map(
+    catalog.challenges.map((challenge) => [challenge.id, challenge]),
+  );
+  return catalog.index
+    .filter((entry) => entry.status === "ACTIVE")
+    .filter((entry) => !challengeById.get(entry.id)?.evaluationRubric)
+    .map((entry) => ({ id: entry.id, title: entry.title }));
 }
 
 export async function syncChallengesIndexFromContent(options: { root?: string } = {}) {
@@ -115,6 +130,7 @@ async function loadLegacyChallenge(filePath: string): Promise<ChallengeLoadResul
       question: parsed.question,
       solution: parsed.solution ?? parsed.expectedAnswer ?? "",
       tags: parsed.tags,
+      ...(parsed.evaluationRubric ? { evaluationRubric: parsed.evaluationRubric } : {}),
     },
     indexEntry: buildIndexEntryFromMeta(parsed),
   };
@@ -130,6 +146,11 @@ async function loadSplitChallenge(filePath: string): Promise<ChallengeLoadResult
   ]);
   if (code.trim().length === 0) throw new Error(`Desafio inválido em ${filePath}: arquivo "${codeFileName}" vazio`);
   if (solution.trim().length === 0) throw new Error(`Desafio inválido em ${filePath}: arquivo "${solutionFileName}" vazio`);
+  const evaluationRubric = parsed.rubricFile
+    ? challengeEvaluationRubricSchema.parse(
+        await readJsonUnknown(path.resolve(path.dirname(filePath), parsed.rubricFile)),
+      )
+    : parsed.evaluationRubric;
 
   return {
     challenge: {
@@ -141,6 +162,7 @@ async function loadSplitChallenge(filePath: string): Promise<ChallengeLoadResult
       tags: parsed.tags,
       code,
       solution,
+      ...(evaluationRubric ? { evaluationRubric } : {}),
     },
     indexEntry: buildIndexEntryFromMeta(parsed),
   };

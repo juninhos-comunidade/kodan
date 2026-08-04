@@ -3,78 +3,37 @@ import "server-only";
 import { headers } from "next/headers";
 
 import {
-  evaluateAttempt,
   MAX_EVALUATED_ATTEMPTS,
   revealAttemptSolution as buildRevealedAttempt,
   type AttemptSessionStatus,
 } from "./attempt-execution";
 import { loadPractitionerCountsForChallenges } from "./challenge-practitioner-counts";
-import type { TrainingAdapter, TrainingChallenge } from "./training-adapter";
+import { createOpenRouterEvaluator } from "./evaluation/openrouter-evaluator";
+import { logEvaluationEvent } from "./evaluation/evaluation-telemetry";
+import { resolveFreeOpenRouterModel } from "./evaluation/model-policy";
+import {
+  parseStoredPublicFeedback,
+  revealStoredFeedback,
+} from "./evaluation/stored-feedback";
+import {
+  submitIntegratedAttempt,
+  withSerializableRetry,
+} from "./integrated-attempt-submission";
+import type { TrainingAdapter } from "./training-adapter";
 
 async function getPrisma() {
   const { default: prisma } = await import("@kodan/db");
   return prisma;
 }
 
-async function getFeedbackFromOpenRouter(
-  challenge: Pick<TrainingChallenge, "title" | "question" | "code" | "solution">,
-  userAnswer: string,
-) {
+async function getConfiguredEvaluator() {
   const { env } = await import("@kodan/env/server");
-  if (!env.OPENROUTER_API_KEY) return undefined;
-
-  try {
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: env.OPENROUTER_MODEL ?? "openai/gpt-4o-mini",
-        temperature: 0.2,
-        messages: [
-          {
-            role: "system",
-            content: "Você é um tech lead de React. Responda somente JSON com os campos: score (0-10), summary, strengths (string[]), blindspots (string[]).",
-          },
-          {
-            role: "user",
-            content: `Desafio: ${challenge.title}\n\nPergunta: ${challenge.question}\n\nCódigo:\n${challenge.code}\n\nSolução de referência:\n${challenge.solution}\n\nResposta do aluno:\n${userAnswer}`,
-          },
-        ],
-      }),
-    });
-    if (!response.ok) return undefined;
-
-    const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
-    const content = data.choices?.[0]?.message?.content;
-    return content ? JSON.parse(cleanJsonResponse(content)) as unknown : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-function cleanJsonResponse(raw: string) {
-  return raw.trim().replace(/^```[a-zA-Z]*\s*/, "").replace(/\s*```$/, "").trim();
-}
-
-function isSerializableConflict(error: unknown) {
-  return Boolean(
-    error &&
-    typeof error === "object" &&
-    "code" in error &&
-    error.code === "P2034"
-  );
-}
-
-async function withSerializableRetry<T>(operation: () => Promise<T>) {
-  try {
-    return await operation();
-  } catch (error) {
-    if (!isSerializableConflict(error)) throw error;
-    return operation();
-  }
+  return createOpenRouterEvaluator({
+    apiKey: env.EVALUATION_V2_ENABLED ? env.OPENROUTER_API_KEY : undefined,
+    model: resolveFreeOpenRouterModel(env.OPENROUTER_MODEL),
+    telemetry: logEvaluationEvent,
+    fetchImplementation: fetch,
+  });
 }
 
 export const integratedTrainingAdapter: TrainingAdapter = {
@@ -111,7 +70,13 @@ export const integratedTrainingAdapter: TrainingAdapter = {
       prisma.challenge.count(),
       prisma.challenge.findMany({
         include: userId
-          ? { attempts: { where: { userId }, orderBy: { createdAt: "desc" }, take: 1 } }
+          ? {
+              attempts: {
+                where: { userId },
+                orderBy: { createdAt: "desc" },
+                take: MAX_EVALUATED_ATTEMPTS,
+              },
+            }
           : undefined,
         orderBy: { recommendedElo: "asc" },
         take: limit,
@@ -154,59 +119,13 @@ export const integratedTrainingAdapter: TrainingAdapter = {
   },
   async submitAttempt(userId, challengeId, input) {
     const prisma = await getPrisma();
-    const challenge = await prisma.challenge.findUnique({ where: { id: challengeId } });
-    if (!challenge) throw new Error("Desafio não encontrado");
-
-    const feedbackInput = await getFeedbackFromOpenRouter(challenge, input.userAnswer);
-    return withSerializableRetry(() =>
-      prisma.$transaction(async (tx) => {
-        const freshUser = await tx.user.findUnique({
-          where: { id: userId },
-          select: { id: true, elo: true },
-        });
-        if (!freshUser) throw new Error("Usuário padrão local não encontrado");
-
-        const previousAttempts = await tx.attempt.findMany({
-          where: { userId, challengeId },
-          orderBy: { createdAt: "desc" },
-          select: { sessionStatus: true },
-        });
-        if (previousAttempts.length >= MAX_EVALUATED_ATTEMPTS) {
-          throw new Error("Limite de tentativas atingido");
-        }
-        const latestStatus = previousAttempts[0]?.sessionStatus;
-        if (latestStatus && latestStatus !== "RETRY_AVAILABLE") {
-          throw new Error("Tentativa encerrada");
-        }
-
-        const evaluation = evaluateAttempt({
-          currentElo: freshUser.elo,
-          previousAttemptsCount: previousAttempts.length,
-          usedHint: Boolean(input.usedHint),
-          solution: challenge.solution,
-          feedback: feedbackInput,
-        });
-
-        if (evaluation.eloChange !== 0) {
-          await tx.user.update({
-            where: { id: userId },
-            data: { elo: evaluation.newElo },
-          });
-        }
-        await tx.attempt.create({
-          data: {
-            userId,
-            challengeId,
-            userAnswer: input.userAnswer,
-            feedbackJson: JSON.stringify(evaluation.feedback),
-            score: evaluation.score,
-            eloChange: evaluation.eloChange,
-            attemptNumber: evaluation.attemptNumber,
-            sessionStatus: evaluation.status,
-          },
-        });
-        return evaluation;
-      }, { isolationLevel: "Serializable" })
+    return submitIntegratedAttempt(
+      prisma,
+      await getConfiguredEvaluator(),
+      userId,
+      challengeId,
+      input,
+      { telemetry: logEvaluationEvent },
     );
   },
   async revealAttemptSolution(userId, challengeId) {
@@ -225,22 +144,26 @@ export const integratedTrainingAdapter: TrainingAdapter = {
         if (!challenge) throw new Error("Desafio não encontrado");
         if (
           !latestAttempt ||
-          latestAttempt.sessionStatus === "SOLVED" ||
           latestAttempt.sessionStatus === "REVEALED"
         ) {
           throw new Error("Tentativa encerrada");
         }
 
+        const publicFeedback = parseStoredPublicFeedback(latestAttempt.feedbackJson);
+        if (!publicFeedback) throw new Error("Feedback persistido inválido");
         const revealed = buildRevealedAttempt({
           currentElo: user.elo,
           attemptNumber: latestAttempt.attemptNumber,
           solution: challenge.solution,
-          feedback: JSON.parse(latestAttempt.feedbackJson) as unknown,
+          feedback: publicFeedback,
         });
         await tx.attempt.update({
           where: { id: latestAttempt.id },
           data: {
-            feedbackJson: JSON.stringify(revealed.feedback),
+            feedbackJson: revealStoredFeedback(
+              latestAttempt.feedbackJson,
+              challenge.solution,
+            ),
             sessionStatus: revealed.status,
           },
         });

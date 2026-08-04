@@ -36,10 +36,15 @@ import { Button } from "@kodan/ui/components/button";
 import { ZenToast } from "@kodan/ui/components/zen";
 import { cn } from "@kodan/ui/lib/utils";
 import { getLoginHref } from "@/lib/auth-navigation";
+import {
+  MAX_TRAINING_ANSWER_LENGTH,
+  validateTrainingAnswer,
+} from "@/lib/training-input-guard";
 import { revealSolution, submitAttempt } from "../../../actions";
 import {
   attemptSessionReducer,
   initialAttemptSessionState,
+  type ArenaFeedback,
   type ArenaAttemptResult,
   type AttemptSessionState,
 } from "./attempt-session-state";
@@ -58,11 +63,11 @@ export interface Challenge {
   recommendedElo: number;
   code: string;
   question: string;
+  evaluationAvailable: boolean;
   tags: string;
   attempts?: AttemptSummary[];
 }
 
-const MIN_ANSWER_LENGTH = 30;
 const DRAFT_STORAGE_PREFIX = "kodan:train-diagnosis:";
 
 type ZenToastTone = "success" | "error" | "warning" | "info";
@@ -412,13 +417,17 @@ export default function TrainArenaClient({
   const parsedQuestion = parseQuestion(challenge.question);
   const lines = challenge.code.split("\n");
   const answerLength = userAnswer.trim().length;
+  const answerValidation = validateTrainingAnswer(userAnswer);
   const wordCount =
     userAnswer.trim().length === 0
       ? 0
       : userAnswer.trim().split(/\s+/).length;
   // Visitantes também podem acionar o botão: nesse caso exibimos o convite de login.
   const canSubmit =
-    !submitting && !answerLocked && (!isAuthenticated || answerLength >= MIN_ANSWER_LENGTH);
+    challenge.evaluationAvailable &&
+    !submitting &&
+    !answerLocked &&
+    (!isAuthenticated || answerValidation.valid);
   const hasStartedAnalysis =
     answerLength > 0 || notes.trim().length > 0 || hintRevealed || submitting;
 
@@ -427,7 +436,7 @@ export default function TrainArenaClient({
       event.preventDefault();
     }
 
-    if (submitting || answerLocked) {
+    if (!challenge.evaluationAvailable || submitting || answerLocked) {
       return;
     }
 
@@ -436,11 +445,11 @@ export default function TrainArenaClient({
       return;
     }
 
-    if (answerLength < MIN_ANSWER_LENGTH) {
+    if (!answerValidation.valid) {
       showZenToast(
         "warning",
-        "Diagnóstico incompleto",
-        `Escreva pelo menos ${MIN_ANSWER_LENGTH} caracteres para enviar.`,
+        "Revise sua resposta",
+        answerValidation.error,
       );
       return;
     }
@@ -587,6 +596,7 @@ export default function TrainArenaClient({
                       answerLength={answerLength}
                       wordCount={wordCount}
                       canSubmit={canSubmit}
+                      evaluationAvailable={challenge.evaluationAvailable}
                       submitting={submitting}
                       answerLocked={answerLocked}
                       onAnswerChange={setUserAnswer}
@@ -1060,6 +1070,7 @@ function DiagnosisPanel({
   answerLength,
   wordCount,
   canSubmit,
+  evaluationAvailable,
   submitting,
   answerLocked,
   onAnswerChange,
@@ -1071,6 +1082,7 @@ function DiagnosisPanel({
   answerLength: number;
   wordCount: number;
   canSubmit: boolean;
+  evaluationAvailable: boolean;
   submitting: boolean;
   answerLocked: boolean;
   onAnswerChange: (answer: string) => void;
@@ -1111,6 +1123,7 @@ function DiagnosisPanel({
       <div className="min-h-0 flex-1 px-6">
         <textarea
           value={answer}
+          maxLength={MAX_TRAINING_ANSWER_LENGTH}
           aria-label="Resposta do diagnóstico técnico"
           placeholder="Escreva seu diagnóstico aqui..."
           readOnly={answerLocked}
@@ -1123,13 +1136,18 @@ function DiagnosisPanel({
 
       <div className="mx-6 flex h-11 shrink-0 items-center justify-between border-x border-b border-[color:var(--challengers-border)] px-4 text-[0.76rem] text-[var(--challengers-muted)]">
         <span>{wordCount} palavras</span>
-        <span className={answerLength < MIN_ANSWER_LENGTH ? "text-[var(--challengers-warning)]" : undefined}>
-          {answerLength}/{MIN_ANSWER_LENGTH} caracteres mínimos
+        <span className={answerLength >= MAX_TRAINING_ANSWER_LENGTH ? "text-[var(--challengers-warning)]" : undefined}>
+          {answerLength}/{MAX_TRAINING_ANSWER_LENGTH} caracteres
         </span>
         <span className="hidden sm:inline">Ctrl + Enter para enviar</span>
       </div>
 
       <div className="shrink-0 px-6 pb-6 pt-4">
+        {!evaluationAvailable ? (
+          <p className="mb-3 rounded-[8px] border border-[color:var(--challengers-border)] bg-[var(--challengers-panel)] px-3 py-2 text-sm leading-6 text-[var(--challengers-muted)]">
+            A avaliação deste desafio está em revisão editorial. Você pode preparar seu diagnóstico, mas o envio será liberado após a rubrica ser validada.
+          </p>
+        ) : null}
         <Button
           type="submit"
           disabled={!canSubmit}
@@ -1221,16 +1239,41 @@ function FeedbackPanel({
             </p>
           </section>
 
-          <FeedbackList
-            title="Pontos fortes"
-            items={result.feedback.strengths}
-            tone="positive"
-          />
-          <FeedbackList
-            title="Pontos cegos"
-            items={result.feedback.blindspots}
-            tone="negative"
-          />
+          {result.feedback.points ? (
+            <FeedbackPoints points={result.feedback.points} />
+          ) : (
+            <>
+              <FeedbackList
+                title="Pontos fortes"
+                items={result.feedback.strengths}
+                tone="positive"
+              />
+              <FeedbackList
+                title="Pontos cegos"
+                items={result.feedback.blindspots}
+                tone="negative"
+              />
+            </>
+          )}
+
+          {result.feedback.corrections?.length ? (
+            <FeedbackList
+              title="Correções importantes"
+              items={result.feedback.corrections}
+              tone="negative"
+            />
+          ) : null}
+
+          {result.feedback.reflectionPrompt ? (
+            <section className="rounded-[9px] border border-[color:var(--challengers-border)] bg-[var(--challengers-panel)] px-4 py-3">
+              <h3 className="text-[0.76rem] font-semibold uppercase tracking-[0.12em] text-[var(--challengers-muted)]">
+                Para pensar
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-[var(--challengers-ink)]">
+                {result.feedback.reflectionPrompt}
+              </p>
+            </section>
+          ) : null}
 
           {result.feedback.seniorSolution ? (
             <section className="border-t border-[color:var(--challengers-border)] pt-4">
@@ -1279,7 +1322,9 @@ function FeedbackPanel({
             className="h-10 flex-1 rounded-[8px] border-[color:var(--challengers-border)] bg-[var(--challengers-surface)] text-[var(--challengers-ink)] hover:bg-[var(--challengers-panel)]"
             onClick={onRetry}
           >
-            Continuar investigando
+            {result.status === "SOLVED"
+              ? "Tentar melhorar a nota"
+              : "Continuar investigando"}
           </Button>
         ) : null}
         {result.canRevealSolution ? (
@@ -1365,5 +1410,52 @@ function FeedbackList({
         ))}
       </ul>
     </section>
+  );
+}
+
+function FeedbackPoints({
+  points,
+}: {
+  points: NonNullable<ArenaFeedback["points"]>;
+}) {
+  const primaryPoints = points.filter((point) => point.kind !== "COMPLEMENT");
+  const complements = points.filter((point) => point.kind === "COMPLEMENT");
+
+  return (
+    <>
+      <section>
+        <h3 className="text-[0.76rem] font-semibold uppercase tracking-[0.12em] text-[var(--challengers-muted)]">
+          Você identificou
+        </h3>
+        <ul className="mt-2 space-y-2">
+          {primaryPoints.map((point) => (
+            <li
+              key={point.kind === "HIDDEN" ? point.slot : point.conceptId}
+              className="flex gap-2 text-sm leading-6 text-[var(--challengers-ink)]"
+            >
+              <span aria-hidden="true" className="w-4 shrink-0 font-semibold">
+                {point.kind === "MATCHED" ? "✓" : point.kind === "HIDDEN" ? "?" : "•"}
+              </span>
+              <span>{point.label}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+      {complements.length ? (
+        <section>
+          <h3 className="text-[0.76rem] font-semibold uppercase tracking-[0.12em] text-[var(--challengers-muted)]">
+            Complementos
+          </h3>
+          <ul className="mt-2 space-y-2">
+            {complements.map((point) => (
+              <li key={point.conceptId} className="flex gap-2 text-sm leading-6 text-[var(--challengers-ink)]">
+                <span aria-hidden="true" className="w-4 shrink-0">○</span>
+                <span>{point.label}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+    </>
   );
 }

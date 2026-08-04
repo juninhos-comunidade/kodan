@@ -1,0 +1,54 @@
+{
+  "version": "1.0.0",
+  "questionKind": "debugging",
+  "centralAnswer": "Requisições iniciadas para userIds diferentes podem terminar fora de ordem, permitindo que uma resposta antiga sobrescreva no estado o perfil mais recente.",
+  "evaluatorNotes": [
+    "Aceite soluções que ignorem respostas obsoletas ou cancelem a requisição anterior.",
+    "Não exija o uso literal de AbortController ou de uma flag chamada active.",
+    "Não marque out-of-order-response apenas porque a resposta propõe AbortController, cleanup ou cancelamento; a ordem imprevisível e a sobrescrita obsoleta precisam ser explicadas.",
+    "Não marque stale-response-guard apenas porque a resposta identifica a corrida; ela precisa propor como impedir a atualização obsoleta."
+  ],
+  "concepts": [
+    {
+      "id": "out-of-order-response",
+      "importance": "critical",
+      "internalDescription": "As requisições concorrentes podem concluir fora da ordem em que foram iniciadas, e uma resposta associada a um userId antigo pode executar setUser depois da resposta mais recente.",
+      "publicLabel": "O risco de uma resposta antiga sobrescrever o perfil atual.",
+      "reflectionPrompt": "Considere se as respostas da rede necessariamente chegam na mesma ordem das mudanças de usuário."
+    },
+    {
+      "id": "rapid-user-id-changes",
+      "importance": "essential",
+      "internalDescription": "Mudanças rápidas de userId iniciam múltiplas requisições que permanecem em andamento ao mesmo tempo.",
+      "publicLabel": "A concorrência criada por mudanças rápidas de usuário.",
+      "reflectionPrompt": "Observe quantas requisições podem permanecer ativas quando a propriedade muda rapidamente."
+    },
+    {
+      "id": "stale-response-guard",
+      "importance": "critical",
+      "internalDescription": "A correção precisa impedir que respostas obsoletas atualizem o estado, seja ignorando-as no cleanup, associando-as à requisição atual ou cancelando a requisição anterior.",
+      "publicLabel": "A proteção contra atualizações provenientes de requisições obsoletas.",
+      "reflectionPrompt": "Pense em como distinguir uma resposta ainda válida de outra pertencente a um efeito já substituído."
+    },
+    {
+      "id": "abort-controller",
+      "importance": "complementary",
+      "internalDescription": "AbortController pode cancelar a requisição anterior e evitar trabalho de rede desnecessário, desde que abortos sejam tratados corretamente.",
+      "publicLabel": "O cancelamento da requisição anterior com AbortController."
+    }
+  ],
+  "misconceptions": [
+    {
+      "id": "missing-user-id-dependency",
+      "severity": "critical",
+      "internalDescription": "Afirmar que o bug ocorre porque userId está ausente das dependências, embora ele já esteja presente.",
+      "publicCorrection": "O userId já participa das dependências; o problema está nas requisições que continuam concorrendo."
+    },
+    {
+      "id": "responses-preserve-order",
+      "severity": "major",
+      "internalDescription": "Afirmar que a última requisição iniciada sempre será a última a terminar.",
+      "publicCorrection": "A ordem de conclusão das respostas de rede não é garantida."
+    }
+  ]
+}

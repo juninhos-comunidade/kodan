@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import { createMockTrainingStore } from "@/server/api/mock-store";
+import type { ModelEvaluation } from "./evaluation/types";
 import { createInMemoryTrainingAdapter } from "./in-memory-training-adapter";
 import { selectTrainingAdapter } from "./training-adapter";
 
@@ -40,11 +41,18 @@ describe("selectTrainingAdapter", () => {
 
   test("o adapter in-memory preserva a sessão entre envio e revelação", async () => {
     const adapter = createInMemoryTrainingAdapter(createMockTrainingStore({
-      feedbackForAnswer: () => ({
-        score: 4,
-        summary: "Ainda não.",
-        strengths: ["Boa hipótese."],
-        blindspots: ["Revise o efeito."],
+      modelEvaluationForAnswer: (_answer, rubric): ModelEvaluation => ({
+        status: "VALID",
+        centralCorrectness: 30,
+        technicalReasoning: 30,
+        technicalPrecision: 30,
+        conceptAssessments: rubric.concepts.map((concept) => ({
+          conceptId: concept.id,
+          state: "MISSING",
+          evidence: "Criterio ausente.",
+        })),
+        misconceptionIds: [],
+        decisionRationale: "Avaliacao controlada pelo teste.",
       }),
     }));
     const user = await adapter.getOptionalUser();
@@ -63,6 +71,19 @@ describe("selectTrainingAdapter", () => {
     expect(restored?.attempts?.[0]).toMatchObject({
       sessionStatus: "REVEALED",
       userAnswer: "O efeito está com dependências incompletas.",
+    });
+  });
+
+  test("o adapter disponibiliza a rubrica versionada para avaliação no servidor", async () => {
+    const adapter = createInMemoryTrainingAdapter(createMockTrainingStore());
+
+    const challenge = await adapter.getChallengeById("mock-effect-dependencies");
+
+    expect(JSON.parse(challenge?.evaluationRubricJson ?? "null")).toMatchObject({
+      version: "1.0.0",
+      concepts: expect.arrayContaining([
+        expect.objectContaining({ importance: "critical" }),
+      ]),
     });
   });
 });

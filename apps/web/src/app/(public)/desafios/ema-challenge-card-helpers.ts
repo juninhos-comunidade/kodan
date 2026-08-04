@@ -10,6 +10,7 @@ export type ChallengeKind =
 export interface Attempt {
   id: string;
   score: number;
+  sessionStatus?: "RETRY_AVAILABLE" | "SOLVED" | "ELO_EXHAUSTED" | "REVEALED";
 }
 
 export interface Challenge {
@@ -119,7 +120,13 @@ export function getStatusFromAttempts(attempts: Attempt[]): ChallengeStatus {
     return "not_started";
   }
 
-  return attempts[0] && attempts[0].score >= 5 ? "resolved" : "in_progress";
+  return attempts.some(
+    (attempt) =>
+      attempt.sessionStatus === "SOLVED" ||
+      attempt.score >= PASSING_ATTEMPT_SCORE,
+  )
+    ? "resolved"
+    : "in_progress";
 }
 
 export function getStatusPresentation(
@@ -253,3 +260,4 @@ function getLevelCompatibility(recommendedElo: number, userElo: number) {
 
   return null;
 }
+import { PASSING_ATTEMPT_SCORE } from "@/lib/attempt-session-rules";
