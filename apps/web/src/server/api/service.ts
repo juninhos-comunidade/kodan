@@ -9,7 +9,8 @@ import type {
   ChallengeCatalogAdapter,
   PractitionerAdapter,
 } from "@/server/training/training-adapter";
-import { updateCurrentUserSchema, type submitAttemptSchema } from "./schemas";
+import { EvaluationUnavailableError } from "@/server/training/evaluation/errors";
+import { submitAttemptSchema, updateCurrentUserSchema } from "./schemas";
 
 type SubmitAttemptInput = z.infer<typeof submitAttemptSchema>;
 
@@ -94,11 +95,26 @@ export async function getChallengeById(id: string) {
 
 export async function submitChallengeAttempt(challengeId: string, input: SubmitAttemptInput) {
   try {
+    const parsedInput = submitAttemptSchema.parse(input);
     const user = await requireAuthenticatedUser();
-    const result = await attemptAdapter.submitAttempt(user.id, challengeId, input);
+    const result = await attemptAdapter.submitAttempt(
+      user.id,
+      challengeId,
+      parsedInput,
+    );
     revalidateTrainingViews();
     return { success: true as const, data: result };
   } catch (error: unknown) {
+    if (error instanceof EvaluationUnavailableError) {
+      return {
+        success: false as const,
+        error: error.message,
+        code: error.code,
+        reason: error.reason,
+        retryable: error.retryable,
+        preserveAnswer: error.preserveAnswer,
+      };
+    }
     return { success: false as const, error: getErrorMessage(error, "Erro ao enviar tentativa") };
   }
 }

@@ -20,6 +20,7 @@
     "db:generate:challenges": "bun run ./src/generate-challenges-content.ts",
     "db:sync:challenges:index": "bun run ./src/sync-challenges-index.ts",
     "db:seed:challenges": "bun run ./src/seed-challenges.ts",
+    "evaluation:validate-rubrics": "bun run ./src/validate-evaluation-rubrics.ts",
     "postinstall": "prisma generate",
     "db:studio": "prisma studio"
   },

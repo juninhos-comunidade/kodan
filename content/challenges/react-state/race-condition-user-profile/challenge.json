@@ -8,5 +8,6 @@
     "useEffect",
     "race-condition",
     "data-fetching"
-  ]
+  ],
+  "rubricFile": "rubric.json"
 }

@@ -3,14 +3,24 @@ import { ZodError, type ZodSchema } from "zod";
 type ApiFailure = {
   success: false;
   error: string;
+  code?: "EVALUATION_UNAVAILABLE";
+  reason?: string;
+  retryable?: boolean;
+  preserveAnswer?: boolean;
 };
+
+type ApiFailureDetails = Omit<ApiFailure, "success" | "error">;
 
 export function jsonSuccess<T>(data: T, init?: ResponseInit) {
   return Response.json({ success: true, data }, init);
 }
 
-export function jsonFailure(error: string, status = 400) {
-  return Response.json({ success: false, error } satisfies ApiFailure, {
+export function jsonFailure(
+  error: string,
+  status = 400,
+  details: ApiFailureDetails = {},
+) {
+  return Response.json({ success: false, error, ...details } satisfies ApiFailure, {
     status,
   });
 }

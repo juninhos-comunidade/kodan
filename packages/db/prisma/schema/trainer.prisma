@@ -7,6 +7,7 @@ model Challenge {
   question       String    // Question to diagnose
   solution       String    // Senior solution template
   tags           String    // Comma-separated tags, e.g. "useEffect,stale-closure"
+  evaluationRubricJson String?
   attempts       Attempt[]
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt

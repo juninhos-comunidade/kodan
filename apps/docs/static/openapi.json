@@ -211,6 +211,21 @@
           },
           "error": {
             "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "EVALUATION_UNAVAILABLE"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          },
+          "retryable": {
+            "type": "boolean"
+          },
+          "preserveAnswer": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -530,6 +545,9 @@
               },
               "question": {
                 "type": "string"
+              },
+              "evaluationAvailable": {
+                "type": "boolean"
               }
             },
             "required": [
@@ -542,7 +560,8 @@
               "updatedAt",
               "attempts",
               "code",
-              "question"
+              "question",
+              "evaluationAvailable"
             ]
           }
         },
@@ -748,8 +767,7 @@
         "type": "object",
         "properties": {
           "userAnswer": {
-            "type": "string",
-            "minLength": 30
+            "type": "string"
           },
           "usedHint": {
             "type": "boolean",
@@ -821,10 +839,26 @@
               "feedback": {
                 "type": "object",
                 "properties": {
+                  "schemaVersion": {
+                    "type": "number",
+                    "enum": [
+                      2
+                    ]
+                  },
                   "score": {
                     "type": "number",
                     "minimum": 0,
                     "maximum": 10
+                  },
+                  "level": {
+                    "type": "string",
+                    "enum": [
+                      "INCORRECT",
+                      "RELATED_BUT_INCORRECT",
+                      "PARTIALLY_CORRECT",
+                      "CORRECT",
+                      "PRECISE"
+                    ]
                   },
                   "summary": {
                     "type": "string"
@@ -840,6 +874,116 @@
                     "items": {
                       "type": "string"
                     }
+                  },
+                  "points": {
+                    "type": "array",
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "MATCHED"
+                              ]
+                            },
+                            "conceptId": {
+                              "type": "string"
+                            },
+                            "label": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "conceptId",
+                            "label"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "HIDDEN"
+                              ]
+                            },
+                            "slot": {
+                              "type": "string"
+                            },
+                            "label": {
+                              "type": "string",
+                              "enum": [
+                                "???"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "slot",
+                            "label"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "REVEALED"
+                              ]
+                            },
+                            "conceptId": {
+                              "type": "string"
+                            },
+                            "label": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "conceptId",
+                            "label"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "COMPLEMENT"
+                              ]
+                            },
+                            "conceptId": {
+                              "type": "string"
+                            },
+                            "label": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "conceptId",
+                            "label"
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "corrections": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "reflectionPrompt": {
+                    "type": "string"
+                  },
+                  "detailedReviewAvailable": {
+                    "type": "boolean"
                   },
                   "seniorSolution": {
                     "type": "string"

@@ -87,8 +87,9 @@ Ela abre em [http://localhost:3002](http://localhost:3002). Esse comando também
 | `BETTER_AUTH_SECRET` | No modo integrado | Segredo de autenticação, com ao menos 32 caracteres. |
 | `BETTER_AUTH_URL` | No modo integrado | URL pública/local da aplicação, por exemplo `http://localhost:3001`. |
 | `CORS_ORIGIN` | No modo integrado | Origem autorizada, normalmente a mesma URL local da aplicação. |
-| `OPENROUTER_API_KEY` | Não | Habilita feedback por IA; sem ela o projeto usa feedback local de fallback. |
-| `OPENROUTER_MODEL` | Não | Modelo do OpenRouter; o padrão atual é `openai/gpt-4o-mini`. |
+| `OPENROUTER_API_KEY` | Não | Habilita a avaliação integrada; sem ela o envio falha sem registrar tentativa ou alterar ELO. |
+| `OPENROUTER_MODEL` | Não | Modelo gratuito fixo (`:free`); padrão validado `google/gemma-4-26b-a4b-it:free`. `openrouter/free` é rejeitado. |
+| `EVALUATION_V2_ENABLED` | Não | Ativa a avaliação estruturada V2; padrão `true`. |
 | `LEGACY_SQLITE_URL` | Não | Caminho do banco SQLite legado, somente para migração. |
 | `GITHUB_CLIENT_ID` | Não | Client ID da aplicação registrada no GitHub OAuth, utilizado para habilitar o login com GitHub. |
 | `GITHUB_CLIENT_SECRET` | Não | Client Secret da aplicação registrada no GitHub OAuth, utilizado em conjunto com o GITHUB_CLIENT_ID para autenticar usuários via GitHub. |

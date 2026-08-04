@@ -17,7 +17,7 @@ const retryResult: ArenaAttemptResult = {
   canRetry: true,
   canRevealSolution: true,
   remainingEvaluatedAttempts: 2,
-  nextEloPotentialPercent: 60,
+  nextEloPotentialPercent: 80,
   eloFinalized: false,
   feedback: {
     score: 4,
@@ -147,5 +147,40 @@ describe("attemptSessionReducer", () => {
     });
 
     expect(restored.state.showComparison).toBe(false);
+  });
+
+  test("restaura somente o feedback publico do envelope V2", () => {
+    const restored = restoreAttemptSession({
+      score: 7.8,
+      eloChange: 9,
+      attemptNumber: 1,
+      sessionStatus: "SOLVED",
+      feedbackJson: JSON.stringify({
+        schemaVersion: 2,
+        evaluation: { decisionRationale: "nao deve chegar a arena" },
+        publicFeedback: {
+          score: 7.8,
+          summary: "Resposta aprovada.",
+          strengths: ["Ponto central"],
+          blindspots: ["???"],
+          seniorSolution: "",
+        },
+      }),
+    });
+
+    expect(restored.state.result?.feedback).toEqual({
+      score: 7.8,
+      summary: "Resposta aprovada.",
+      strengths: ["Ponto central"],
+      blindspots: ["???"],
+      seniorSolution: "",
+    });
+    expect(restored.state.result?.feedback).not.toHaveProperty("evaluation");
+    expect(restored.state.result).toMatchObject({
+      canRetry: true,
+      canRevealSolution: true,
+      nextEloPotentialPercent: 100,
+      eloFinalized: false,
+    });
   });
 });

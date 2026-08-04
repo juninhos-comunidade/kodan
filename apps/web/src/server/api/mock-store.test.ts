@@ -1,6 +1,29 @@
 import { describe, expect, test } from "bun:test";
 
 import { createMockTrainingStore } from "./mock-store";
+import type {
+  ChallengeEvaluationRubric,
+  ModelEvaluation,
+} from "@/server/training/evaluation/types";
+
+function modelEvaluation(
+  rubric: ChallengeEvaluationRubric,
+  correct: boolean,
+): ModelEvaluation {
+  return {
+    status: "VALID",
+    centralCorrectness: correct ? 80 : 30,
+    technicalReasoning: correct ? 80 : 30,
+    technicalPrecision: correct ? 80 : 30,
+    conceptAssessments: rubric.concepts.map((concept) => ({
+      conceptId: concept.id,
+      state: correct ? "MATCHED" : "MISSING",
+      evidence: correct ? "Criterio identificado." : "Criterio ausente.",
+    })),
+    misconceptionIds: [],
+    decisionRationale: "Avaliacao controlada pelo teste.",
+  };
+}
 
 describe("createMockTrainingStore", () => {
   test("fornece desafios e registra uma tentativa sem banco de dados", () => {
@@ -22,12 +45,10 @@ describe("createMockTrainingStore", () => {
 
   test("mantém a mesma sessão até resolver e reduz o ELO potencial", () => {
     const store = createMockTrainingStore({
-      feedbackForAnswer: (answer) => ({
-        score: answer === "resposta correta e suficientemente detalhada" ? 8 : 4,
-        summary: "Avaliação simulada.",
-        strengths: ["Há uma linha de raciocínio."],
-        blindspots: ["Ainda falta identificar a causa principal."],
-      }),
+      modelEvaluationForAnswer: (answer, rubric) => modelEvaluation(
+        rubric,
+        answer === "resposta correta e suficientemente detalhada",
+      ),
     });
     const challengeId = store.listChallenges({ limit: 1, offset: 0 }).items[0]!.id;
 
@@ -46,22 +67,28 @@ describe("createMockTrainingStore", () => {
     expect(second).toMatchObject({
       status: "SOLVED",
       attemptNumber: 2,
-      eloChange: 6,
-      newElo: 1206,
+      eloChange: 9,
+      newElo: 1209,
+      feedback: { blindspots: [] },
+    });
+    const improvementAttempt = store.submitAttempt(challengeId, {
+      userAnswer: "uma resposta pior durante a tentativa de melhoria",
+    });
+    expect(improvementAttempt).toMatchObject({
+      status: "SOLVED",
+      attemptNumber: 3,
+      eloChange: 0,
+      newElo: 1209,
     });
     expect(() => store.submitAttempt(challengeId, {
-      userAnswer: "uma nova resposta depois de resolver",
-    })).toThrow("Tentativa encerrada");
+      userAnswer: "uma quarta resposta",
+    })).toThrow("Limite de tentativas atingido");
   });
 
   test("revela a solução e bloqueia novas respostas", () => {
     const store = createMockTrainingStore({
-      feedbackForAnswer: () => ({
-        score: 4,
-        summary: "Avaliação simulada.",
-        strengths: ["Há uma linha de raciocínio."],
-        blindspots: ["Ainda falta identificar a causa principal."],
-      }),
+      modelEvaluationForAnswer: (_answer, rubric) =>
+        modelEvaluation(rubric, false),
     });
     const challengeId = store.listChallenges({ limit: 1, offset: 0 }).items[0]!.id;
 
