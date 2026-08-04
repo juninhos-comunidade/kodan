@@ -36,7 +36,7 @@ export async function POST(
           retryable: result.retryable,
           preserveAnswer: result.preserveAnswer,
         }
-      : undefined);
+      : {});
   }
 
   return jsonSuccess(result.data, { status: 201 });

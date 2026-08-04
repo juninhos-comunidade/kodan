@@ -225,8 +225,9 @@ function findDivergences(
   }
   return divergences;
 }
+type BenchmarkReport = typeof report;
 
-function renderMarkdown(report: typeof report) {
+function renderMarkdown(report: report) {
   const rows = report.runs.map((run) => [
     run.divergences.length === 0 ? "PASS" : "FAIL",
     run.caseId,
