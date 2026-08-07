@@ -1,5 +1,7 @@
 import { Terminal } from "lucide-react";
 
+import { AUTH_PROMISE } from "@/content/public-promises";
+
 export default function AuthLayout({
   children,
 }: {
@@ -21,7 +23,7 @@ export default function AuthLayout({
             </h1>
 
             <p className="text-sm text-cyan-100">
-              Master the art of reading code.
+              {AUTH_PROMISE.tagline}
             </p>
           </div>
         </div>
@@ -29,19 +31,17 @@ export default function AuthLayout({
         {/* Conteúdo */}
         <div className="space-y-8">
           <h2 className="max-w-lg text-5xl font-bold leading-tight">
-            Torne-se um mestre em diagnosticar código.
+            {AUTH_PROMISE.title}
           </h2>
 
           <p className="max-w-xl text-lg leading-8 text-cyan-100">
-            Resolva desafios reais de leitura de código, descubra bugs,
-            evolua seu ELO e receba feedback detalhado de um Tech Lead
-            alimentado por Inteligência Artificial.
+            {AUTH_PROMISE.description}
           </p>
 
         </div>
 
         <p className="text-sm text-cyan-100/80">
-          © {new Date().getFullYear()} Kodan · Sharpen your debugging instincts.
+          © {new Date().getFullYear()} Kodan · {AUTH_PROMISE.footer}
         </p>
       </div>
 
@@ -60,7 +60,7 @@ export default function AuthLayout({
               </p>
 
               <p className="text-xs text-slate-500">
-                Read. Diagnose. Improve.
+                {AUTH_PROMISE.tagline}
               </p>
             </div>
           </div>

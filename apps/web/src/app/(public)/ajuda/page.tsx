@@ -1,12 +1,13 @@
 import Link from "next/link";
-import { BookOpen, CircleHelp, MessageCircleQuestion, Swords } from "lucide-react";
+import { BookOpen, CircleHelp, ClipboardCheck, Swords } from "lucide-react";
 
 import { cn } from "@kodan/ui/lib/utils";
+import { HELP_COPY } from "@/content/public-promises";
 
 const helpTopics = [
   { title: "Como iniciar um treino?", description: "Abra Todos os Desafios, escolha um exercício e continue para a arena de treino.", icon: Swords, featured: true, href: "/desafios", linkLabel: "Ver todos os desafios" },
-  { title: "Como funciona o ELO?", description: "Seu ELO evolui conforme a qualidade das respostas avaliadas nos desafios.", icon: BookOpen },
-  { title: "Precisa de suporte?", description: "Use o perfil para conferir seus dados e o histórico disponível no momento.", icon: MessageCircleQuestion, href: "/perfil", linkLabel: "Ir para o perfil" },
+  { title: "Como funciona o ELO?", description: HELP_COPY.eloDescription, icon: BookOpen },
+  { title: "Como funciona a avaliação?", description: HELP_COPY.evaluationDescription, icon: ClipboardCheck },
 ] as const;
 
 export default function HelpPage() {
@@ -15,7 +16,7 @@ export default function HelpPage() {
       <div className="mx-auto max-w-4xl">
         <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--dojo-accent)]"><CircleHelp className="size-4" aria-hidden="true" />Suporte</p>
         <h1 className="mt-3 font-serif text-4xl font-bold">Ajuda do Kodan</h1>
-        <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--dojo-muted)]">Orientações rápidas para continuar sua jornada no Dojo.</p>
+        <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--dojo-muted)]">{HELP_COPY.introduction}</p>
         <div className="mt-10 grid gap-4 md:grid-cols-3">
           {helpTopics.map((topic) => {
             const { title, description, icon: Icon } = topic;
