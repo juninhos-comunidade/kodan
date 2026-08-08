@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 
 import { selectFeaturedChallenge } from "@/lib/featured-challenge";
-import { buildPractitionerProgress } from "@/lib/practitioner-progress";
 import {
   getCurrentUser,
   listChallenges,
-  listCurrentUserAttempts,
 } from "@/server/api/service";
 import DashboardHome from "./dashboard-home";
 
@@ -17,10 +15,9 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const [challengesResult, userResult, attemptsResult] = await Promise.all([
+  const [challengesResult, userResult] = await Promise.all([
     listChallenges({ limit: 50, offset: 0 }),
     getCurrentUser(),
-    listCurrentUserAttempts(),
   ]);
   const challenges = challengesResult.success && challengesResult.data
     ? challengesResult.data.items
@@ -49,10 +46,6 @@ console.log("challengesResult", challengesResult);
   const user = userResult.success && userResult.data
     ? userResult.data
     : { name: "Kodan", image: null, elo: 1200 };
-  const streak = attemptsResult.success && attemptsResult.data
-    ? buildPractitionerProgress(attemptsResult.data, new Date()).streak
-    : 0;
-
   return (
     <DashboardHome
       challenge={{
@@ -72,8 +65,6 @@ console.log("challengesResult", challengesResult);
       recommendationReason={selection.reason}
       userName={user.name}
       userImage={user.image}
-      userElo={user.elo}
-      userStreak={streak}
     />
   );
 }

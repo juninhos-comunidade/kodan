@@ -12,8 +12,6 @@ type DashboardHomeProps = {
   recommendationReason: "CONTINUE_RECENT" | "PERSONALIZED" | "POPULAR_BEGINNER" | "FALLBACK";
   userName: string;
   userImage: string | null;
-  userElo: number;
-  userStreak: number;
 };
 
 export type DashboardChallenge = {
@@ -25,7 +23,7 @@ export type DashboardChallenge = {
   question: string;
 };
 
-export default function DashboardHome({ challenge, challengeCount, recommendationReason, userName, userImage, userElo, userStreak }: DashboardHomeProps) {
+export default function DashboardHome({ challenge, challengeCount, recommendationReason, userName, userImage }: DashboardHomeProps) {
   const themeAssets = useDashboardThemeAssets();
 
   return (
@@ -33,8 +31,6 @@ export default function DashboardHome({ challenge, challengeCount, recommendatio
       <DashboardHomeHeader
         userName={userName}
         userImage={userImage}
-        userElo={userElo}
-        userStreak={userStreak}
       />
       <div className="grid gap-5 p-5 sm:p-8 2xl:grid-cols-[minmax(0,1.65fr)_minmax(20rem,0.75fr)]">
         <section className="space-y-5">

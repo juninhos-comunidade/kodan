@@ -20,8 +20,6 @@ const meta = {
     recommendationReason: "CONTINUE_RECENT",
     userName: "Gabriel",
     userImage: null,
-    userElo: 1460,
-    userStreak: 7,
   },
   argTypes: {
     challenge: { control: "object" },
@@ -29,15 +27,13 @@ const meta = {
     recommendationReason: { control: "select", options: ["CONTINUE_RECENT", "PERSONALIZED", "POPULAR_BEGINNER", "FALLBACK"] },
     userName: { control: "text" },
     userImage: { control: "text" },
-    userElo: { control: { type: "range", min: 0, max: 3000, step: 10 } },
-    userStreak: { control: { type: "number", min: 0 } },
   },
 } satisfies Meta<typeof DashboardHome>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const DashboardCompleto: Story = {};
-export const Cabecalho: Story = { render: () => <DashboardHomeHeader userName="Gabriel" userImage={null} userElo={1460} userStreak={7} /> };
+export const Cabecalho: Story = { render: () => <DashboardHomeHeader userName="Gabriel" userImage={null} /> };
 export const DesafioRecomendado: Story = { render: () => <div className="p-6"><RecommendedChallengeCard challenge={challenge} recommendationReason="PERSONALIZED" /></div> };
 export const PreviewDeCodigo: Story = { parameters: { layout: "centered" }, render: () => <div className="h-[420px] w-[640px]"><ChallengeCodePreview code={challenge.code} /></div> };
 export const MenuDeRank: Story = { parameters: { layout: "centered" }, render: () => <DashboardRankMenu userElo={1460} /> };
