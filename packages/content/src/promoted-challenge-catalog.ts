@@ -16,7 +16,7 @@ import {
 export type ChallengeContentEntry = {
   id: string;
   title: string;
-  language: string;
+  language: ChallengeIndexEntry["language"];
   difficulty: string;
   recommendedElo: number;
   code: string;

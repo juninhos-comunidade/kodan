@@ -25,7 +25,7 @@ function getInitials(userName: string) {
 export function DashboardHomeHeader({ userName, userImage }: DashboardHomeHeaderProps) {
   const session = useSession();
 
-  const router = useRouter()
+  const router = useRouter();
 
   return (
     <header className="sticky top-0 z-20 flex min-h-28 items-center justify-between gap-5 bg-[var(--dojo-page)] px-5 pl-16 sm:px-8 lg:px-12">
