@@ -18,6 +18,7 @@ import type {
 type MockChallenge = {
   id: string;
   title: string;
+  language: "react" | "typescript" | "python" | "nodejs";
   difficulty: "EASY" | "MEDIUM" | "HARD";
   recommendedElo: number;
   tags: string;
@@ -55,6 +56,7 @@ const mockChallenges: MockChallenge[] = [
   {
     id: "mock-effect-dependencies",
     title: "Filtro de Produtos com Busca Travada",
+    language: "react",
     difficulty: "EASY",
     recommendedElo: 1100,
     tags: "react, hooks, useEffect, dependencies",
@@ -94,6 +96,7 @@ useEffect(() => {
   {
     id: "mock-stale-closure",
     title: "Timeline de Eventos com Lista Desatualizada",
+    language: "react",
     difficulty: "EASY",
     recommendedElo: 1120,
     tags: "react, hooks, closure, state",
@@ -130,6 +133,7 @@ useEffect(() => {
   {
     id: "mock-cleanup",
     title: "Listener Duplicado ao Abrir o Painel",
+    language: "react",
     difficulty: "MEDIUM",
     recommendedElo: 1250,
     tags: "react, cleanup, event-listener, useEffect",

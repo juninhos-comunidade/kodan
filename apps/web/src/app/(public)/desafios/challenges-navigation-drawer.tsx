@@ -13,6 +13,7 @@ import type { Challenge } from "./ema-challenge-card-helpers";
 
 export function ChallengesNavigationDrawer({
   open,
+  languageLabel,
   challenges,
   topicFilter,
   filterDifficulty,
@@ -21,6 +22,7 @@ export function ChallengesNavigationDrawer({
   onDifficultyChange,
 }: {
   open: boolean;
+  languageLabel: string;
   challenges: Challenge[];
   topicFilter: ChallengeTopicFilter;
   filterDifficulty: DifficultyFilter;
@@ -95,6 +97,7 @@ export function ChallengesNavigationDrawer({
           </button>
         </header>
         <ChallengesNavigationTree
+          languageLabel={languageLabel}
           sections={sections}
           topicFilter={topicFilter}
           filterDifficulty={filterDifficulty}

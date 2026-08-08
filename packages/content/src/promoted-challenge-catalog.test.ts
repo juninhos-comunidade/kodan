@@ -47,6 +47,8 @@ describe("readPromotedChallengeCatalog", () => {
     expect(catalog.challenges.map((challenge) => challenge.id)).toEqual(["legacy", "split"]);
     expect(catalog.index.find((entry) => entry.id === "legacy")?.language).toBe("react");
     expect(catalog.index.find((entry) => entry.id === "split")?.language).toBe("typescript");
+    expect(catalog.challenges.find((challenge) => challenge.id === "legacy")?.language).toBe("react");
+    expect(catalog.challenges.find((challenge) => challenge.id === "split")?.language).toBe("typescript");
     expect(catalog.challenges.find((challenge) => challenge.id === "split")?.evaluationRubric).toMatchObject({
       version: "1.0.0",
       questionKind: "explain-code",

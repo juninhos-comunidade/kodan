@@ -63,6 +63,7 @@ export function serializeAttempt(attempt: AttemptRecord) {
           challenge: {
             id: attempt.challenge.id,
             title: attempt.challenge.title,
+            language: attempt.challenge.language,
             difficulty: attempt.challenge.difficulty,
             recommendedElo: attempt.challenge.recommendedElo,
             tags: attempt.challenge.tags,

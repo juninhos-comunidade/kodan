@@ -1,6 +1,7 @@
 model Challenge {
   id             String    @id @default(uuid())
   title          String
+  language       String    @default("react")
   difficulty     String    // EASY, MEDIUM, HARD
   recommendedElo Int       @default(1200)
   code           String    // React code snippet
@@ -13,6 +14,7 @@ model Challenge {
   updatedAt      DateTime  @updatedAt
 
   @@map("challenge")
+  @@index([language])
 }
 
 enum AttemptSessionStatus {

@@ -1,13 +1,37 @@
 import { describe, expect, test } from "bun:test";
 
-import { serializeAttempt, serializeChallengeDetail } from "./serializers";
+import {
+  serializeAttempt,
+  serializeChallengeDetail,
+  serializeChallengeSummary,
+} from "./serializers";
 import { challengeDetailSchema } from "./schemas";
 
 describe("challenge serializers", () => {
+  test("expõe a linguagem no resumo público do desafio", () => {
+    const serialized = serializeChallengeSummary({
+      id: "challenge-language",
+      title: "Narrowing seguro",
+      difficulty: "MEDIUM",
+      recommendedElo: 1200,
+      language: "typescript",
+      code: "const value: unknown = 1;",
+      question: "Explique.",
+      solution: "Segredo",
+      tags: "typescript,narrowing",
+      attempts: [],
+      createdAt: new Date("2026-01-01T00:00:00.000Z"),
+      updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+    });
+
+    expect(serialized.language).toBe("typescript");
+  });
+
   test("does not expose the reference solution in public challenge details", () => {
     const serialized = serializeChallengeDetail({
       id: "challenge-1",
       title: "Closure obsoleta",
+      language: "react",
       difficulty: "MEDIUM",
       recommendedElo: 1200,
       code: "const value = 1;",
@@ -34,6 +58,7 @@ describe("challenge serializers", () => {
     const serialized = serializeChallengeDetail({
       id: "challenge-without-rubric",
       title: "Em revisão",
+      language: "react",
       difficulty: "EASY",
       recommendedElo: 1000,
       code: "const value = 1;",

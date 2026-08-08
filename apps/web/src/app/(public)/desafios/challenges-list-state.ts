@@ -8,6 +8,7 @@ import {
   getStatusFromAttempts,
   type Challenge,
   type ChallengeKind,
+  type ChallengeLanguage,
   type ChallengeStatus,
   type Difficulty,
 } from "./ema-challenge-card-helpers";
@@ -203,6 +204,7 @@ export function matchesChallenge(
   statusFilter: StatusFilter = "ALL",
   typeFilter: TypeFilter = "ALL",
   onlyUnsolved = false,
+  languageFilter: ChallengeLanguage | "ALL" = "ALL",
 ) {
   const normalizedQuery = searchQuery.trim().toLocaleLowerCase();
   const status = getStatusFromAttempts(challenge.attempts);
@@ -217,6 +219,8 @@ export function matchesChallenge(
   const matchesStatus = statusFilter === "ALL" || status === statusFilter;
   const matchesType = typeFilter === "ALL" || type === typeFilter;
   const matchesUnsolved = !onlyUnsolved || status !== "resolved";
+  const matchesLanguage =
+    languageFilter === "ALL" || challenge.language === languageFilter;
 
   return (
     matchesSearch &&
@@ -224,6 +228,7 @@ export function matchesChallenge(
     matchesStatus &&
     matchesType &&
     matchesUnsolved &&
+    matchesLanguage &&
     matchesChallengeTopic(challenge, topicFilter)
   );
 }
@@ -237,6 +242,7 @@ export function getVisibleChallenges(
   typeFilter: TypeFilter = "ALL",
   onlyUnsolved = false,
   sortBy: SortBy = "RECENT",
+  languageFilter: ChallengeLanguage | "ALL" = "ALL",
 ) {
   return challenges
     .filter((challenge) =>
@@ -248,6 +254,7 @@ export function getVisibleChallenges(
         statusFilter,
         typeFilter,
         onlyUnsolved,
+        languageFilter,
       ),
     )
     .toSorted((left, right) => sortChallenges(left, right, sortBy));

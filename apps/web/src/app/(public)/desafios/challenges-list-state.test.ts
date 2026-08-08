@@ -16,6 +16,7 @@ function makeChallenge(overrides: Partial<Challenge> = {}): Challenge {
     title: overrides.title ?? "Stale Closure no useEffect",
     difficulty: overrides.difficulty ?? "MEDIUM",
     recommendedElo: overrides.recommendedElo ?? 1200,
+    language: overrides.language ?? "react",
     tags: overrides.tags ?? "react,useEffect,closures",
     attempts: overrides.attempts ?? [],
   };
@@ -87,6 +88,27 @@ describe("challenges-list-state", () => {
     );
 
     expect(visibleChallenges).toEqual([expect.objectContaining({ id: "1" })]);
+  });
+
+  it("filtra os desafios pela linguagem selecionada", () => {
+    const visibleChallenges = getVisibleChallenges(
+      [
+        makeChallenge({ id: "react", language: "react" }),
+        makeChallenge({ id: "typescript", language: "typescript" }),
+      ],
+      "",
+      "ALL",
+      "ALL",
+      "ALL",
+      "ALL",
+      false,
+      "RECENT",
+      "typescript",
+    );
+
+    expect(visibleChallenges.map((challenge) => challenge.id)).toEqual([
+      "typescript",
+    ]);
   });
 
   it("resolve o desafio ativo mantendo o atual quando ele ainda esta visível", () => {

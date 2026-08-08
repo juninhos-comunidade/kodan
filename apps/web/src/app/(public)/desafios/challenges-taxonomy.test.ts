@@ -13,6 +13,7 @@ function makeChallenge(overrides: Partial<Challenge> = {}): Challenge {
   return {
     id: overrides.id ?? "react-hooks-stale-closure",
     title: overrides.title ?? "Stale closure no useEffect",
+    language: overrides.language ?? "react",
     difficulty: overrides.difficulty ?? "MEDIUM",
     recommendedElo: overrides.recommendedElo ?? 1400,
     tags: overrides.tags ?? "useEffect,stale-closure,react-hooks",
