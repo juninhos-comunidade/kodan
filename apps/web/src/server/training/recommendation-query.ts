@@ -2,6 +2,7 @@ export function buildRecommendationWhere(
   attemptedChallengeIds: string[],
 ) {
   return {
+    promoted: true,
     evaluationRubricJson: { not: null },
     ...(attemptedChallengeIds.length > 0
       ? { id: { notIn: attemptedChallengeIds } }

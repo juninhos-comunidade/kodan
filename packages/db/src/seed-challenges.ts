@@ -10,7 +10,7 @@ async function run() {
     pruneDuplicateOrphans,
   });
   console.log(
-    `[seed:challenges] total=${result.total} inserted=${result.inserted} updated=${result.updated} pruned=${result.pruned} protectedOrphans=${result.protectedOrphans.length}`,
+    `[seed:challenges] total=${result.total} inserted=${result.inserted} updated=${result.updated} pruned=${result.pruned} demoted=${result.demoted} protectedOrphans=${result.protectedOrphans.length}`,
   );
   for (const orphan of result.protectedOrphans) {
     console.warn(

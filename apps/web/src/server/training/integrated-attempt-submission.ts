@@ -20,7 +20,7 @@ export async function submitIntegratedAttempt(
   options: { telemetry?: EvaluationTelemetry } = {},
 ) {
   const [challenge, preflightUser, preflightAttempts] = await Promise.all([
-    prisma.challenge.findUnique({ where: { id: challengeId } }),
+    prisma.challenge.findUnique({ where: { id: challengeId, promoted: true } }),
     prisma.user.findUnique({ where: { id: userId }, select: { id: true } }),
     prisma.attempt.findMany({
       where: { userId, challengeId },

@@ -73,8 +73,9 @@ export const integratedTrainingAdapter: TrainingAdapter = {
     const prisma = await getPrisma();
     const [user, total, items] = await Promise.all([
       userId ? prisma.user.findUnique({ where: { id: userId } }) : null,
-      prisma.challenge.count(),
+      prisma.challenge.count({ where: { promoted: true } }),
       prisma.challenge.findMany({
+        where: { promoted: true },
         include: userId
           ? {
               attempts: {
@@ -107,7 +108,7 @@ export const integratedTrainingAdapter: TrainingAdapter = {
   async getChallengeById(id, userId) {
     const prisma = await getPrisma();
     const challenge = await prisma.challenge.findUnique({
-      where: { id },
+      where: { id, promoted: true },
       include: userId
         ? { attempts: { where: { userId }, orderBy: { createdAt: "desc" } } }
         : undefined,
@@ -160,7 +161,10 @@ export const integratedTrainingAdapter: TrainingAdapter = {
       prisma.$transaction(async (tx) => {
         const [user, challenge, latestAttempt] = await Promise.all([
           tx.user.findUnique({ where: { id: userId }, select: { elo: true } }),
-          tx.challenge.findUnique({ where: { id: challengeId }, select: { solution: true } }),
+          tx.challenge.findUnique({
+            where: { id: challengeId, promoted: true },
+            select: { solution: true },
+          }),
           tx.attempt.findFirst({
             where: { userId, challengeId },
             orderBy: { createdAt: "desc" },

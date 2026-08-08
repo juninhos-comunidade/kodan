@@ -54,6 +54,15 @@ export async function upsertChallengesFromContent(
         },
       })).count
     : 0;
+  const remainingOrphans = options.pruneDuplicateOrphans
+    ? protectedOrphans
+    : orphaned;
+  const demoted = remainingOrphans.length > 0
+    ? (await prisma.challenge.updateMany({
+        where: { id: { in: remainingOrphans.map((item) => item.id) } },
+        data: { promoted: false },
+      })).count
+    : 0;
   const updated = challenges.filter((challenge) => existingIds.has(challenge.id)).length;
   const inserted = challenges.length - updated;
 
@@ -62,6 +71,7 @@ export async function upsertChallengesFromContent(
     inserted,
     updated,
     pruned,
+    demoted,
     protectedOrphans,
   };
 }
@@ -76,6 +86,7 @@ async function upsertChallenge(prisma: PrismaClient, challenge: ChallengeContent
     question: challenge.question,
     solution: challenge.solution,
     tags: challenge.tags.join(","),
+    promoted: true,
     evaluationRubricJson: challenge.evaluationRubric
       ? JSON.stringify(challenge.evaluationRubric)
       : null,

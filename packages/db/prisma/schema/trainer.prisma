@@ -8,6 +8,7 @@ model Challenge {
   question       String    // Question to diagnose
   solution       String    // Senior solution template
   tags           String    // Comma-separated tags, e.g. "useEffect,stale-closure"
+  promoted       Boolean   @default(true)
   evaluationRubricJson String?
   attempts       Attempt[]
   createdAt      DateTime  @default(now())
@@ -15,6 +16,7 @@ model Challenge {
 
   @@map("challenge")
   @@index([language])
+  @@index([promoted])
 }
 
 enum AttemptSessionStatus {

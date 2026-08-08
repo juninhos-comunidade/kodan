@@ -33,7 +33,7 @@ export type ProductEventInput =
 
 type AggregateEventPersistence = {
   challenge: {
-    count(input: { where: { id: string } }): Promise<number>;
+    count(input: { where: { id: string; promoted: true } }): Promise<number>;
   };
   productEventAggregate: {
     upsert(input: AggregateUpsertInput): Promise<unknown>;
@@ -188,7 +188,7 @@ export async function recordProductEvent(
   if (challengeId !== null) {
     if (challengeId.length === 0 || challengeId.length > 128) return false;
     const challengeExists = await persistence.challenge.count({
-      where: { id: challengeId },
+      where: { id: challengeId, promoted: true },
     });
     if (challengeExists !== 1) return false;
   }
