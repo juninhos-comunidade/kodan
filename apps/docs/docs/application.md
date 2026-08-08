@@ -182,6 +182,7 @@ As rotas `/api/*` não são páginas. Elas são interfaces HTTP para integraçõ
 - `/api/challenges` lista desafios.
 - `/api/challenges/{id}` retorna detalhe de desafio.
 - `/api/challenges/{id}/attempts` registra uma tentativa.
+- `/api/product-events` registra apenas eventos agregados da jornada pública, sem identificadores de praticante ou conteúdo de respostas.
 - `/api/auth/*` é fornecida pelo Better Auth.
 
 > O contrato público de detalhe não expõe a solução de referência. Ela só aparece no resultado quando a sessão é resolvida ou quando o praticante escolhe revelá-la.

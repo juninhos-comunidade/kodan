@@ -18,6 +18,7 @@ const {
   challengesResponseSchema,
   currentUserResponseSchema,
   listChallengesQuerySchema,
+  productEventSchema,
   submitAttemptResponseSchema,
   submitAttemptSchema,
   updateCurrentUserSchema,
@@ -56,6 +57,10 @@ const SubmitAttemptInput = registry.register(
   "SubmitAttemptInput",
   submitAttemptSchema,
 );
+const ProductEventInput = registry.register(
+  "ProductEventInput",
+  productEventSchema,
+);
 const ChallengePathParams = registry.register(
   "ChallengePathParams",
   z.object({
@@ -80,6 +85,25 @@ const errorResponses = {
     content: jsonContent(ApiError),
   },
 };
+
+registry.registerPath({
+  method: "post",
+  path: "/api/product-events",
+  tags: ["Product events"],
+  summary: "Registrar evento agregado da jornada pública",
+  description:
+    "Aceita somente eventos de baixa cardinalidade e não recebe identificadores de praticante nem conteúdo de respostas.",
+  request: {
+    body: {
+      content: jsonContent(ProductEventInput),
+    },
+  },
+  responses: {
+    204: { description: "Evento agregado registrado." },
+    400: errorResponses[400],
+    500: errorResponses[500],
+  },
+});
 
 registry.registerPath({
   method: "get",
@@ -216,6 +240,7 @@ const productDocument = generator.generateDocument({
     { name: "Me", description: "Usuário atual e perfil local." },
     { name: "Challenges", description: "Catálogo e detalhe dos desafios." },
     { name: "Attempts", description: "Submissões e histórico de tentativas." },
+    { name: "Product events", description: "Métricas agregadas da jornada pública." },
   ],
 });
 

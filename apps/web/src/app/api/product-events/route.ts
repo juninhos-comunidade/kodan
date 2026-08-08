@@ -1,15 +1,14 @@
-import type { ProductEventInput } from "@/server/training/product-event-store";
 import { recordAnonymousProductEvent } from "@/server/api/service";
+import { parseJsonBody } from "@/server/api/http";
+import { productEventSchema } from "@/server/api/schemas";
 
 export async function POST(request: Request) {
-  let event: unknown;
-  try {
-    event = await request.json();
-  } catch {
-    return Response.json({ error: "Evento inválido" }, { status: 400 });
+  const parsed = await parseJsonBody(request, productEventSchema);
+  if (!parsed.success) {
+    return Response.json({ error: parsed.error }, { status: 400 });
   }
 
-  const result = await recordAnonymousProductEvent(event as ProductEventInput);
+  const result = await recordAnonymousProductEvent(parsed.data);
   if (!result.success) {
     return Response.json({ error: result.error }, { status: 503 });
   }
