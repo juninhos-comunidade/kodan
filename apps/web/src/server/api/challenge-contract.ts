@@ -3,6 +3,7 @@ import { z } from "zod";
 export type ChallengeRecord = {
   id: string;
   title: string;
+  language: string;
   difficulty: string;
   recommendedElo: number;
   code: string;
@@ -23,6 +24,12 @@ export type ChallengeRecord = {
 };
 
 export const difficultySchema = z.enum(["EASY", "MEDIUM", "HARD"]);
+export const challengeLanguageSchema = z.enum([
+  "react",
+  "typescript",
+  "python",
+  "nodejs",
+]);
 
 export const challengeAttemptSummarySchema = z.object({
   id: z.string(),
@@ -41,6 +48,7 @@ export const challengeAttemptSummarySchema = z.object({
 export const challengeSummarySchema = z.object({
   id: z.string(),
   title: z.string(),
+  language: challengeLanguageSchema,
   difficulty: difficultySchema,
   recommendedElo: z.number().int(),
   tags: z.string(),
@@ -59,6 +67,7 @@ export function serializeChallengeSummary(challenge: ChallengeRecord) {
   return {
     id: challenge.id,
     title: challenge.title,
+    language: challenge.language,
     difficulty: challenge.difficulty,
     recommendedElo: challenge.recommendedElo,
     tags: challenge.tags,

@@ -29,6 +29,7 @@ export type TrainingAttemptSummary = {
 export type TrainingChallenge = {
   id: string;
   title: string;
+  language: string;
   difficulty: string;
   recommendedElo: number;
   tags: string;

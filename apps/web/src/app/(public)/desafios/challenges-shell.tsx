@@ -15,8 +15,6 @@ import { eloToDanRank, formatRankLabel } from "@/lib/rating";
 import { cn } from "@kodan/ui/lib/utils";
 
 export function ChallengesDesktopShell({
-  userElo,
-  user,
   title,
   description,
   searchQuery,
@@ -34,7 +32,7 @@ export function ChallengesDesktopShell({
   return (
     <section className="challengers-shell hidden h-full min-h-0 overflow-hidden lg:flex lg:flex-col">
       <header className="border-b border-[color:var(--challengers-border)] bg-[var(--challengers-surface)] px-6 py-5 xl:px-8">
-        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-6 gap-y-4 xl:grid-cols-[minmax(16rem,0.8fr)_minmax(16rem,1fr)_auto]">
+        <div className="grid min-w-0 grid-cols-[minmax(16rem,0.8fr)_minmax(20rem,1fr)] items-center gap-6">
           <div className="min-w-0">
             <h1 className="font-serif text-2xl font-bold text-[var(--challengers-ink)]">
               {title}
@@ -43,18 +41,13 @@ export function ChallengesDesktopShell({
               {description}
             </p>
           </div>
-          <search className="col-span-2 w-full min-w-0 xl:col-span-1">
+          <search className="w-full min-w-0">
             <ChallengeSearchInput
               value={searchQuery}
               className="w-full"
               onChange={onSearchChange}
             />
           </search>
-          <div className="col-start-2 row-start-1 flex shrink-0 items-center gap-3 xl:col-start-3">
-            <RankBadge userElo={userElo} />
-            <ThemeToggleButton />
-            <ProfileLink user={user} />
-          </div>
         </div>
       </header>
       <div className="min-w-0 flex-1 overflow-auto">{children}</div>
@@ -68,6 +61,7 @@ export function ChallengesMobileShell({
   searchQuery,
   children,
   filtersOpen,
+  filtersDisabled,
   onSearchChange,
   onOpenFilters,
 }: {
@@ -76,6 +70,7 @@ export function ChallengesMobileShell({
   searchQuery: string;
   children: ReactNode;
   filtersOpen: boolean;
+  filtersDisabled: boolean;
   onSearchChange: (query: string) => void;
   onOpenFilters: () => void;
 }) {
@@ -103,7 +98,8 @@ export function ChallengesMobileShell({
             aria-haspopup="dialog"
             aria-expanded={filtersOpen}
             aria-controls="challenge-filters-panel"
-            className="challengers-icon-button inline-flex size-11 shrink-0 items-center justify-center rounded-lg border"
+            disabled={filtersDisabled}
+            className="challengers-icon-button inline-flex size-11 shrink-0 items-center justify-center rounded-lg border disabled:cursor-not-allowed disabled:opacity-40"
             onClick={onOpenFilters}
           >
             <Filter className="size-4" aria-hidden="true" />

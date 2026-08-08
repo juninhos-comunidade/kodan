@@ -63,6 +63,7 @@ function getChallengeRoute(challengeId: string): Route {
 }
 
 export function ChallengesExplorerPanel({
+  languageLabel,
   topicLabel,
   topicDescription,
   topicFilter,
@@ -88,6 +89,7 @@ export function ChallengesExplorerPanel({
   onClearFilters,
   onPageChange,
 }: {
+  languageLabel: string;
   topicLabel: string;
   topicDescription: string;
   topicFilter: ChallengeTopicFilter;
@@ -121,7 +123,7 @@ export function ChallengesExplorerPanel({
             {topicLabel}
           </h1>
           <span className="challengers-badge border-[color:var(--challengers-blue-border)] bg-[var(--challengers-blue-soft)] px-2 py-1 text-[0.7rem] font-semibold text-[var(--challengers-blue)]">
-            React
+            {languageLabel}
           </span>
         </div>
         <p className="mt-2 max-w-[56rem] text-[0.86rem] text-[var(--challengers-muted)]">
@@ -131,7 +133,7 @@ export function ChallengesExplorerPanel({
 
       <div className="md:hidden">
         <div className="flex items-center gap-2 px-1 pb-3 pt-1 text-[0.74rem] font-medium text-[var(--challengers-muted)]">
-          <span>React</span>
+          <span>{languageLabel}</span>
           <ChevronRight className="size-3" />
           <span className="text-[var(--challengers-ink)]">{topicLabel}</span>
         </div>
@@ -214,7 +216,7 @@ function ChallengeFilters({
         </summary>
         <div className="challengers-panel absolute left-0 top-[calc(100%+8px)] z-30 grid w-[min(44rem,calc(100vw-2rem))] grid-cols-2 gap-px overflow-hidden rounded-[8px] border border-[color:var(--challengers-border-strong)] bg-[var(--challengers-border)] shadow-[var(--challengers-shadow-soft)] md:grid-cols-4">
           <FilterGroup title="Dificuldade">
-            <FilterSelect label="Dificuldade" value={filterDifficulty} onChange={(value) => onFilterChange(value as DifficultyFilter)} options={[{ value: "ALL", label: "Todos" }, { value: "EASY", label: "Easy" }, { value: "MEDIUM", label: "Medium" }, { value: "HARD", label: "Hard" }]} />
+            <FilterSelect label="Dificuldade" value={filterDifficulty} onChange={(value) => onFilterChange(value as DifficultyFilter)} options={[{ value: "ALL", label: "Todos" }, { value: "EASY", label: "Fácil" }, { value: "MEDIUM", label: "Médio" }, { value: "HARD", label: "Difícil" }]} />
           </FilterGroup>
           <FilterGroup title="Status">
             <FilterSelect label="Status" value={statusFilter} onChange={(value) => onStatusChange(value as StatusFilter)} options={STATUS_OPTIONS} />

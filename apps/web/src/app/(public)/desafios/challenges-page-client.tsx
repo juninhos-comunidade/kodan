@@ -6,6 +6,10 @@ import { useRouter } from "next/navigation";
 import { ZenToast } from "@kodan/ui/components/zen";
 import { useZenToast } from "@/hooks/use-zen-toast";
 import { ChallengesNavigationDrawer } from "./challenges-navigation-drawer";
+import {
+  ChallengesLanguageExplorer,
+  getChallengeLanguageDefinition,
+} from "./challenges-language-explorer";
 import { ChallengesExplorerPanel } from "./challenges-explorer-list";
 import {
   CHALLENGES_INITIAL_LOAD_SIZE,
@@ -29,7 +33,10 @@ import {
   ChallengesMobileShell,
   ChallengesStatePanel,
 } from "./challenges-shell";
-import { type Challenge } from "./ema-challenge-card-helpers";
+import {
+  type Challenge,
+  type ChallengeLanguage,
+} from "./ema-challenge-card-helpers";
 
 type ChallengesApiResponse =
   | {
@@ -77,6 +84,8 @@ export default function ChallengesPageClient({
     null,
   );
   const [navigationOpen, setNavigationOpen] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] =
+    useState<ChallengeLanguage | null>(null);
   const { toast, showToast } = useZenToast();
 
   const showZenErrorToast = (message: string) => {
@@ -161,6 +170,7 @@ export default function ChallengesPageClient({
     state.typeFilter,
     state.onlyUnsolved,
     state.sortBy,
+    selectedLanguage ?? "ALL",
   );
   const paginatedChallenges = getPaginatedChallenges(
     visibleChallenges,
@@ -173,7 +183,9 @@ export default function ChallengesPageClient({
   );
   const topicLabel =
     state.topicFilter === "ALL"
-      ? "Todos os desafios"
+      ? selectedLanguage
+        ? `Todos os desafios de ${getChallengeLanguageDefinition(selectedLanguage).name}`
+        : "Todos os desafios"
       : getChallengeTopicLabel(state.topicFilter);
   const topicDescription =
     state.topicFilter === "ALL"
@@ -185,7 +197,16 @@ export default function ChallengesPageClient({
     state.statusFilter !== "ALL" ||
     state.typeFilter !== "ALL" ||
     state.onlyUnsolved ||
+    state.topicFilter !== "ALL" ||
     state.sortBy !== "RECENT";
+  const selectedLanguageDefinition = selectedLanguage
+    ? getChallengeLanguageDefinition(selectedLanguage)
+    : null;
+  const selectedLanguageChallenges = selectedLanguage
+    ? state.challenges.filter(
+        (challenge) => challenge.language === selectedLanguage,
+      )
+    : [];
 
   const handlePageChange = async (page: number) => {
     if (page < 1) {
@@ -204,8 +225,7 @@ export default function ChallengesPageClient({
     router.push(`/treinar/${challengeId}`);
   };
 
-
-  const content = state.loadingInitial ? (
+  const listContent = state.loadingInitial ? (
     <ChallengesLoadingState />
   ) : state.initialError ? (
     <ChallengesStatePanel
@@ -222,13 +242,9 @@ export default function ChallengesPageClient({
         </button>
       }
     />
-  ) : state.challenges.length === 0 ? (
-    <ChallengesStatePanel
-      title="Nenhum desafio carregado"
-      description="O catálogo ainda não recebeu exercícios para esta trilha."
-    />
   ) : (
     <ChallengesExplorerPanel
+      languageLabel={selectedLanguageDefinition?.name ?? "React"}
       topicLabel={topicLabel}
       topicDescription={topicDescription}
       topicFilter={state.topicFilter}
@@ -262,6 +278,35 @@ export default function ChallengesPageClient({
     />
   );
 
+  const content =
+    state.loadingInitial || state.initialError ? (
+      listContent
+    ) : (
+      <ChallengesLanguageExplorer
+        challenges={state.challenges}
+        userElo={state.userElo}
+        selectedLanguage={selectedLanguage}
+        selectedTopic={state.topicFilter}
+        onSelectLanguage={(language) => {
+          setSelectedLanguage(language);
+          dispatch({ type: "setTopic", payload: "ALL" });
+          dispatch({ type: "setFilter", payload: "ALL" });
+        }}
+        onSelectTopic={(language, topic) => {
+          setSelectedLanguage(language);
+          dispatch({ type: "setTopic", payload: topic });
+          dispatch({ type: "setFilter", payload: "ALL" });
+        }}
+        onBackToTree={() => {
+          setSelectedLanguage(null);
+          setNavigationOpen(false);
+          dispatch({ type: "setTopic", payload: "ALL" });
+        }}
+      >
+        {listContent}
+      </ChallengesLanguageExplorer>
+    );
+
   return (
     <main
       data-challengers-screen="true"
@@ -271,8 +316,16 @@ export default function ChallengesPageClient({
         <ChallengesDesktopShell
           userElo={state.userElo}
           user={user}
-          title={topicLabel}
-          description={topicDescription}
+          title={
+            selectedLanguageDefinition
+              ? `Desafios de ${selectedLanguageDefinition.name}`
+              : "Árvore de tecnologias"
+          }
+          description={
+            selectedLanguageDefinition
+              ? topicDescription
+              : "Escolha uma linguagem para explorar o catálogo."
+          }
           searchQuery={state.searchQuery}
           onSearchChange={(query) =>
             dispatch({ type: "setSearch", payload: query })
@@ -287,6 +340,7 @@ export default function ChallengesPageClient({
         user={user}
         searchQuery={state.searchQuery}
         filtersOpen={navigationOpen}
+        filtersDisabled={!selectedLanguage}
         onSearchChange={(query) =>
           dispatch({ type: "setSearch", payload: query })
         }
@@ -295,17 +349,22 @@ export default function ChallengesPageClient({
         {content}
       </ChallengesMobileShell>
 
-      <ChallengesNavigationDrawer
-        open={navigationOpen}
-        challenges={state.challenges}
-        topicFilter={state.topicFilter}
-        filterDifficulty={state.filterDifficulty}
-        onClose={() => setNavigationOpen(false)}
-        onTopicChange={(topic) => dispatch({ type: "setTopic", payload: topic })}
-        onDifficultyChange={(difficulty) =>
-          dispatch({ type: "setFilter", payload: difficulty })
-        }
-      />
+      {selectedLanguageDefinition ? (
+        <ChallengesNavigationDrawer
+          open={navigationOpen}
+          languageLabel={selectedLanguageDefinition.name}
+          challenges={selectedLanguageChallenges}
+          topicFilter={state.topicFilter}
+          filterDifficulty={state.filterDifficulty}
+          onClose={() => setNavigationOpen(false)}
+          onTopicChange={(topic) =>
+            dispatch({ type: "setTopic", payload: topic })
+          }
+          onDifficultyChange={(difficulty) =>
+            dispatch({ type: "setFilter", payload: difficulty })
+          }
+        />
+      ) : null}
 
       <div className="fixed bottom-4 right-4 z-50">
         <ZenToast open={toast.open} tone={toast.tone} title={toast.title}>

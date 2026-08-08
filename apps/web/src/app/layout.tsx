@@ -3,11 +3,12 @@ import type { Metadata } from "next";
 import "../index.css";
 import { AppShell } from "../components/app-shell";
 import Providers from "../components/providers";
+import { APP_DESCRIPTION, APP_LOCALE } from "../content/public-promises";
 import { getCurrentUser } from "../server/api/service";
 
 export const metadata: Metadata = {
   title: "Kodan",
-  description: "Treine sua mente para ler, interpretar e diagnosticar problemas complexos em código React.",
+  description: APP_DESCRIPTION,
 };
 
 export default async function RootLayout({
@@ -31,7 +32,7 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={APP_LOCALE} suppressHydrationWarning>
       <body suppressHydrationWarning className="antialiased">
         <Providers>
           <AppShell user={sidebarUser}>{children}</AppShell>

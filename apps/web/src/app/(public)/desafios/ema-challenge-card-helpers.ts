@@ -1,4 +1,5 @@
 export type Difficulty = "EASY" | "MEDIUM" | "HARD";
+export type ChallengeLanguage = "react" | "typescript" | "python" | "nodejs";
 export type ChallengeStatus = "resolved" | "in_progress" | "not_started";
 export type ChallengeKind =
   | "CONCEITO"
@@ -16,6 +17,7 @@ export interface Attempt {
 export interface Challenge {
   id: string;
   title: string;
+  language: ChallengeLanguage;
   difficulty: Difficulty;
   recommendedElo: number;
   tags: string;

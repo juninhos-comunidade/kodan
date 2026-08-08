@@ -24,6 +24,7 @@ describe("upsertChallengesFromContent", () => {
       title: "Desafio",
       difficulty: "EASY",
       recommendedElo: 1100,
+      language: "typescript",
       question: "Explique o comportamento.",
       tags: ["typescript"],
       rubricFile: "rubric.json",
@@ -58,10 +59,12 @@ describe("upsertChallengesFromContent", () => {
     expect(upsert).toHaveBeenCalledWith({
       where: { id: "challenge-1" },
       update: expect.objectContaining({
+        language: "typescript",
         evaluationRubricJson: JSON.stringify(rubric),
       }),
       create: expect.objectContaining({
         id: "challenge-1",
+        language: "typescript",
         evaluationRubricJson: JSON.stringify(rubric),
       }),
     });

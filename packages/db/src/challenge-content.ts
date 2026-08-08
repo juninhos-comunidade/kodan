@@ -33,6 +33,7 @@ export async function upsertChallengesFromContent(
 async function upsertChallenge(prisma: PrismaClient, challenge: ChallengeContentEntry) {
   const payload = {
     title: challenge.title,
+    language: challenge.language,
     difficulty: challenge.difficulty,
     recommendedElo: challenge.recommendedElo,
     code: challenge.code,

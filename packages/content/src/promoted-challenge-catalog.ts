@@ -16,6 +16,7 @@ import {
 export type ChallengeContentEntry = {
   id: string;
   title: string;
+  language: ChallengeIndexEntry["language"];
   difficulty: string;
   recommendedElo: number;
   code: string;
@@ -120,10 +121,12 @@ async function collectChallengeSources(root: string): Promise<ChallengeSource[]>
 
 async function loadLegacyChallenge(filePath: string): Promise<ChallengeLoadResult> {
   const parsed = challengeLegacySchema.parse(await readJsonUnknown(filePath)) as ChallengeLegacy;
+  const indexEntry = buildIndexEntryFromMeta(parsed);
   return {
     challenge: {
       id: parsed.id,
       title: parsed.title,
+      language: indexEntry.language,
       difficulty: parsed.difficulty,
       recommendedElo: parsed.recommendedElo,
       code: parsed.code,
@@ -132,12 +135,13 @@ async function loadLegacyChallenge(filePath: string): Promise<ChallengeLoadResul
       tags: parsed.tags,
       ...(parsed.evaluationRubric ? { evaluationRubric: parsed.evaluationRubric } : {}),
     },
-    indexEntry: buildIndexEntryFromMeta(parsed),
+    indexEntry,
   };
 }
 
 async function loadSplitChallenge(filePath: string): Promise<ChallengeLoadResult> {
   const parsed = challengeSplitMetaSchema.parse(await readJsonUnknown(filePath)) as ChallengeSplitMeta;
+  const indexEntry = buildIndexEntryFromMeta(parsed);
   const codeFileName = parsed.codeFile ?? "code.tsx";
   const solutionFileName = parsed.solutionFile ?? parsed.expectedAnswerFile ?? "solution.md";
   const [code, solution] = await Promise.all([
@@ -156,6 +160,7 @@ async function loadSplitChallenge(filePath: string): Promise<ChallengeLoadResult
     challenge: {
       id: parsed.id,
       title: parsed.title,
+      language: indexEntry.language,
       difficulty: parsed.difficulty,
       recommendedElo: parsed.recommendedElo,
       question: parsed.question,
@@ -164,7 +169,7 @@ async function loadSplitChallenge(filePath: string): Promise<ChallengeLoadResult
       solution,
       ...(evaluationRubric ? { evaluationRubric } : {}),
     },
-    indexEntry: buildIndexEntryFromMeta(parsed),
+    indexEntry,
   };
 }
 
@@ -174,7 +179,7 @@ function buildIndexEntryFromMeta(meta: {
   difficulty: "EASY" | "MEDIUM" | "HARD";
   recommendedElo: number;
   tags: string[];
-  language?: string;
+  language?: ChallengeIndexEntry["language"];
   type?: string;
   estimatedTime?: number;
   status?: string;
@@ -192,11 +197,12 @@ function buildIndexEntryFromMeta(meta: {
   };
 }
 
-function inferLanguage(tags: string[]) {
+function inferLanguage(tags: string[]): ChallengeIndexEntry["language"] {
   const normalized = tags.map((tag) => tag.toLowerCase());
   if (normalized.includes("react")) return "react";
   if (normalized.includes("typescript")) return "typescript";
-  if (normalized.includes("javascript")) return "javascript";
+  if (normalized.some((tag) => ["node", "nodejs", "node.js"].includes(tag))) return "nodejs";
+  if (normalized.includes("python")) return "python";
   return "react";
 }
 
