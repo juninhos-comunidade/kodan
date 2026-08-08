@@ -62,8 +62,14 @@ function CadastroForm() {
   onSuccess: (ctx)=> {
     finishAuthAction();
     const emailVerified = Boolean(ctx.data.user.emailVerified);
-    if (!emailVerified) rememberPendingVerificationEmail(formData.email);
-    router.replace(getPostSignupPath(emailVerified, callbackURL));
+    const sessionCreated = Boolean(ctx.data.token);
+    if (!emailVerified && !sessionCreated) {
+      rememberPendingVerificationEmail(formData.email);
+    }
+    router.replace(getPostSignupPath(
+      { emailVerified, sessionCreated },
+      callbackURL,
+    ));
   },
   onError:(ctx)=>{
     finishAuthAction();

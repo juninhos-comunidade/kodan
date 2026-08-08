@@ -24,10 +24,12 @@ export function getRegisterHref(callbackURL: string): Route {
 }
 
 export function getPostSignupPath(
-  emailVerified: boolean,
+  state: { emailVerified: boolean; sessionCreated: boolean },
   callbackURL: string,
 ): Route {
-  return emailVerified ? callbackURL as Route : "/verificar-email";
+  return state.emailVerified || state.sessionCreated
+    ? callbackURL as Route
+    : "/verificar-email";
 }
 
 export function requiresEmailVerification(status: number) {

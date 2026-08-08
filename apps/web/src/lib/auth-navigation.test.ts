@@ -30,12 +30,25 @@ describe("auth navigation", () => {
   });
 
   test("encaminha cadastro não verificado para a confirmação de e-mail", () => {
-    expect(String(getPostSignupPath(false, "/treinar/challenge-1"))).toBe(
+    expect(String(getPostSignupPath(
+      { emailVerified: false, sessionCreated: false },
+      "/treinar/challenge-1",
+    ))).toBe(
       "/verificar-email",
     );
-    expect(String(getPostSignupPath(true, "/treinar/challenge-1"))).toBe(
+    expect(String(getPostSignupPath(
+      { emailVerified: true, sessionCreated: true },
+      "/treinar/challenge-1",
+    ))).toBe(
       "/treinar/challenge-1",
     );
+  });
+
+  test("segue para a jornada quando a conta sem verificação já recebeu sessão", () => {
+    expect(String(getPostSignupPath(
+      { emailVerified: false, sessionCreated: true },
+      "/treinar/challenge-1",
+    ))).toBe("/treinar/challenge-1");
   });
 
   test("reconhece a resposta de login que exige verificação", () => {
