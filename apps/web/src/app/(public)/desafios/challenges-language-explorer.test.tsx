@@ -8,6 +8,7 @@ function renderExplorer() {
     <ChallengesLanguageExplorer
       challenges={[]}
       userElo={1200}
+      authenticated={false}
       selectedLanguage={null}
       selectedTopic="ALL"
       onSelectLanguage={() => undefined}
@@ -43,5 +44,16 @@ describe("ChallengesLanguageExplorer", () => {
     expect(markup).toContain('data-icon="typescript"');
     expect(markup).toContain('data-icon="python"');
     expect(markup).toContain('data-icon="node-js"');
+  });
+
+  test("usa a marca do Kodan em vez do portão torii", () => {
+    const markup = renderExplorer();
+
+    expect(markup).toContain('data-kodan-logo="true"');
+    expect(markup).not.toContain("⛩");
+  });
+
+  test("não apresenta ELO como domínio pessoal para visitantes", () => {
+    expect(renderExplorer()).not.toContain("1200 ELO · seu domínio");
   });
 });

@@ -12,6 +12,7 @@ type DashboardHomeProps = {
   recommendationReason: "CONTINUE_RECENT" | "PERSONALIZED" | "POPULAR_BEGINNER" | "FALLBACK";
   userName: string;
   userImage: string | null;
+  authenticated?: boolean;
 };
 
 export type DashboardChallenge = {
@@ -23,7 +24,7 @@ export type DashboardChallenge = {
   question: string;
 };
 
-export default function DashboardHome({ challenge, challengeCount, recommendationReason, userName, userImage }: DashboardHomeProps) {
+export default function DashboardHome({ challenge, challengeCount, recommendationReason, userName, userImage, authenticated = true }: DashboardHomeProps) {
   const themeAssets = useDashboardThemeAssets();
 
   return (
@@ -37,6 +38,7 @@ export default function DashboardHome({ challenge, challengeCount, recommendatio
           <RecommendedChallengeCard
             challenge={challenge}
             recommendationReason={recommendationReason}
+            authenticated={authenticated}
           />
           <DojoInitiationCard icon={themeAssets.initiation} />
         </section>

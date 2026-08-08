@@ -594,7 +594,7 @@ function ChallengePagination({
   const canGoNext = page < totalPages;
 
   return (
-    <footer className="challengers-subtle-panel mt-7 hidden items-center justify-between rounded-[10px] border px-4 py-3 text-[0.78rem] text-[var(--challengers-muted)] md:flex">
+    <footer className="challengers-subtle-panel mt-7 flex flex-col gap-3 rounded-[10px] border px-4 py-3 text-[0.78rem] text-[var(--challengers-muted)] sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-3">
         <span>Mostrar</span>
         <span className="challengers-control rounded-[7px] border px-3 py-2 text-[var(--challengers-ink)]">

@@ -25,9 +25,11 @@ function getRecommendationLabel(reason: RecommendationReason) {
 export function RecommendedChallengeCard({
   challenge,
   recommendationReason,
+  authenticated = true,
 }: {
   challenge: DashboardChallenge;
   recommendationReason: RecommendationReason;
+  authenticated?: boolean;
 }) {
   return (
     <article className="overflow-hidden rounded-2xl border border-[color:var(--dojo-border)] bg-transparent">
@@ -61,7 +63,7 @@ export function RecommendedChallengeCard({
               ))}
             </div>
             <Link href={`/treinar/${challenge.id}`} className="inline-flex min-h-11 items-center gap-4 rounded-xl bg-[var(--dojo-accent)] px-5 py-3 text-sm font-semibold text-[var(--dojo-surface)] transition-colors duration-200 hover:bg-[var(--dojo-accent-strong)]">
-              Continuar treino <ArrowRight className="size-4" aria-hidden="true" />
+              {authenticated ? "Continuar treino" : "Começar diagnóstico"} <ArrowRight className="size-4" aria-hidden="true" />
             </Link>
           </div>
         </div>

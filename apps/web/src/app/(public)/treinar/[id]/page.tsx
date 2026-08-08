@@ -1,9 +1,10 @@
 import { headers } from "next/headers";
 
 import { isMockMode } from "@/lib/mock-mode";
+import { selectFeaturedChallenge } from "@/lib/featured-challenge";
 import { getRuntimeSession } from "@/lib/runtime-data";
 import { serializeChallengeDetail } from "@/server/api/serializers";
-import { getChallengeById } from "@/server/api/service";
+import { getChallengeById, listChallenges } from "@/server/api/service";
 import { restoreAttemptSession } from "./attempt-session-state";
 import TrainArenaClient, { type Challenge } from "./train-arena-client";
 
@@ -13,9 +14,10 @@ export default async function TrainArenaPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [challengeRes, session] = await Promise.all([
+  const [challengeRes, session, challengesRes] = await Promise.all([
     getChallengeById(id),
     isMockMode() ? Promise.resolve(null) : getRuntimeSession(await headers()),
+    listChallenges({ limit: 50, offset: 0 }),
   ]);
 
   const initialChallenge: Challenge | null =
@@ -27,6 +29,19 @@ export default async function TrainArenaPage({
       ? challengeRes.data.attempts?.[0]
       : undefined,
   );
+  const nextSelection = challengesRes.success && challengesRes.data
+    ? selectFeaturedChallenge({
+        challenges: challengesRes.data.items.map((challenge) => ({
+          ...challenge,
+          evaluationAvailable: Boolean(challenge.evaluationRubricJson),
+          uniquePractitionerCount: challenge.uniquePractitionerCount ?? 0,
+          attempts: challenge.attempts ?? [],
+        })),
+        userElo: challengesRes.data.userElo,
+        now: new Date(),
+        excludeChallengeIds: [id],
+      })
+    : null;
 
   return (
     <TrainArenaClient
@@ -35,6 +50,12 @@ export default async function TrainArenaPage({
       isAuthenticated={isMockMode() || Boolean(session?.user)}
       initialSession={restoredSession.state}
       initialUserAnswer={restoredSession.userAnswer}
+      nextChallenge={nextSelection?.challenge
+        ? {
+            id: nextSelection.challenge.id,
+            title: nextSelection.challenge.title,
+          }
+        : null}
     />
   );
 }

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, mock, test } from "bun:test";
 const serviceCalls = {
   getCurrentUser: mock(async () => ({ success: true })),
   listCurrentUserAttempts: mock(async () => ({ success: true })),
+  recordChallengeFeedbackViewed: mock(async () => ({ success: true })),
   revealChallengeSolution: mock(async () => ({ success: true })),
   submitChallengeAttempt: mock(async () => ({ success: true })),
   updateCurrentUserProfile: mock(async () => ({ success: true })),
@@ -22,6 +23,7 @@ mock.module("next/headers", () => ({ headers: async () => requestHeaders }));
 const {
   getAttemptsHistory,
   getLocalUser,
+  recordFeedbackViewed,
   revealSolution,
   submitAttempt,
   updateLocalUserProfile,
@@ -40,6 +42,7 @@ describe("dashboard server actions", () => {
       () => updateLocalUserProfile({ name: "Gabriel" }),
       () => submitAttempt("challenge-1", "Uma resposta suficientemente detalhada."),
       () => revealSolution("challenge-1"),
+      () => recordFeedbackViewed("challenge-1", 1, "UNDER_10_MIN"),
       () => getAttemptsHistory(),
     ];
 
@@ -52,6 +55,7 @@ describe("dashboard server actions", () => {
     expect(serviceCalls.updateCurrentUserProfile).not.toHaveBeenCalled();
     expect(serviceCalls.submitChallengeAttempt).not.toHaveBeenCalled();
     expect(serviceCalls.revealChallengeSolution).not.toHaveBeenCalled();
+    expect(serviceCalls.recordChallengeFeedbackViewed).not.toHaveBeenCalled();
     expect(serviceCalls.listCurrentUserAttempts).not.toHaveBeenCalled();
   });
 

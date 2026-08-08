@@ -41,6 +41,7 @@
     "doctor": "react-doctor",
     "openapi:generate": "bun run ./scripts/generate-openapi.ts",
     "evaluation:benchmark": "bun run ./scripts/evaluation/benchmark.ts",
+    "evaluation:check-types": "tsc --noEmit -p ./scripts/evaluation/tsconfig.json",
     "docs:dev": "bun run openapi:generate && bun run --filter docs dev",
     "docs:build": "bun run openapi:generate && bun run --filter docs build",
     "question-bank:generate": "bun run ./scripts/question-bank/generate.ts",

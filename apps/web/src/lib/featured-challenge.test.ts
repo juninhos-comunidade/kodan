@@ -10,6 +10,7 @@ const challenges = [
     difficulty: "EASY",
     recommendedElo: 900,
     uniquePractitionerCount: 30,
+    evaluationAvailable: true,
     attempts: [],
   },
   {
@@ -17,6 +18,7 @@ const challenges = [
     difficulty: "EASY",
     recommendedElo: 800,
     uniquePractitionerCount: 10,
+    evaluationAvailable: true,
     attempts: [],
   },
   {
@@ -24,6 +26,7 @@ const challenges = [
     difficulty: "MEDIUM",
     recommendedElo: 1210,
     uniquePractitionerCount: 2,
+    evaluationAvailable: true,
     attempts: [
       {
         score: 4,
@@ -45,6 +48,25 @@ describe("selectFeaturedChallenge", () => {
       challenge: { id: "popular-easy" },
       reason: "POPULAR_BEGINNER",
     });
+  });
+
+  test("nunca destaca um desafio sem avaliação disponível", () => {
+    const result = selectFeaturedChallenge({
+      challenges: [
+        {
+          id: "popular-sem-rubrica",
+          difficulty: "EASY",
+          recommendedElo: 800,
+          uniquePractitionerCount: 500,
+          evaluationAvailable: false,
+          attempts: [],
+        },
+        ...challenges,
+      ],
+      now,
+    });
+
+    expect(result.challenge?.id).toBe("popular-easy");
   });
 
   test("prioriza uma tentativa recente para o praticante autenticado", () => {
@@ -96,6 +118,7 @@ describe("selectFeaturedChallenge", () => {
           difficulty: "EASY",
           recommendedElo: 900,
           uniquePractitionerCount: 50,
+          evaluationAvailable: true,
           attempts: [{
             score: 8,
             sessionStatus: "SOLVED" as const,
@@ -107,6 +130,7 @@ describe("selectFeaturedChallenge", () => {
           difficulty: "MEDIUM",
           recommendedElo: 1390,
           uniquePractitionerCount: 1,
+          evaluationAvailable: true,
           attempts: [{
             score: 8,
             sessionStatus: "SOLVED" as const,
@@ -122,5 +146,15 @@ describe("selectFeaturedChallenge", () => {
       challenge: { id: "closest" },
       reason: "PERSONALIZED",
     });
+  });
+
+  test("exclui o desafio atual ao escolher a próxima prática", () => {
+    const result = selectFeaturedChallenge({
+      challenges,
+      now,
+      excludeChallengeIds: ["popular-easy"],
+    });
+
+    expect(result.challenge?.id).toBe("less-popular-easy");
   });
 });

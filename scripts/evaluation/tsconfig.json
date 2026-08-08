@@ -1,0 +1,12 @@
+{
+  "extends": "@kodan/config/tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "types": ["node"],
+    "paths": {
+      "@/*": ["../../apps/web/src/*"]
+    }
+  },
+  "include": ["benchmark.ts", "request-pacer.ts"]
+}

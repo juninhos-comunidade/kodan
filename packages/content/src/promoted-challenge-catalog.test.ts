@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -7,6 +7,10 @@ import {
   findActiveChallengesWithoutEvaluationRubric,
   readPromotedChallengeCatalog,
 } from "./promoted-challenge-catalog";
+import {
+  challengeEvaluationRubricSchema,
+  evaluationBenchmarkCasesSchema,
+} from "./challenge-schemas";
 
 const temporaryRoots: string[] = [];
 
@@ -89,5 +93,61 @@ describe("findActiveChallengesWithoutEvaluationRubric", () => {
     expect(missing).toEqual([
       { id: "active-without", title: "Ativo sem rubrica" },
     ]);
+  });
+});
+
+describe("trilha piloto de avaliação", () => {
+  test("mantém somente a rubrica já validada ativa e prepara quatro candidatas", async () => {
+    const validatedPilotId = "react-state-race-condition-user-profile";
+    const candidateChallenges = [
+      ["react-hooks-stale-closure-useeffect", "react-hooks/stale-closure-useeffect"],
+      ["react-rendering-object-dependency-infinite-loop", "react-rendering/object-dependency-infinite-loop"],
+      ["react-medium-busca-incremental-de-clientes-1", "react-interview/medium/react-medium-busca-incremental-de-clientes-1"],
+      ["react-hard-dashboard-operacional-1", "react-interview/hard/react-hard-dashboard-operacional-1"],
+    ];
+    const catalog = await readPromotedChallengeCatalog();
+    const activeIds = new Set(
+      catalog.index
+        .filter((entry) => entry.status === "ACTIVE")
+        .map((entry) => entry.id),
+    );
+    const challengeById = new Map(
+      catalog.challenges.map((challenge) => [challenge.id, challenge]),
+    );
+    expect(activeIds.has(validatedPilotId)).toBe(true);
+    expect(challengeById.get(validatedPilotId)?.evaluationRubric).toBeDefined();
+
+    for (const [candidateId, challengeDirectory] of candidateChallenges) {
+      expect(activeIds.has(candidateId)).toBe(true);
+      expect(challengeById.get(candidateId)?.evaluationRubric).toBeUndefined();
+
+      const rubric = challengeEvaluationRubricSchema.parse(JSON.parse(
+        await readFile(
+          path.join(catalog.root, challengeDirectory, "rubric.json"),
+          "utf-8",
+        ),
+      ));
+
+      const cases = evaluationBenchmarkCasesSchema.parse(JSON.parse(
+        await readFile(
+          path.join(catalog.root, challengeDirectory, "evaluation-cases.json"),
+          "utf-8",
+        ),
+      ));
+      expect(new Set(cases.map((evaluationCase) => evaluationCase.category))).toEqual(
+        new Set(["accepted", "partial", "rejected", "adversarial"]),
+      );
+
+      const conceptIds = new Set(rubric.concepts.map((concept) => concept.id));
+      for (const evaluationCase of cases) {
+        const referencedConceptIds = [
+          ...(evaluationCase.expectedMatchedConceptIds ?? []),
+          ...(evaluationCase.forbiddenMatchedConceptIds ?? []),
+        ];
+        for (const conceptId of referencedConceptIds) {
+          expect(conceptIds.has(conceptId)).toBe(true);
+        }
+      }
+    }
   });
 });

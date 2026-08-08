@@ -11,6 +11,7 @@ export type FeaturedChallengeCandidate = {
   difficulty: string;
   recommendedElo: number;
   uniquePractitionerCount: number;
+  evaluationAvailable: boolean;
   attempts: FeaturedAttempt[];
 };
 
@@ -24,21 +25,29 @@ type SelectFeaturedChallengeInput<T extends FeaturedChallengeCandidate> = {
   challenges: T[];
   userElo?: number;
   now: Date;
+  excludeChallengeIds?: readonly string[];
 };
 
 export function selectFeaturedChallenge<T extends FeaturedChallengeCandidate>({
   challenges,
   userElo,
   now,
+  excludeChallengeIds = [],
 }: SelectFeaturedChallengeInput<T>): {
   challenge: T | null;
   reason: FeaturedChallengeReason;
 } {
+  const excludedIds = new Set(excludeChallengeIds);
+  const evaluableChallenges = challenges.filter(
+    (challenge) =>
+      challenge.evaluationAvailable && !excludedIds.has(challenge.id),
+  );
+
   if (userElo !== undefined) {
     let recentInProgress: T | undefined;
     let latestAttemptTime = Number.NEGATIVE_INFINITY;
 
-    for (const challenge of challenges) {
+    for (const challenge of evaluableChallenges) {
       const attempt = challenge.attempts[0];
       if (attempt?.sessionStatus !== "RETRY_AVAILABLE") {
         continue;
@@ -57,12 +66,12 @@ export function selectFeaturedChallenge<T extends FeaturedChallengeCandidate>({
       return { challenge: recentInProgress, reason: "CONTINUE_RECENT" };
     }
 
-    const unattemptedChallenges = challenges.filter(
+    const unattemptedChallenges = evaluableChallenges.filter(
       (challenge) => challenge.attempts.length === 0,
     );
     const personalizedPool = unattemptedChallenges.length > 0
       ? unattemptedChallenges
-      : challenges;
+      : evaluableChallenges;
     const personalized = personalizedPool
       .toSorted((left, right) =>
         Math.abs(left.recommendedElo - userElo) -
@@ -74,7 +83,7 @@ export function selectFeaturedChallenge<T extends FeaturedChallengeCandidate>({
     }
   }
 
-  const popularBeginner = challenges
+  const popularBeginner = evaluableChallenges
     .filter((challenge) => challenge.difficulty === "EASY")
     .sort((left, right) =>
       right.uniquePractitionerCount - left.uniquePractitionerCount ||
@@ -86,7 +95,7 @@ export function selectFeaturedChallenge<T extends FeaturedChallengeCandidate>({
   }
 
   return {
-    challenge: challenges[0] ?? null,
+    challenge: evaluableChallenges[0] ?? null,
     reason: "FALLBACK",
   };
 }

@@ -10,6 +10,8 @@ import {
   Sun,
 } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
+import { KodanLogo as BrandLogo } from "@/components/kodan-logo";
+import { getLoginHref } from "@/lib/auth-navigation";
 import { eloToDanRank, formatRankLabel } from "@/lib/rating";
 
 import { cn } from "@kodan/ui/lib/utils";
@@ -58,6 +60,7 @@ export function ChallengesDesktopShell({
 export function ChallengesMobileShell({
   userElo,
   user,
+  authenticated = true,
   searchQuery,
   children,
   filtersOpen,
@@ -67,6 +70,7 @@ export function ChallengesMobileShell({
 }: {
   userElo: number;
   user: ChallengesUserSummary;
+  authenticated?: boolean;
   searchQuery: string;
   children: ReactNode;
   filtersOpen: boolean;
@@ -80,9 +84,18 @@ export function ChallengesMobileShell({
         <div className="flex items-center justify-between gap-3 pl-12">
           <KodanLogo compact />
           <div className="flex items-center gap-2">
-            <CompactRankBadge userElo={userElo} />
+            {authenticated ? <CompactRankBadge userElo={userElo} /> : null}
             <ThemeToggleButton />
-            <ProfileLink user={user} />
+            {authenticated ? (
+              <ProfileLink user={user} />
+            ) : (
+              <Link
+                href={getLoginHref("/desafios")}
+                className="challengers-control inline-flex min-h-11 items-center rounded-lg border px-3 text-xs font-semibold text-[var(--challengers-blue)]"
+              >
+                Entrar
+              </Link>
+            )}
           </div>
         </div>
         <div className="mt-3 flex items-center gap-2">
@@ -120,22 +133,10 @@ function KodanLogo({ compact = false }: { compact?: boolean }) {
         compact && "gap-2",
       )}
     >
-      <span
-        className={cn(
-          "inline-flex items-center justify-center rounded-md border border-[color:var(--challengers-blue-border)] bg-[var(--challengers-blue-soft)] font-serif font-semibold text-[var(--challengers-blue)]",
-          compact ? "size-7 text-sm" : "size-9 text-xl",
-        )}
-      >
-        K
-      </span>
-      <span
-        className={cn(
-          "font-serif font-bold tracking-widest",
-          compact ? "text-sm" : "text-xl",
-        )}
-      >
-        KODAN
-      </span>
+      <BrandLogo
+        size={compact ? "sm" : "md"}
+        wordmarkClassName={cn(compact ? "text-sm" : "text-xl")}
+      />
     </Link>
   );
 }

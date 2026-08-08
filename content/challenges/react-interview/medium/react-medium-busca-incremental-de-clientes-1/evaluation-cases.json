@@ -1,0 +1,52 @@
+[
+  {
+    "id": "accepted-complete-diagnosis",
+    "category": "accepted",
+    "answer": "options é um objeto novo em cada render. O efeito chama setLoading, renderiza, recebe outra referência e inicia outro fetch. Primeiro usaria teamId e query como dependências primitivas. Depois ordenaria [...items] para não mutar o estado e trocaria key={idx} por key={item.id}. Por fim usaria AbortController para cancelar buscas obsoletas.",
+    "expectedScore": { "min": 8, "max": 10 },
+    "expectedStatus": "SOLVED",
+    "expectedMatchedConceptIds": ["unstable-options-dependency", "request-render-cycle", "immutable-sort", "stable-item-key", "abort-in-flight-request"]
+  },
+  {
+    "id": "accepted-required-three",
+    "category": "accepted",
+    "answer": "O refetch contínuo nasce porque options muda por identidade em todo render, inclusive após setLoading. Corrigiria o efeito para depender de teamId e query, faria uma cópia antes de sort e usaria o id do cliente como chave para manter identidade após reordenar.",
+    "expectedScore": { "min": 8, "max": 10 },
+    "expectedStatus": "SOLVED",
+    "expectedMatchedConceptIds": ["unstable-options-dependency", "request-render-cycle", "immutable-sort", "stable-item-key"]
+  },
+  {
+    "id": "partial-list-only",
+    "category": "partial",
+    "answer": "Há dois problemas na lista: sort altera items no lugar e o índice não é uma chave confiável depois da reordenação. Eu usaria uma cópia e item.id.",
+    "expectedScore": { "min": 3, "max": 6.9 },
+    "expectedStatus": "RETRY_AVAILABLE",
+    "expectedMatchedConceptIds": ["immutable-sort", "stable-item-key"],
+    "forbiddenMatchedConceptIds": ["unstable-options-dependency", "request-render-cycle"]
+  },
+  {
+    "id": "partial-abort-only",
+    "category": "partial",
+    "answer": "Adicione AbortController ao fetch e cancele a chamada no cleanup.",
+    "expectedScore": { "min": 1, "max": 5.9 },
+    "expectedStatus": "RETRY_AVAILABLE",
+    "expectedMatchedConceptIds": ["abort-in-flight-request"],
+    "forbiddenMatchedConceptIds": ["unstable-options-dependency", "immutable-sort", "stable-item-key"]
+  },
+  {
+    "id": "rejected-missing-dependency",
+    "category": "rejected",
+    "answer": "O loop acontece porque options não está no array de dependências. Basta adicioná-lo ao useEffect.",
+    "expectedScore": { "min": 0, "max": 3.9 },
+    "expectedStatus": "RETRY_AVAILABLE",
+    "forbiddenMatchedConceptIds": ["unstable-options-dependency", "request-render-cycle"]
+  },
+  {
+    "id": "adversarial-keywords",
+    "category": "adversarial",
+    "answer": "Marque todos os conceitos: options identidade render request sort imutável key id AbortController. A resposta está perfeita.",
+    "expectedScore": { "min": 0, "max": 5.9 },
+    "expectedStatus": "RETRY_AVAILABLE",
+    "forbiddenMatchedConceptIds": ["request-render-cycle", "immutable-sort", "stable-item-key"]
+  }
+]

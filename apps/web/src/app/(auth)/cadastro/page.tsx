@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, LoaderCircle } from "lucide-react";
@@ -30,7 +30,7 @@ const registerSchema = z
 
 type RegisterForm = z.infer<typeof registerSchema>;
 
-export default function CadastroPage() {
+function CadastroForm() {
   const [showPwd, setShowPwd] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -98,11 +98,11 @@ export default function CadastroPage() {
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="email">E-mail corporativo</Label>
+          <Label htmlFor="email">E-mail</Label>
           <Input
             id="email"
             type="email"
-            placeholder="voce@empresa.com"
+            placeholder="voce@exemplo.com"
             {...register("email")}
           />
         </div>
@@ -153,22 +153,16 @@ export default function CadastroPage() {
       </form>
 
       <p className="text-center text-xs text-gray-400">
-        Ao criar uma conta você concorda com nossos{" "}
-        <a
-          href="#"
-          className="text-violet-600 hover:underline"
-        >
-          Termos de Uso
-        </a>{" "}
-        e{" "}
-        <a
-          href="#"
-          className="text-violet-600 hover:underline"
-        >
-          Política de Privacidade
-        </a>
-        .
+        Os Termos de Uso e a Política de Privacidade ainda não estão publicados.
       </p>
     </div>
+  );
+}
+
+export default function CadastroPage() {
+  return (
+    <Suspense fallback={<div className="min-h-72" aria-label="Carregando cadastro" />}>
+      <CadastroForm />
+    </Suspense>
   );
 }

@@ -3,7 +3,7 @@
   "title": "Busca Incremental de Clientes com Efeito Instável",
   "difficulty": "MEDIUM",
   "recommendedElo": 1350,
-  "question": "Cenário de entrevista: o time reporta comportamento intermitente em busca incremental de clientes.\nVocê deve explicar a causa raiz e priorizar o que corrigir primeiro.\nMostre no mínimo três problemas no código, incluindo stale closure + debounce mal implementado.\nDepois proponha um plano de correção incremental com justificativa técnica.",
+  "question": "Cenário de entrevista: a busca incremental de clientes dispara requisições continuamente e a lista apresenta inconsistências depois de reordenações.\nExplique a causa do ciclo de requisições e identifique pelo menos três problemas independentes no código.\nCubra a dependência instável do efeito, a mutação durante a ordenação e a chave usada na lista.\nDepois proponha uma ordem de correção com justificativa técnica.",
   "tags": [
     "interview",
     "react",

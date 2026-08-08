@@ -10,6 +10,7 @@ model Challenge {
   tags           String    // Comma-separated tags, e.g. "useEffect,stale-closure"
   evaluationRubricJson String?
   attempts       Attempt[]
+  productEventAggregates ProductEventAggregate[]
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
@@ -36,9 +37,24 @@ model Attempt {
   eloChange    Int       // ELO variation (+/-)
   attemptNumber Int      @default(1)
   sessionStatus AttemptSessionStatus @default(RETRY_AVAILABLE)
+  activationCounted Boolean @default(false)
   createdAt    DateTime  @default(now())
 
   @@index([userId])
   @@index([challengeId])
   @@map("attempt")
+}
+
+model ProductEventAggregate {
+  name             String
+  challengeId      String
+  challenge        Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  sessionAgeBucket String
+  day              DateTime  @db.Date
+  count            Int       @default(0)
+  updatedAt        DateTime  @updatedAt
+
+  @@id([name, challengeId, sessionAgeBucket, day])
+  @@index([name, day])
+  @@map("product_event_aggregate")
 }

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ModeToggle } from "./mode-toggle";
 import UserMenu from "./user-menu";
 import { NavLink } from "./nav-link";
+import { KodanLogo } from "./kodan-logo";
 
 const HEADER_LINKS = [
   { href: "/desafios", label: "Desafios" },
@@ -14,9 +15,9 @@ export default function Header() {
         {/* Brand Logo */}
         <Link
           href="/"
-          className="font-serif text-lg font-bold tracking-wide text-foreground hover:opacity-85 transition-opacity select-none"
+          className="text-foreground transition-opacity hover:opacity-85"
         >
-          道 PATH
+          <KodanLogo size="sm" />
         </Link>
         {/* Thin vertical divider */}
         <div className="h-4 w-[1px] bg-border/40" />

@@ -25,6 +25,7 @@ export default async function DashboardPage() {
   const selection = selectFeaturedChallenge({
     challenges: challenges.map((challenge) => ({
       ...challenge,
+      evaluationAvailable: Boolean(challenge.evaluationRubricJson),
       uniquePractitionerCount: challenge.uniquePractitionerCount ?? 0,
       attempts: challenge.attempts ?? [],
     })),
@@ -34,10 +35,6 @@ export default async function DashboardPage() {
     now: new Date(),
   });
   const featuredChallenge = selection.challenge;
-
-  console.log("Challenges:", challenges);
-console.log("Quantidade:", challenges.length);
-console.log("challengesResult", challengesResult);
 
   if (!featuredChallenge) {
     throw new Error("Nenhum desafio jogável disponível.");
@@ -65,6 +62,7 @@ console.log("challengesResult", challengesResult);
       recommendationReason={selection.reason}
       userName={user.name}
       userImage={user.image}
+      authenticated={Boolean(userResult.success && userResult.data)}
     />
   );
 }

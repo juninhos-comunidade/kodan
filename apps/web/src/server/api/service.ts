@@ -8,6 +8,8 @@ import type {
   AttemptAdapter,
   ChallengeCatalogAdapter,
   PractitionerAdapter,
+  ProductTelemetryAdapter,
+  SessionAgeBucket,
 } from "@/server/training/training-adapter";
 import { EvaluationUnavailableError } from "@/server/training/evaluation/errors";
 import { submitAttemptSchema, updateCurrentUserSchema } from "./schemas";
@@ -17,6 +19,7 @@ type SubmitAttemptInput = z.infer<typeof submitAttemptSchema>;
 const practitionerAdapter: PractitionerAdapter = trainingAdapter;
 const challengeCatalogAdapter: ChallengeCatalogAdapter = trainingAdapter;
 const attemptAdapter: AttemptAdapter = trainingAdapter;
+const productTelemetryAdapter: ProductTelemetryAdapter = trainingAdapter;
 
 async function requireAuthenticatedUser() {
   const user = await practitionerAdapter.getOptionalUser();
@@ -129,6 +132,35 @@ export async function revealChallengeSolution(challengeId: string) {
     return {
       success: false as const,
       error: getErrorMessage(error, "Erro ao revelar solução"),
+    };
+  }
+}
+
+export async function recordChallengeFeedbackViewed(
+  challengeId: string,
+  attemptNumber: number,
+  sessionAgeBucket: SessionAgeBucket,
+) {
+  try {
+    if (
+      !["UNDER_10_MIN", "MIN_10_TO_30", "OVER_30_MIN"].includes(
+        sessionAgeBucket,
+      )
+    ) {
+      throw new Error("Faixa de sessão inválida");
+    }
+    const user = await requireAuthenticatedUser();
+    await productTelemetryAdapter.recordFeedbackViewed(
+      user.id,
+      challengeId,
+      attemptNumber,
+      sessionAgeBucket,
+    );
+    return { success: true as const };
+  } catch (error: unknown) {
+    return {
+      success: false as const,
+      error: getErrorMessage(error, "Erro ao registrar visualização do feedback"),
     };
   }
 }

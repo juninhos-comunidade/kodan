@@ -1,0 +1,66 @@
+{
+  "version": "1.0.0",
+  "questionKind": "debugging",
+  "centralAnswer": "O socket lê closures antigas de rows e liveEvents, muta objetos do estado e não é encerrado; a lista também ordena o estado no lugar e usa índice como chave. Em paralelo, o snapshot do fetch pode chegar depois de eventos do socket e sobrescrever dados mais recentes. A estabilização exige updates funcionais imutáveis, cleanup, chave estável e uma estratégia explícita de reconciliação entre snapshot e stream.",
+  "evaluatorNotes": [
+    "A resposta completa deve identificar pelo menos quatro causas independentes e conectar correções à ordem hotfix, estabilização e refactor.",
+    "Exija uma race condition real entre snapshot e stream ou entre eventos, não apenas o uso da palavra race.",
+    "useCallback ou useMemo isolados não corrigem closures do listener já registrado."
+  ],
+  "concepts": [
+    {
+      "id": "socket-stale-closures",
+      "importance": "critical",
+      "internalDescription": "O listener criado pelo efeito fechado sobre rows e liveEvents iniciais perde atualizações posteriores.",
+      "publicLabel": "As closures obsoletas dentro do listener do socket.",
+      "reflectionPrompt": "Quais versões de rows e liveEvents o listener registrado na montagem consegue enxergar?"
+    },
+    {
+      "id": "immutable-functional-upsert",
+      "importance": "critical",
+      "internalDescription": "O upsert deve usar setRows funcional e criar novos objetos e arrays, sem alterar found nem reutilizar rows.",
+      "publicLabel": "A atualização funcional e imutável das linhas.",
+      "reflectionPrompt": "Como aplicar um evento usando o estado mais recente sem alterar a referência existente?"
+    },
+    {
+      "id": "socket-cleanup",
+      "importance": "essential",
+      "internalDescription": "O efeito precisa remover o listener e fechar o WebSocket ao desmontar ou trocar workspaceId.",
+      "publicLabel": "O encerramento do listener e da conexão do socket.",
+      "reflectionPrompt": "O que acontece com a conexão anterior quando workspaceId muda?"
+    },
+    {
+      "id": "snapshot-stream-reconciliation",
+      "importance": "critical",
+      "internalDescription": "O fetch inicial e o stream concorrem; versão, sequência ou buffering deve impedir que um snapshot atrasado apague eventos novos.",
+      "publicLabel": "A reconciliação entre o snapshot inicial e os eventos ao vivo.",
+      "reflectionPrompt": "Se o fetch terminar depois de um evento do socket, qual fonte deve prevalecer?"
+    },
+    {
+      "id": "immutable-visible-sort",
+      "importance": "essential",
+      "internalDescription": "A lista visível deve ordenar uma cópia para não mutar rows dentro de useMemo.",
+      "publicLabel": "A ordenação de uma cópia das linhas."
+    },
+    {
+      "id": "row-id-key",
+      "importance": "complementary",
+      "internalDescription": "row.id preserva a identidade dos itens depois de filtros e reordenações.",
+      "publicLabel": "A chave estável baseada em row.id."
+    }
+  ],
+  "misconceptions": [
+    {
+      "id": "setstate-merges-mutated-reference",
+      "severity": "critical",
+      "internalDescription": "Afirmar que setRows(rows) detecta as mutações internas e força uma renderização correta.",
+      "publicCorrection": "Reutilizar a mesma referência pode impedir a atualização e mantém o estado mutado."
+    },
+    {
+      "id": "transition-orders-network",
+      "severity": "major",
+      "internalDescription": "Afirmar que startTransition serializa respostas de rede ou resolve a concorrência entre fontes.",
+      "publicCorrection": "A transição prioriza renderizações; ela não define a ordem de chegada nem reconcilia dados."
+    }
+  ]
+}

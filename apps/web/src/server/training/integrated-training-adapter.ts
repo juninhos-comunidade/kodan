@@ -19,6 +19,7 @@ import {
   submitIntegratedAttempt,
   withSerializableRetry,
 } from "./integrated-attempt-submission";
+import { recordFeedbackViewed } from "./product-event-store";
 import type { TrainingAdapter } from "./training-adapter";
 
 async function getPrisma() {
@@ -170,6 +171,15 @@ export const integratedTrainingAdapter: TrainingAdapter = {
         return revealed;
       }, { isolationLevel: "Serializable" })
     );
+  },
+  async recordFeedbackViewed(userId, challengeId, attemptNumber, sessionAgeBucket) {
+    const prisma = await getPrisma();
+    await recordFeedbackViewed(prisma, {
+      userId,
+      challengeId,
+      attemptNumber,
+      sessionAgeBucket,
+    });
   },
   async listAttempts(userId) {
     const prisma = await getPrisma();

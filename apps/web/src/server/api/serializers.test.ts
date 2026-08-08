@@ -27,6 +27,27 @@ describe("challenge serializers", () => {
     expect(serialized.language).toBe("typescript");
   });
 
+  test("expõe apenas a disponibilidade da avaliação no resumo público", () => {
+    const serialized = serializeChallengeSummary({
+      id: "challenge-evaluable",
+      title: "Race condition",
+      difficulty: "MEDIUM",
+      recommendedElo: 1350,
+      language: "react",
+      code: "const value = 1;",
+      question: "Explique.",
+      solution: "Segredo",
+      evaluationRubricJson: JSON.stringify({ version: "1.0.0" }),
+      tags: "react,effects",
+      attempts: [],
+      createdAt: new Date("2026-01-01T00:00:00.000Z"),
+      updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+    });
+
+    expect(serialized.evaluationAvailable).toBe(true);
+    expect(serialized).not.toHaveProperty("evaluationRubricJson");
+  });
+
   test("does not expose the reference solution in public challenge details", () => {
     const serialized = serializeChallengeDetail({
       id: "challenge-1",

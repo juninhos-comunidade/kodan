@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { Eye, EyeOff, LoaderCircle } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faGoogle,
   faGithub,
 } from "@fortawesome/free-brands-svg-icons";
 
@@ -24,14 +23,14 @@ import { useAuthActionFeedback } from "@/components/auth-action-feedback";
 const loginSchema = z
   .object({
     email: z.email("E-mail inválido"),
-    password: z.string().min(8, "A senha deve ter no mínimo 6 caracteres"),
+    password: z.string().min(8, "A senha deve ter no mínimo 8 caracteres"),
   })
   
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 
-export default function LoginPage() {
+function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -102,22 +101,6 @@ export default function LoginPage() {
         </p>
       </div>
 
-      {/* Card de demonstração */}
-      {/* <div className="rounded-lg border border-violet-200 bg-violet-50 p-3 text-xs text-violet-700">
-        <p className="mb-1 font-semibold">
-          Credenciais de demonstração:
-        </p>
-
-        <p>
-          Gestor: <code>ana.souza@empresa.com</code> / <code>123456</code>
-        </p>
-
-        <p>
-          Colaborador: <code>carlos.lima@empresa.com</code> /{" "}
-          <code>123456</code>
-        </p>
-      </div> */}
-
       <form className="space-y-4" onSubmit={handleSubmit(onSubmit, onInvalid)}>
         <div className="space-y-1.5 text-black/80">
           <Label htmlFor="email">E-mail</Label>
@@ -125,7 +108,7 @@ export default function LoginPage() {
           <Input
             id="email"
             type="email"
-            placeholder="voce@empresa.com"
+            placeholder="voce@exemplo.com"
             {...register("email")}
           />
         </div>
@@ -185,20 +168,6 @@ className="w-full bg-[#2783c0] hover:bg-[#1f6da0]"
         </div>
       </div>
 
-      {/* <Button
-        type="button"
-        variant="outline"
-        className="w-full rounded"
-        onClick={() => signInSocial("google")}
-      >
-        <FontAwesomeIcon
-          icon={faGoogle}
-          className="mr-2 h-4 w-4 text-zinc-500"
-        />
-
-        <p className="text-black/60">Entrar com Google</p>
-      </Button> */}
-
       <Button
         type="button"
         variant="outline"
@@ -213,5 +182,13 @@ className="w-full bg-[#2783c0] hover:bg-[#1f6da0]"
         <p className="text-black/60">Entrar com GitHub</p>
       </Button>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-72" aria-label="Carregando login" />}>
+      <LoginForm />
+    </Suspense>
   );
 }

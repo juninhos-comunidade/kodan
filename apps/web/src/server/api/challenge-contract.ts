@@ -54,6 +54,7 @@ export const challengeSummarySchema = z.object({
   tags: z.string(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
+  evaluationAvailable: z.boolean(),
   attempts: z.array(challengeAttemptSummarySchema),
 });
 
@@ -73,6 +74,7 @@ export function serializeChallengeSummary(challenge: ChallengeRecord) {
     tags: challenge.tags,
     createdAt: challenge.createdAt.toISOString(),
     updatedAt: challenge.updatedAt.toISOString(),
+    evaluationAvailable: Boolean(challenge.evaluationRubricJson),
     attempts: (challenge.attempts ?? []).map((attempt) => ({
       id: attempt.id,
       score: attempt.score,

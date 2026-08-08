@@ -1,0 +1,47 @@
+{
+  "version": "1.0.0",
+  "questionKind": "debugging",
+  "centralAnswer": "config é um novo objeto em cada render. Como dependências são comparadas por identidade, o efeito roda novamente, o fetch atualiza data e provoca outro render que cria outra referência. A solução deve remover essa identidade instável do ciclo, usando uma constante externa, uma dependência primitiva ou uma memoização justificada.",
+  "evaluatorNotes": [
+    "Aceite extrair a configuração estática, depender diretamente de config.api ou usar useMemo com dependências estáveis.",
+    "Apenas dizer que config muda não basta; a resposta deve relacionar identidade, efeito, atualização de estado e novo render.",
+    "Não trate fetch ou setData isoladamente como a causa do loop."
+  ],
+  "concepts": [
+    {
+      "id": "unstable-object-identity",
+      "importance": "critical",
+      "internalDescription": "O literal config cria uma referência diferente em toda renderização e falha na comparação de identidade das dependências.",
+      "publicLabel": "A identidade instável do objeto usado como dependência.",
+      "reflectionPrompt": "Dois objetos com os mesmos campos são a mesma dependência para o React?"
+    },
+    {
+      "id": "effect-render-cycle",
+      "importance": "essential",
+      "internalDescription": "O efeito busca dados, setData renderiza novamente e a nova referência de config dispara outra execução.",
+      "publicLabel": "O ciclo entre efeito, atualização de estado e nova renderização.",
+      "reflectionPrompt": "O que acontece com a dependência depois que setData provoca outro render?"
+    },
+    {
+      "id": "stable-dependency-fix",
+      "importance": "critical",
+      "internalDescription": "A correção elimina a referência recriada do array, usando valor primitivo, constante externa ou memoização estável.",
+      "publicLabel": "Uma dependência cuja identidade permanece estável.",
+      "reflectionPrompt": "Qual é o menor valor estável de que a requisição realmente depende?"
+    }
+  ],
+  "misconceptions": [
+    {
+      "id": "objects-compared-by-value",
+      "severity": "critical",
+      "internalDescription": "Afirmar que objetos equivalentes são considerados iguais no array de dependências.",
+      "publicCorrection": "Objetos são comparados por referência, não por igualdade estrutural."
+    },
+    {
+      "id": "remove-all-dependencies",
+      "severity": "major",
+      "internalDescription": "Remover dependências indiscriminadamente sem analisar os valores usados no efeito.",
+      "publicCorrection": "A dependência deve representar os valores externos usados pelo efeito; neste caso, a URL estável."
+    }
+  ]
+}
