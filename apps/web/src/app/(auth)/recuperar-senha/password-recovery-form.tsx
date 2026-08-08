@@ -9,6 +9,8 @@ import { Input } from "@/components/input";
 import { Label } from "@/components/label";
 import { authClient } from "@/lib/auth-client";
 
+import { PASSWORD_RECOVERY_ACCEPTED_COPY } from "./password-recovery-copy";
+
 export function PasswordRecoveryForm({ enabled }: { enabled: boolean }) {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "submitting" | "accepted" | "error">("idle");
@@ -31,9 +33,11 @@ export function PasswordRecoveryForm({ enabled }: { enabled: boolean }) {
           </span>
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Confira seu e-mail</h2>
+          <h2 className="text-2xl font-bold text-gray-900">
+            {PASSWORD_RECOVERY_ACCEPTED_COPY.title}
+          </h2>
           <p className="mt-2 text-sm leading-6 text-gray-500">
-            Se houver uma conta para esse endereço, o Kodan solicitou um link seguro de redefinição.
+            {PASSWORD_RECOVERY_ACCEPTED_COPY.description}
           </p>
         </div>
         <Link href="/login">

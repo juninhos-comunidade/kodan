@@ -9,6 +9,9 @@ mock.module("@/lib/auth-client", () => ({
   },
 }));
 
+const { PASSWORD_RECOVERY_ACCEPTED_COPY } = await import(
+  "./recuperar-senha/password-recovery-copy"
+);
 const { PasswordRecoveryForm } = await import("./recuperar-senha/password-recovery-form");
 const { ResetPasswordForm } = await import("./redefinir-senha/reset-password-form");
 const { VerificationEmailForm } = await import("./verificar-email/verification-email-form");
@@ -21,6 +24,14 @@ test("oferece recuperação real somente quando a entrega está configurada", ()
   expect(enabled).toContain('type="email"');
   expect(disabled).toContain("Recuperação por e-mail indisponível");
   expect(disabled).not.toContain("Enviar link de recuperação");
+});
+
+test("confirma somente a solicitação de recuperação sem prometer entrega", () => {
+  expect(PASSWORD_RECOVERY_ACCEPTED_COPY).toEqual({
+    title: "Solicitação recebida",
+    description:
+      "Se houver uma conta para esse endereço, tentaremos enviar um link seguro de redefinição.",
+  });
 });
 
 test("só permite redefinição quando existe token verificado", () => {
