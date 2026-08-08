@@ -7,15 +7,11 @@ export interface ProfileUserSummary {
   name: string;
   bio: string;
   image: string | null;
-  planLabel: string;
   tagline: string;
   memberSinceLabel: string;
-  countryLabel: string;
-  timezoneLabel: string;
   rank: string;
   rankKanji: string;
   elo: number;
-  topPercentLabel: string;
 }
 
 export interface ProfileStatItem {

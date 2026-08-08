@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 
 import { auth } from "@kodan/auth";
+import { ActiveDayBeacon } from "@/components/product-event-beacon";
 import { SessionProvider } from "@/providers/session-provider";
 
 export default async function PublicLayout({
@@ -14,6 +15,7 @@ export default async function PublicLayout({
 
   return (
     <SessionProvider session={session}>
+      <ActiveDayBeacon />
       {children}
     </SessionProvider>
   );

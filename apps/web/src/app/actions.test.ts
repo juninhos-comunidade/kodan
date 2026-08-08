@@ -20,6 +20,7 @@ mock.module("@/lib/mock-mode", () => ({
 let requestHeaders = new Headers();
 mock.module("next/headers", () => ({ headers: async () => requestHeaders }));
 
+const actionsModule = await import("./actions");
 const {
   getAttemptsHistory,
   getLocalUser,
@@ -27,7 +28,7 @@ const {
   revealSolution,
   submitAttempt,
   updateLocalUserProfile,
-} = await import("./actions");
+} = actionsModule;
 
 describe("dashboard server actions", () => {
   beforeEach(() => {
@@ -68,4 +69,5 @@ describe("dashboard server actions", () => {
 
     expect(serviceCalls.submitChallengeAttempt).not.toHaveBeenCalled();
   });
+
 });

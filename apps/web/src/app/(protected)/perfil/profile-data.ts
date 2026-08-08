@@ -103,15 +103,11 @@ export function buildProfileViewModel({
       name: user.name,
       bio: user.bio ?? "Código com clareza. Diagnose com precisão. Ascenda.",
       image: user.image,
-      planLabel: "LOCAL",
       tagline: user.bio ?? "Código com clareza. Diagnose com precisão. Ascenda.",
       memberSinceLabel: `Membro desde ${formatMonthYear(user.createdAt)}`,
-      countryLabel: "Brasil",
-      timezoneLabel: "Fuso horário: BRT",
       rank: getProfileRankLabel(user.elo),
       rankKanji: eloToDanRank(user.elo).kanji,
       elo: user.elo,
-      topPercentLabel: getTopPercentLabel(user.elo),
     },
     stats: [
       {
@@ -129,11 +125,6 @@ export function buildProfileViewModel({
         id: "accuracy",
         label: "Taxa de acerto",
         value: `${PT_BR_PERCENT.format(progress.accuracy)}%`,
-      },
-      {
-        id: "study-hours",
-        label: "Horas de estudo",
-        value: `${progress.studyHours} h`,
       },
       {
         id: "attempts",
@@ -367,22 +358,6 @@ function getPrimaryTopicLabel(challenge: ProfileChallengeRecord) {
 function getPrimaryTopic(challenge: ProfileChallengeRecord) {
   const topic = getChallengeTopic(getChallengeTopicKey(challenge));
   return { id: topic.key, label: topic.label };
-}
-
-function getTopPercentLabel(elo: number) {
-  if (elo >= 1850) {
-    return "Top 5%";
-  }
-
-  if (elo >= 1550) {
-    return "Top 12%";
-  }
-
-  if (elo >= 1300) {
-    return "Top 35%";
-  }
-
-  return "Em evolução";
 }
 
 function getAchievementDateLabel(date: Date) {

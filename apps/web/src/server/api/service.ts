@@ -11,7 +11,9 @@ import type {
   ProductTelemetryAdapter,
   SessionAgeBucket,
 } from "@/server/training/training-adapter";
+import type { ProductEventInput } from "@/server/training/product-event-store";
 import { EvaluationUnavailableError } from "@/server/training/evaluation/errors";
+import { handleEvaluationUnavailable } from "./evaluation-failure-handler";
 import { submitAttemptSchema, updateCurrentUserSchema } from "./schemas";
 
 type SubmitAttemptInput = z.infer<typeof submitAttemptSchema>;
@@ -109,14 +111,11 @@ export async function submitChallengeAttempt(challengeId: string, input: SubmitA
     return { success: true as const, data: result };
   } catch (error: unknown) {
     if (error instanceof EvaluationUnavailableError) {
-      return {
-        success: false as const,
-        error: error.message,
-        code: error.code,
-        reason: error.reason,
-        retryable: error.retryable,
-        preserveAnswer: error.preserveAnswer,
-      };
+      return handleEvaluationUnavailable(
+        error,
+        challengeId,
+        (event) => productTelemetryAdapter.recordProductEvent(event),
+      );
     }
     return { success: false as const, error: getErrorMessage(error, "Erro ao enviar tentativa") };
   }
@@ -150,17 +149,29 @@ export async function recordChallengeFeedbackViewed(
       throw new Error("Faixa de sessão inválida");
     }
     const user = await requireAuthenticatedUser();
-    await productTelemetryAdapter.recordFeedbackViewed(
+    const recorded = await productTelemetryAdapter.recordFeedbackViewed(
       user.id,
       challengeId,
       attemptNumber,
       sessionAgeBucket,
     );
-    return { success: true as const };
+    return { success: true as const, recorded };
   } catch (error: unknown) {
     return {
       success: false as const,
       error: getErrorMessage(error, "Erro ao registrar visualização do feedback"),
+    };
+  }
+}
+
+export async function recordAnonymousProductEvent(input: ProductEventInput) {
+  try {
+    const recorded = await productTelemetryAdapter.recordProductEvent(input);
+    return { success: true as const, recorded };
+  } catch (error: unknown) {
+    return {
+      success: false as const,
+      error: getErrorMessage(error, "Erro ao registrar evento de produto"),
     };
   }
 }

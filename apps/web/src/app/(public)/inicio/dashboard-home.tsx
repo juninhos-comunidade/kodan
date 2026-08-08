@@ -1,5 +1,6 @@
 "use client";
 
+import { ProductEventBeacon } from "@/components/product-event-beacon";
 import { DashboardHomeHeader } from "./dashboard-home/dashboard-home-header";
 import { DashboardNavigation } from "./dashboard-home/dashboard-navigation";
 import { DojoInitiationCard } from "./dashboard-home/dojo-initiation-card";
@@ -29,6 +30,7 @@ export default function DashboardHome({ challenge, challengeCount, recommendatio
 
   return (
     <div data-dashboard-home="true" className="min-h-full bg-[var(--dojo-page)] font-mono text-[var(--dojo-ink)]">
+      <ProductEventBeacon event={{ name: "home_viewed" }} dedupeKey="home_viewed" />
       <DashboardHomeHeader
         userName={userName}
         userImage={userImage}

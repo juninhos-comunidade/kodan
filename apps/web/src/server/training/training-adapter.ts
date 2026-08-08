@@ -2,6 +2,7 @@ import type {
   AttemptSessionStatus,
   FeedbackPayload,
 } from "./attempt-execution";
+import type { ProductEventInput } from "./product-event-store";
 
 export type TrainingUser = {
   id: string;
@@ -89,12 +90,13 @@ export interface AttemptAdapter {
 }
 
 export interface ProductTelemetryAdapter {
+  recordProductEvent(input: ProductEventInput): Promise<boolean>;
   recordFeedbackViewed(
     userId: string,
     challengeId: string,
     attemptNumber: number,
     sessionAgeBucket: SessionAgeBucket,
-  ): Promise<void>;
+  ): Promise<boolean>;
 }
 
 export type SessionAgeBucket =

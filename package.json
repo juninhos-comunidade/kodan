@@ -38,6 +38,7 @@
     "db:migrate": "bun run --filter @kodan/db db:migrate",
     "db:migrate:sqlite-to-neon": "bun run --filter @kodan/db db:migrate:sqlite-to-neon",
     "db:seed:challenges": "bun run --filter @kodan/db db:seed:challenges",
+    "db:seed:challenges:reconcile": "bun run --filter @kodan/db db:seed:challenges:reconcile",
     "doctor": "react-doctor",
     "openapi:generate": "bun run ./scripts/generate-openapi.ts",
     "evaluation:benchmark": "bun run ./scripts/evaluation/benchmark.ts",

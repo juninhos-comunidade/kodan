@@ -19,7 +19,12 @@ import {
   submitIntegratedAttempt,
   withSerializableRetry,
 } from "./integrated-attempt-submission";
-import { recordFeedbackViewed } from "./product-event-store";
+import {
+  recordFeedbackViewed,
+  recordProductEvent as recordAggregateProductEvent,
+  toEvaluationLatencyBucket,
+} from "./product-event-store";
+import { buildRecommendationWhere } from "./recommendation-query";
 import type { TrainingAdapter } from "./training-adapter";
 
 async function getPrisma() {
@@ -120,14 +125,34 @@ export const integratedTrainingAdapter: TrainingAdapter = {
   },
   async submitAttempt(userId, challengeId, input) {
     const prisma = await getPrisma();
-    return submitIntegratedAttempt(
+    let successfulEvaluationLatencyMs: number | undefined;
+    const result = await submitIntegratedAttempt(
       prisma,
       await getConfiguredEvaluator(),
       userId,
       challengeId,
       input,
-      { telemetry: logEvaluationEvent },
+      {
+        telemetry: (event) => {
+          logEvaluationEvent(event);
+          if (event.name === "attempt_evaluation_succeeded") {
+            successfulEvaluationLatencyMs = event.latencyMs;
+          }
+        },
+      },
     );
+    if (successfulEvaluationLatencyMs !== undefined) {
+      try {
+        await recordAggregateProductEvent(prisma, {
+          name: "attempt_evaluation_succeeded",
+          challengeId,
+          contextBucket: toEvaluationLatencyBucket(successfulEvaluationLatencyMs),
+        });
+      } catch {
+        // A tentativa concluída não depende da telemetria agregada de saúde.
+      }
+    }
+    return result;
   },
   async revealAttemptSolution(userId, challengeId) {
     const prisma = await getPrisma();
@@ -174,12 +199,16 @@ export const integratedTrainingAdapter: TrainingAdapter = {
   },
   async recordFeedbackViewed(userId, challengeId, attemptNumber, sessionAgeBucket) {
     const prisma = await getPrisma();
-    await recordFeedbackViewed(prisma, {
+    return recordFeedbackViewed(prisma, {
       userId,
       challengeId,
       attemptNumber,
       sessionAgeBucket,
     });
+  },
+  async recordProductEvent(input) {
+    const prisma = await getPrisma();
+    return recordAggregateProductEvent(prisma, input);
   },
   async listAttempts(userId) {
     const prisma = await getPrisma();
@@ -196,7 +225,7 @@ export const integratedTrainingAdapter: TrainingAdapter = {
   async listRecommendations(_userId, attemptedChallengeIds, limit) {
     const prisma = await getPrisma();
     return prisma.challenge.findMany({
-      where: attemptedChallengeIds.length > 0 ? { id: { notIn: attemptedChallengeIds } } : undefined,
+      where: buildRecommendationWhere(attemptedChallengeIds),
       orderBy: [{ recommendedElo: "asc" }, { createdAt: "desc" }],
       take: limit,
     });

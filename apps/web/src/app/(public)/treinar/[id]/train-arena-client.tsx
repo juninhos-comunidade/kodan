@@ -35,7 +35,13 @@ import {
 import { Button } from "@kodan/ui/components/button";
 import { ZenToast } from "@kodan/ui/components/zen";
 import { cn } from "@kodan/ui/lib/utils";
+import { ProductEventBeacon } from "@/components/product-event-beacon";
 import { getLoginHref } from "@/lib/auth-navigation";
+import {
+  ACTIVATION_DAY_STORAGE_KEY,
+  sendProductEvent,
+  toUtcDateKey,
+} from "@/lib/product-event-client";
 import {
   MAX_TRAINING_ANSWER_LENGTH,
   validateTrainingAnswer,
@@ -53,6 +59,7 @@ import {
   type AttemptSessionState,
 } from "./attempt-session-state";
 import type { SessionAgeBucket } from "@/server/training/training-adapter";
+import { FirstFeedbackCelebration } from "./first-feedback-celebration";
 
 interface AttemptSummary {
   id: string;
@@ -363,6 +370,7 @@ export default function TrainArenaClient({
   const trainingSessionStartedAtRef = useRef(0);
   const [showHintConfirm, setShowHintConfirm] = useState(false);
   const [hintRevealed, setHintRevealed] = useState(false);
+  const [firstFeedbackCelebrated, setFirstFeedbackCelebrated] = useState(false);
 
   const draftStorageKey = `${DRAFT_STORAGE_PREFIX}${id}`;
 
@@ -434,8 +442,15 @@ export default function TrainArenaClient({
         );
         if (!cancelled && response.success) {
           recordedFeedbackRef.current = eventKey;
+          if (response.recorded) setFirstFeedbackCelebrated(true);
           try {
             window.localStorage.setItem(FIRST_FEEDBACK_VIEWED_STORAGE_KEY, "true");
+            if (!window.localStorage.getItem(ACTIVATION_DAY_STORAGE_KEY)) {
+              window.localStorage.setItem(
+                ACTIVATION_DAY_STORAGE_KEY,
+                toUtcDateKey(new Date()),
+              );
+            }
           } catch {
             // O ref ainda evita duplicação durante a montagem atual.
           }
@@ -649,6 +664,22 @@ export default function TrainArenaClient({
       data-challengers-screen="true"
       className="h-svh overflow-hidden bg-[var(--challengers-page)] text-[var(--challengers-ink)]"
     >
+      <ProductEventBeacon
+        event={{ name: "challenge_viewed", challengeId: id }}
+        dedupeKey={`challenge_viewed:${id}`}
+      />
+      {answerLength > 0 ? (
+        <ProductEventBeacon
+          event={{ name: "diagnosis_started", challengeId: id }}
+          dedupeKey={`diagnosis_started:${id}`}
+        />
+      ) : null}
+      {showAuthenticationDialog ? (
+        <ProductEventBeacon
+          event={{ name: "auth_gate_viewed", challengeId: id }}
+          dedupeKey={`auth_gate_viewed:${id}`}
+        />
+      ) : null}
       <div className="flex h-full min-w-0 flex-col">
         <ChallengeHeader
           challenge={challenge}
@@ -720,6 +751,7 @@ export default function TrainArenaClient({
                       onReveal={() => void handleRevealSolution()}
                       revealing={attemptSession.phase === "revealing"}
                       nextChallenge={nextChallenge}
+                      firstFeedbackCelebrated={firstFeedbackCelebrated}
                     />
                   )}
                 </div>
@@ -1295,6 +1327,7 @@ function FeedbackPanel({
   onReveal,
   revealing,
   nextChallenge,
+  firstFeedbackCelebrated,
 }: {
   result: ArenaAttemptResult;
   userAnswer: string;
@@ -1304,10 +1337,12 @@ function FeedbackPanel({
   onReveal: () => void;
   revealing: boolean;
   nextChallenge: { id: string; title: string } | null;
+  firstFeedbackCelebrated: boolean;
 }) {
   return (
     <section className="challengers-panel flex min-h-0 flex-col overflow-hidden rounded-[10px] border">
       <div className="min-h-0 flex-1 overflow-auto px-6 py-5">
+        {firstFeedbackCelebrated ? <FirstFeedbackCelebration /> : null}
         <div className="grid gap-3 sm:grid-cols-2">
           <FeedbackMetric
             label="Avaliação final"
@@ -1443,7 +1478,16 @@ function FeedbackPanel({
             Revelar solução e encerrar
           </Button>
         ) : nextChallenge ? (
-          <Link href={`/treinar/${nextChallenge.id}`} className="flex-1">
+          <Link
+            href={`/treinar/${nextChallenge.id}`}
+            className="flex-1"
+            onClick={() => {
+              void sendProductEvent({
+                name: "next_challenge_started",
+                challengeId: nextChallenge.id,
+              });
+            }}
+          >
             <Button className="h-10 w-full rounded-[8px] border-[color:var(--challengers-blue)] bg-[var(--challengers-blue)] text-[oklch(99%_0.003_248)] hover:bg-[var(--challengers-blue-strong)]">
               {nextChallenge.title}
             </Button>

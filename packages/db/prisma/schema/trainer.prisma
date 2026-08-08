@@ -10,7 +10,6 @@ model Challenge {
   tags           String    // Comma-separated tags, e.g. "useEffect,stale-closure"
   evaluationRubricJson String?
   attempts       Attempt[]
-  productEventAggregates ProductEventAggregate[]
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
@@ -47,14 +46,13 @@ model Attempt {
 
 model ProductEventAggregate {
   name             String
-  challengeId      String
-  challenge        Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
-  sessionAgeBucket String
+  scopeKey         String
+  contextBucket    String
   day              DateTime  @db.Date
   count            Int       @default(0)
   updatedAt        DateTime  @updatedAt
 
-  @@id([name, challengeId, sessionAgeBucket, day])
+  @@id([name, scopeKey, contextBucket, day])
   @@index([name, day])
   @@map("product_event_aggregate")
 }

@@ -3,8 +3,14 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 mock.module("../../../actions", () => ({
   recordFeedbackViewed: async () => ({ success: true }),
+  recordProductEvent: async () => ({ success: true }),
   revealSolution: async () => ({ success: false }),
   submitAttempt: async () => ({ success: false }),
+}));
+mock.module("@/components/product-event-beacon", () => ({
+  ProductEventBeacon: ({ event }: { event: { name: string } }) => (
+    <i data-product-event={event.name} />
+  ),
 }));
 
 const { default: TrainArenaClient } = await import("./train-arena-client");
@@ -55,4 +61,6 @@ test("oferece o próximo desafio avaliável depois do feedback", () => {
   expect(markup).toContain('href="/treinar/proximo-desafio"');
   expect(markup).toContain("Próximo diagnóstico");
   expect(markup).not.toContain("Concluir arena");
+  expect(markup).toContain('data-product-event="challenge_viewed"');
+  expect(markup).toContain('data-product-event="diagnosis_started"');
 });

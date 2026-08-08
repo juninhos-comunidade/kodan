@@ -72,7 +72,7 @@ function SimulatorNavigationCard({ icon }: { icon: StaticImageData }) {
 
 function RoadmapNavigationCard({ title, description, footer, icon, footerIcon: FooterIcon }: Omit<DashboardNavigationCardProps, "href">) {
   return (
-    <article aria-disabled="true" className="relative flex min-h-56 items-center overflow-hidden rounded-2xl border border-dashed border-[color:var(--dojo-border)] bg-transparent p-6 opacity-75">
+    <article data-roadmap-state="unavailable" className="relative flex min-h-56 items-center overflow-hidden rounded-2xl border border-dashed border-[color:var(--dojo-border)] bg-transparent p-6 opacity-75">
       <Image src={icon} alt="" width={500} height={500} className="pointer-events-none absolute left-5 top-1/2 z-10 size-24 -translate-y-1/2 object-contain grayscale" />
       <div className="relative z-10 flex min-h-44 flex-1 flex-col justify-center pl-28 pr-4">
         <span className="mb-3 w-fit rounded-full border border-[color:var(--dojo-border-strong)] px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-wider text-[var(--dojo-accent)]">Em breve</span>

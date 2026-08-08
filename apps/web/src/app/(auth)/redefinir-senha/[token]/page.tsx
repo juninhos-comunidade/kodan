@@ -1,30 +1,10 @@
-import Link from "next/link";
-import { ShieldAlert } from "lucide-react";
+import { redirect } from "next/navigation";
 
-import { Button } from "@/components/button";
-
-export default function RedefinirSenhaPage() {
-  return (
-    <div className="space-y-6 text-center">
-      <div className="flex justify-center">
-        <div className="flex size-16 items-center justify-center rounded-full bg-amber-100">
-          <ShieldAlert className="size-8 text-amber-700" aria-hidden="true" />
-        </div>
-      </div>
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900">
-          Este link de redefinição não está disponível
-        </h2>
-        <p className="mt-2 text-sm leading-6 text-gray-500">
-          A redefinição de senha será habilitada quando o envio seguro por
-          e-mail estiver integrado.
-        </p>
-      </div>
-      <Link href="/login">
-        <Button variant="outline" className="w-full text-black/80">
-          Voltar ao login
-        </Button>
-      </Link>
-    </div>
-  );
+export default async function LegacyResetPasswordPage({
+  params,
+}: {
+  params: Promise<{ token: string }>;
+}) {
+  const { token } = await params;
+  redirect(`/redefinir-senha?token=${encodeURIComponent(token)}`);
 }

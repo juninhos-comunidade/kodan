@@ -1,30 +1,51 @@
-import { expect, test } from "bun:test";
+import { expect, mock, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import RecuperarSenhaPage from "./recuperar-senha/page";
-import RedefinirSenhaPage from "./redefinir-senha/[token]/page";
-import VerificarEmailPage from "./verificar-email/page";
+mock.module("@/lib/auth-client", () => ({
+  authClient: {
+    requestPasswordReset: mock(async () => ({ error: null })),
+    resetPassword: mock(async () => ({ error: null })),
+    sendVerificationEmail: mock(async () => ({ error: null })),
+  },
+}));
 
-test("não simula o envio de recuperação de senha", () => {
-  const markup = renderToStaticMarkup(<RecuperarSenhaPage />);
+const { PasswordRecoveryForm } = await import("./recuperar-senha/password-recovery-form");
+const { ResetPasswordForm } = await import("./redefinir-senha/reset-password-form");
+const { VerificationEmailForm } = await import("./verificar-email/verification-email-form");
 
-  expect(markup).toContain("Recuperação por e-mail indisponível");
-  expect(markup).not.toContain("Enviaremos um link");
-  expect(markup).not.toContain("Enviar link de recuperação");
+test("oferece recuperação real somente quando a entrega está configurada", () => {
+  const enabled = renderToStaticMarkup(<PasswordRecoveryForm enabled />);
+  const disabled = renderToStaticMarkup(<PasswordRecoveryForm enabled={false} />);
+
+  expect(enabled).toContain("Enviar link de recuperação");
+  expect(enabled).toContain('type="email"');
+  expect(disabled).toContain("Recuperação por e-mail indisponível");
+  expect(disabled).not.toContain("Enviar link de recuperação");
 });
 
-test("não permite redefinição sem integração de servidor", () => {
-  const markup = renderToStaticMarkup(<RedefinirSenhaPage />);
+test("só permite redefinição quando existe token verificado", () => {
+  const enabled = renderToStaticMarkup(
+    <ResetPasswordForm token="valid-token" error={null} />,
+  );
+  const invalid = renderToStaticMarkup(
+    <ResetPasswordForm token={null} error="INVALID_TOKEN" />,
+  );
 
-  expect(markup).toContain("Este link de redefinição não está disponível");
-  expect(markup).not.toContain("Redefinir senha");
+  expect(enabled).toContain("Redefinir senha");
+  expect(enabled).toContain('minLength="8"');
+  expect(invalid).toContain("Link inválido ou expirado");
+  expect(invalid).not.toContain('name="password"');
 });
 
-test("não afirma que um e-mail de verificação foi enviado", () => {
-  const markup = renderToStaticMarkup(<VerificarEmailPage />);
+test("permite solicitar verificação sem afirmar envio antes da resposta", () => {
+  const enabled = renderToStaticMarkup(
+    <VerificationEmailForm enabled initialError={null} />,
+  );
+  const disabled = renderToStaticMarkup(
+    <VerificationEmailForm enabled={false} initialError={null} />,
+  );
 
-  expect(markup).toContain("Verificação por e-mail indisponível");
-  expect(markup).not.toContain("Sua conta já pode ser usada");
-  expect(markup).not.toContain("Enviamos um link");
-  expect(markup).not.toContain("Reenviar e-mail");
+  expect(enabled).toContain("Enviar e-mail de verificação");
+  expect(enabled).not.toContain("Sua conta já pode ser usada");
+  expect(disabled).toContain("Verificação por e-mail indisponível");
 });

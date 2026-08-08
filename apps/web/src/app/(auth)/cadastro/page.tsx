@@ -13,14 +13,19 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {authClient} from "@/lib/auth-client"
-import { getLoginHref, getSafeCallbackPath } from "@/lib/auth-navigation";
+import {
+  getLoginHref,
+  getPostSignupPath,
+  getSafeCallbackPath,
+} from "@/lib/auth-navigation";
 import { useAuthActionFeedback } from "@/components/auth-action-feedback";
+import { rememberPendingVerificationEmail } from "../verificar-email/verification-email-form";
 
 const registerSchema = z
   .object({
     name: z.string().min(3, "Informe seu nome"),
     email: z.email("E-mail inválido"),
-    password: z.string().min(6, "A senha deve ter no mínimo 6 caracteres"),
+    password: z.string().min(8, "A senha deve ter no mínimo 8 caracteres"),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -56,7 +61,9 @@ function CadastroForm() {
   {
   onSuccess: (ctx)=> {
     finishAuthAction();
-    router.replace(callbackURL)
+    const emailVerified = Boolean(ctx.data.user.emailVerified);
+    if (!emailVerified) rememberPendingVerificationEmail(formData.email);
+    router.replace(getPostSignupPath(emailVerified, callbackURL));
   },
   onError:(ctx)=>{
     finishAuthAction();
@@ -114,12 +121,14 @@ function CadastroForm() {
             <Input
               id="password"
               type={showPwd ? "text" : "password"}
-              placeholder="Mínimo 6 caracteres"
+              placeholder="Mínimo 8 caracteres"
+              autoComplete="new-password"
               {...register("password")}
             />
 
             <button
               type="button"
+              aria-label={showPwd ? "Ocultar senha" : "Mostrar senha"}
               onClick={() => setShowPwd(!showPwd)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
             >
@@ -139,6 +148,7 @@ function CadastroForm() {
             id="confirmPassword"
             type={showPwd ? "text" : "password"}
             placeholder="Repita a senha"
+            autoComplete="new-password"
             {...register("confirmPassword")}
           />
         </div>
