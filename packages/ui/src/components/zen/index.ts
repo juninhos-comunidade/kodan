@@ -6,6 +6,7 @@ export {
   ZenConfirmationModal,
   ZenEmptyState,
   ZenErrorState,
+  ZenFeedbackModal,
   ZenLoading,
   ZenSkeleton,
   ZenSuccessState,
@@ -13,6 +14,7 @@ export {
   ZenTooltip,
 } from "./feedback";
 export type { ZenTone } from "./feedback";
+export type { ZenFeedbackData, ZenFeedbackModalProps, ZenFeedbackPoint, ZenFeedbackPointStatus } from "./feedback";
 export { ZenCheckbox, ZenInput, ZenSelect, ZenTextarea } from "./forms";
 export type { ZenSelectOption } from "./forms";
 export { ZenCard, ZenDivider, ZenPaper } from "./layout";

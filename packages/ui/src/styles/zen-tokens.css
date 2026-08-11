@@ -7,6 +7,24 @@
   --zen-gold: oklch(70% 0.12 76);
   --zen-border: oklch(83% 0.014 86.13);
   --zen-muted: oklch(48% 0.008 86.13);
+  --zen-button-ink: oklch(32% 0.0076 96.54);
+  --zen-button-ink-text: var(--zen-washi);
+  --zen-button-washi: var(--zen-washi);
+  --zen-button-washi-text: var(--zen-ink);
+  --zen-button-moss: var(--zen-moss);
+  --zen-button-moss-text: var(--zen-washi);
+  --zen-button-hanko: var(--zen-hanko);
+  --zen-button-hanko-text: white;
+  --zen-button-ink-hover: var(--zen-moss);
+  --zen-button-ink-hover-text: var(--zen-button-ink-text);
+  --zen-button-washi-hover: var(--zen-button-washi);
+  --zen-button-washi-hover-text: var(--zen-button-hanko);
+  --zen-button-moss-hover: color-mix(in oklch, var(--zen-button-moss) 78%, var(--zen-ink));
+  --zen-button-moss-hover-text: var(--zen-button-moss-text);
+  --zen-button-hanko-hover: color-mix(in oklch, var(--zen-button-hanko) 82%, black);
+  --zen-button-hanko-hover-text: var(--zen-button-hanko-text);
+  --zen-button-hover-shadow-color: var(--zen-ink);
+  --zen-button-hover-shadow-opacity: 22%;
 }
 
 .dark {
@@ -24,4 +42,22 @@
   --zen-gold: oklch(74% 0.11 76);
   --zen-border: var(--zen-aisumicha);
   --zen-muted: var(--zen-shironezumi);
+  --zen-button-ink: color-mix(in oklch, var(--zen-sabiseiji) 58%, var(--zen-kuro));
+  --zen-button-ink-text: var(--zen-gofun);
+  --zen-button-washi: var(--zen-kuro);
+  --zen-button-washi-text: var(--zen-gofun);
+  --zen-button-moss: var(--zen-sabiseiji);
+  --zen-button-moss-text: var(--zen-kuro);
+  --zen-button-hanko: var(--zen-suoh);
+  --zen-button-hanko-text: var(--zen-gofun);
+  --zen-button-ink-hover: var(--zen-sabiseiji);
+  --zen-button-ink-hover-text: var(--zen-kuro);
+  --zen-button-washi-hover: var(--zen-kuro);
+  --zen-button-washi-hover-text: var(--zen-suoh);
+  --zen-button-moss-hover: color-mix(in oklch, var(--zen-sabiseiji) 78%, var(--zen-kuro));
+  --zen-button-moss-hover-text: var(--zen-kuro);
+  --zen-button-hanko-hover: color-mix(in oklch, var(--zen-suoh) 82%, black);
+  --zen-button-hanko-hover-text: var(--zen-gofun);
+  --zen-button-hover-shadow-color: var(--zen-kuro);
+  --zen-button-hover-shadow-opacity: 0%;
 }

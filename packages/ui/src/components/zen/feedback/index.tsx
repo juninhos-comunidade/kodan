@@ -236,4 +236,6 @@ export function ZenConfirmationModal({
   );
 }
 
+export { ZenFeedbackModal } from "./ZenFeedbackModal";
+export type { ZenFeedbackData, ZenFeedbackModalProps, ZenFeedbackPoint, ZenFeedbackPointStatus } from "./ZenFeedbackModal";
 export type { ZenTone };
