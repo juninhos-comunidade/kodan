@@ -27,6 +27,10 @@
     {
       "name": "Attempts",
       "description": "Submissões e histórico de tentativas."
+    },
+    {
+      "name": "Product events",
+      "description": "Métricas agregadas da jornada pública."
     }
   ],
   "components": {
@@ -284,6 +288,15 @@
               "title": {
                 "type": "string"
               },
+              "language": {
+                "type": "string",
+                "enum": [
+                  "react",
+                  "typescript",
+                  "python",
+                  "nodejs"
+                ]
+              },
               "difficulty": {
                 "type": "string",
                 "enum": [
@@ -305,16 +318,21 @@
               "updatedAt": {
                 "type": "string",
                 "format": "date-time"
+              },
+              "evaluationAvailable": {
+                "type": "boolean"
               }
             },
             "required": [
               "id",
               "title",
+              "language",
               "difficulty",
               "recommendedElo",
               "tags",
               "createdAt",
-              "updatedAt"
+              "updatedAt",
+              "evaluationAvailable"
             ]
           }
         },
@@ -393,6 +411,15 @@
                     "title": {
                       "type": "string"
                     },
+                    "language": {
+                      "type": "string",
+                      "enum": [
+                        "react",
+                        "typescript",
+                        "python",
+                        "nodejs"
+                      ]
+                    },
                     "difficulty": {
                       "type": "string",
                       "enum": [
@@ -414,16 +441,21 @@
                     "updatedAt": {
                       "type": "string",
                       "format": "date-time"
+                    },
+                    "evaluationAvailable": {
+                      "type": "boolean"
                     }
                   },
                   "required": [
                     "id",
                     "title",
+                    "language",
                     "difficulty",
                     "recommendedElo",
                     "tags",
                     "createdAt",
-                    "updatedAt"
+                    "updatedAt",
+                    "evaluationAvailable"
                   ]
                 }
               },
@@ -477,6 +509,15 @@
               "title": {
                 "type": "string"
               },
+              "language": {
+                "type": "string",
+                "enum": [
+                  "react",
+                  "typescript",
+                  "python",
+                  "nodejs"
+                ]
+              },
               "difficulty": {
                 "type": "string",
                 "enum": [
@@ -498,6 +539,9 @@
               "updatedAt": {
                 "type": "string",
                 "format": "date-time"
+              },
+              "evaluationAvailable": {
+                "type": "boolean"
               },
               "attempts": {
                 "type": "array",
@@ -545,23 +589,21 @@
               },
               "question": {
                 "type": "string"
-              },
-              "evaluationAvailable": {
-                "type": "boolean"
               }
             },
             "required": [
               "id",
               "title",
+              "language",
               "difficulty",
               "recommendedElo",
               "tags",
               "createdAt",
               "updatedAt",
+              "evaluationAvailable",
               "attempts",
               "code",
-              "question",
-              "evaluationAvailable"
+              "question"
             ]
           }
         },
@@ -593,6 +635,15 @@
                     "title": {
                       "type": "string"
                     },
+                    "language": {
+                      "type": "string",
+                      "enum": [
+                        "react",
+                        "typescript",
+                        "python",
+                        "nodejs"
+                      ]
+                    },
                     "difficulty": {
                       "type": "string",
                       "enum": [
@@ -614,6 +665,9 @@
                     "updatedAt": {
                       "type": "string",
                       "format": "date-time"
+                    },
+                    "evaluationAvailable": {
+                      "type": "boolean"
                     },
                     "attempts": {
                       "type": "array",
@@ -660,11 +714,13 @@
                   "required": [
                     "id",
                     "title",
+                    "language",
                     "difficulty",
                     "recommendedElo",
                     "tags",
                     "createdAt",
                     "updatedAt",
+                    "evaluationAvailable",
                     "attempts"
                   ]
                 }
@@ -761,6 +817,73 @@
         "required": [
           "success",
           "data"
+        ]
+      },
+      "ProductEventInput": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "enum": [
+                  "home_viewed"
+                ]
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "enum": [
+                  "challenge_viewed",
+                  "diagnosis_started",
+                  "auth_gate_viewed",
+                  "next_challenge_started"
+                ]
+              },
+              "challengeId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              }
+            },
+            "required": [
+              "name",
+              "challengeId"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "enum": [
+                  "active_day"
+                ]
+              },
+              "contextBucket": {
+                "type": "string",
+                "enum": [
+                  "D1",
+                  "D2_TO_D6",
+                  "D7_PLUS"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "contextBucket"
+            ],
+            "additionalProperties": false
+          }
         ]
       },
       "SubmitAttemptInput": {
@@ -6159,6 +6282,49 @@
               }
             },
             "description": "Internal Server Error. This is a problem with the server that you cannot fix."
+          }
+        }
+      }
+    },
+    "/api/product-events": {
+      "post": {
+        "tags": [
+          "Product events"
+        ],
+        "summary": "Registrar evento agregado da jornada pública",
+        "description": "Aceita somente eventos de baixa cardinalidade e não recebe identificadores de praticante nem conteúdo de respostas.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductEventInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Evento agregado registrado."
+          },
+          "400": {
+            "description": "Payload ou parâmetros inválidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno ao processar a requisição.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
           }
         }
       }

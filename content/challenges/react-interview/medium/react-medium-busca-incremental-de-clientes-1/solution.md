@@ -1,5 +1,5 @@
 ### Problemas Encontrados
-1. Dependência instável (`options`) no `useEffect` causa refetch em todo render.
+1. Dependência instável (`options`) no `useEffect`: o objeto é recriado em todo render. O efeito chama `setLoading`, produz outro render e recebe uma nova dependência, formando um ciclo de requisições.
 2. `items.sort(...)` muta o array de estado e cria efeitos colaterais invisíveis.
 3. Uso de `key={idx}` pode associar linha errada após reordenação.
 
@@ -13,7 +13,7 @@
 useEffect(() => {
   const ctrl = new AbortController();
   setLoading(true);
-  fetch(`/api/${item.api}?teamId=${teamId}&q=${query}`, { signal: ctrl.signal })
+  fetch(`/api/customers?teamId=${teamId}&q=${query}`, { signal: ctrl.signal })
     .then(r => r.json())
     .then(data => setItems(data.items))
     .finally(() => setLoading(false));

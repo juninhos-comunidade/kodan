@@ -70,9 +70,11 @@ async function fetchChallenges(params: { limit: number; offset: number }) {
 export default function ChallengesPageClient({
   initialData,
   user,
+  authenticated,
 }: {
   initialData: ChallengesInitialData;
   user: { name: string; image: string | null };
+  authenticated: boolean;
 }) {
   const router = useRouter();
   const [state, dispatch] = useReducer(
@@ -285,6 +287,7 @@ export default function ChallengesPageClient({
       <ChallengesLanguageExplorer
         challenges={state.challenges}
         userElo={state.userElo}
+        authenticated={authenticated}
         selectedLanguage={selectedLanguage}
         selectedTopic={state.topicFilter}
         onSelectLanguage={(language) => {
@@ -338,6 +341,7 @@ export default function ChallengesPageClient({
       <ChallengesMobileShell
         userElo={state.userElo}
         user={user}
+        authenticated={authenticated}
         searchQuery={state.searchQuery}
         filtersOpen={navigationOpen}
         filtersDisabled={!selectedLanguage}

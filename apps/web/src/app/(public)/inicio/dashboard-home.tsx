@@ -1,5 +1,6 @@
 "use client";
 
+import { ProductEventBeacon } from "@/components/product-event-beacon";
 import { DashboardHomeHeader } from "./dashboard-home/dashboard-home-header";
 import { DashboardNavigation } from "./dashboard-home/dashboard-navigation";
 import { DojoInitiationCard } from "./dashboard-home/dojo-initiation-card";
@@ -12,6 +13,7 @@ type DashboardHomeProps = {
   recommendationReason: "CONTINUE_RECENT" | "PERSONALIZED" | "POPULAR_BEGINNER" | "FALLBACK";
   userName: string;
   userImage: string | null;
+  authenticated?: boolean;
 };
 
 export type DashboardChallenge = {
@@ -23,11 +25,12 @@ export type DashboardChallenge = {
   question: string;
 };
 
-export default function DashboardHome({ challenge, challengeCount, recommendationReason, userName, userImage }: DashboardHomeProps) {
+export default function DashboardHome({ challenge, challengeCount, recommendationReason, userName, userImage, authenticated = true }: DashboardHomeProps) {
   const themeAssets = useDashboardThemeAssets();
 
   return (
     <div data-dashboard-home="true" className="min-h-full bg-[var(--dojo-page)] font-mono text-[var(--dojo-ink)]">
+      <ProductEventBeacon event={{ name: "home_viewed" }} dedupeKey="home_viewed" />
       <DashboardHomeHeader
         userName={userName}
         userImage={userImage}
@@ -37,6 +40,7 @@ export default function DashboardHome({ challenge, challengeCount, recommendatio
           <RecommendedChallengeCard
             challenge={challenge}
             recommendationReason={recommendationReason}
+            authenticated={authenticated}
           />
           <DojoInitiationCard icon={themeAssets.initiation} />
         </section>

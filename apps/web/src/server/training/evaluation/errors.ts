@@ -1,7 +1,7 @@
 import type { EvaluationFailureReason } from "./types";
 
 export class EvaluationUnavailableError extends Error {
-  readonly code = "EVALUATION_UNAVAILABLE";
+  readonly code: "EVALUATION_UNAVAILABLE" = "EVALUATION_UNAVAILABLE";
   readonly preserveAnswer = true;
 
   constructor(

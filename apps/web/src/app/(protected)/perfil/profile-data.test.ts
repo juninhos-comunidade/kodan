@@ -61,7 +61,12 @@ describe("profile-data", () => {
     expect(viewModel.user.rank).toBe("4º Kyu");
     expect(viewModel.user.rankKanji).toBe("四級");
     expect(viewModel.user.elo).toBe(1378);
-    expect(viewModel.stats).toHaveLength(5);
+    expect(viewModel.user).not.toHaveProperty("planLabel");
+    expect(viewModel.user).not.toHaveProperty("countryLabel");
+    expect(viewModel.user).not.toHaveProperty("timezoneLabel");
+    expect(viewModel.user).not.toHaveProperty("topPercentLabel");
+    expect(viewModel.stats).toHaveLength(4);
+    expect(viewModel.stats.some((stat) => stat.id === "study-hours")).toBe(false);
     expect(viewModel.stats.find((stat) => stat.id === "resolved")?.value).toBe("1");
     expect(viewModel.stats.find((stat) => stat.id === "streak")?.value).toBe("2 dias");
     expect(viewModel.topicMastery[0]?.label).toBe("Async UI & Races");

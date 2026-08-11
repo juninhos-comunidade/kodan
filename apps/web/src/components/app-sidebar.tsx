@@ -18,15 +18,13 @@ import { cn } from "@kodan/ui/lib/utils";
 
 import { getLoginHref } from "@/lib/auth-navigation";
 import { formatRankLabel } from "@/lib/rating";
-import { useSession } from "@/hooks/use-session";
+import { KodanLogo } from "@/components/kodan-logo";
 
 export const APP_ROUTE_PREFIXES = [
   "/inicio",
   "/desafios",
   "/treinar",
   "/perfil",
-  "/revisoes",
-  "/simulados",
   "/ajuda",
   "/configuracoes",
 ] as const;
@@ -34,8 +32,6 @@ export const APP_ROUTE_PREFIXES = [
 const CHALLENGE_LINKS = [
   { href: "/desafios", label: "Todos os Desafios", dot: "bg-[var(--profile-accent-blue)]" },
   { href: "/desafios?status=in_progress", label: "Em andamento", dot: "bg-[var(--profile-text-muted)]" },
-  { href: "/revisoes", label: "Revisões", dot: "bg-[var(--profile-danger)]" },
-  { href: "/simulados", label: "Simulados", dot: "bg-[var(--profile-warning)]" },
 ] as const satisfies ReadonlyArray<{ href: Route; label: string; dot: string }>;
 
 export type SidebarUser = {
@@ -51,19 +47,18 @@ function formatRank(elo: number) {
 
 function KodanMark({ compact = false }: { compact?: boolean }) {
   return (
-    <div className={cn("flex items-center", compact ? "justify-center" : "gap-4")}>
-      <span className="grid size-10 shrink-0 place-items-center text-3xl text-[var(--profile-text-primary)]" aria-hidden="true">⛩</span>
-      <span className={cn("font-serif text-xl font-semibold tracking-widest text-[var(--profile-text-primary)]", compact && "sr-only")}>KODAN</span>
-    </div>
+    <KodanLogo
+      compact={compact}
+      wordmarkClassName="text-[var(--profile-text-primary)]"
+    />
   );
 }
 
 function isChallengeRoute(pathname: string) {
-  return pathname.startsWith("/desafios") || pathname.startsWith("/treinar") || pathname === "/revisoes" || pathname === "/simulados";
+  return pathname.startsWith("/desafios") || pathname.startsWith("/treinar");
 }
 
 function isSubrouteActive(pathname: string, href: Route) {
-  if (href === "/revisoes" || href === "/simulados") return pathname === href;
   return href === "/desafios" && pathname.startsWith("/desafios");
 }
 
@@ -99,10 +94,6 @@ export function AppSidebar({
     setChallengesOpen(true);
     onCloseMobile();
   };
-
-  const session = useSession()
-
-  console.log("session", session)
 
   return (
     <aside className={cn("relative flex h-svh min-h-0 shrink-0 flex-col overflow-hidden border-r border-[color:var(--profile-border)] bg-[var(--profile-bg)] transition-[width] duration-200", compact ? "w-20" : "w-64")}>

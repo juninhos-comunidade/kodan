@@ -35,12 +35,22 @@ import {
 import { Button } from "@kodan/ui/components/button";
 import { ZenToast } from "@kodan/ui/components/zen";
 import { cn } from "@kodan/ui/lib/utils";
+import { ProductEventBeacon } from "@/components/product-event-beacon";
 import { getLoginHref } from "@/lib/auth-navigation";
+import {
+  ACTIVATION_DAY_STORAGE_KEY,
+  sendProductEvent,
+  toUtcDateKey,
+} from "@/lib/product-event-client";
 import {
   MAX_TRAINING_ANSWER_LENGTH,
   validateTrainingAnswer,
 } from "@/lib/training-input-guard";
-import { revealSolution, submitAttempt } from "../../../actions";
+import {
+  recordFeedbackViewed,
+  revealSolution,
+  submitAttempt,
+} from "../../../actions";
 import {
   attemptSessionReducer,
   initialAttemptSessionState,
@@ -48,6 +58,8 @@ import {
   type ArenaAttemptResult,
   type AttemptSessionState,
 } from "./attempt-session-state";
+import type { SessionAgeBucket } from "@/server/training/training-adapter";
+import { FirstFeedbackCelebration } from "./first-feedback-celebration";
 
 interface AttemptSummary {
   id: string;
@@ -69,6 +81,15 @@ export interface Challenge {
 }
 
 const DRAFT_STORAGE_PREFIX = "kodan:train-diagnosis:";
+const TRAINING_SESSION_STARTED_AT_KEY = "kodan:training-session-started-at";
+const FIRST_FEEDBACK_VIEWED_STORAGE_KEY = "kodan:first-feedback-viewed";
+
+function getSessionAgeBucket(startedAt: number, now: number): SessionAgeBucket {
+  const ageMinutes = Math.max(0, now - startedAt) / 60_000;
+  if (ageMinutes < 10) return "UNDER_10_MIN";
+  if (ageMinutes <= 30) return "MIN_10_TO_30";
+  return "OVER_30_MIN";
+}
 
 type ZenToastTone = "success" | "error" | "warning" | "info";
 type ZenToastState = {
@@ -314,6 +335,7 @@ interface TrainArenaClientProps {
   isAuthenticated: boolean;
   initialSession?: AttemptSessionState;
   initialUserAnswer?: string;
+  nextChallenge?: { id: string; title: string } | null;
 }
 
 // react-doctor-disable-next-line react-doctor/prefer-useReducer
@@ -324,6 +346,7 @@ export default function TrainArenaClient({
   isAuthenticated,
   initialSession = initialAttemptSessionState,
   initialUserAnswer = "",
+  nextChallenge = null,
 }: TrainArenaClientProps) {
   const [userAnswer, setUserAnswer] = useState(initialUserAnswer);
   const [notes, setNotes] = useState("");
@@ -343,8 +366,11 @@ export default function TrainArenaClient({
   });
 
   const usedHintRef = useRef(false);
+  const recordedFeedbackRef = useRef<string | null>(null);
+  const trainingSessionStartedAtRef = useRef(0);
   const [showHintConfirm, setShowHintConfirm] = useState(false);
   const [hintRevealed, setHintRevealed] = useState(false);
+  const [firstFeedbackCelebrated, setFirstFeedbackCelebrated] = useState(false);
 
   const draftStorageKey = `${DRAFT_STORAGE_PREFIX}${id}`;
 
@@ -358,6 +384,96 @@ export default function TrainArenaClient({
       // O diagnóstico continua disponível na sessão atual se o storage não estiver acessível.
     }
   }, [draftStorageKey, initialUserAnswer]);
+
+  useEffect(() => {
+    const now = Date.now();
+    trainingSessionStartedAtRef.current = now;
+
+    try {
+      const stored = Number(
+        window.sessionStorage.getItem(TRAINING_SESSION_STARTED_AT_KEY),
+      );
+      const startedAt = Number.isFinite(stored) && stored > 0 && stored <= now
+        ? stored
+        : now;
+      trainingSessionStartedAtRef.current = startedAt;
+      window.sessionStorage.setItem(
+        TRAINING_SESSION_STARTED_AT_KEY,
+        String(startedAt),
+      );
+    } catch {
+      // O bucket continua sendo calculado a partir desta montagem sem storage.
+    }
+  }, []);
+
+  useEffect(() => {
+    const attemptNumber = attemptSession.result?.attemptNumber;
+    if (
+      !isAuthenticated ||
+      attemptSession.phase !== "feedback" ||
+      attemptNumber === undefined
+    ) {
+      return;
+    }
+
+    const eventKey = `${id}:${attemptNumber}`;
+    if (recordedFeedbackRef.current === eventKey) return;
+    try {
+      if (window.localStorage.getItem(FIRST_FEEDBACK_VIEWED_STORAGE_KEY) === "true") {
+        recordedFeedbackRef.current = eventKey;
+        return;
+      }
+    } catch {
+      // A deduplicação persistente é opcional; o banco guarda somente agregados.
+    }
+    const sessionAgeBucket = getSessionAgeBucket(
+      trainingSessionStartedAtRef.current,
+      Date.now(),
+    );
+
+    let cancelled = false;
+    let retryTimer: number | undefined;
+    const persistFeedbackView = async (attempt = 1) => {
+      try {
+        const response = await recordFeedbackViewed(
+          id,
+          attemptNumber,
+          sessionAgeBucket,
+        );
+        if (!cancelled && response.success) {
+          recordedFeedbackRef.current = eventKey;
+          if (response.recorded) setFirstFeedbackCelebrated(true);
+          try {
+            window.localStorage.setItem(FIRST_FEEDBACK_VIEWED_STORAGE_KEY, "true");
+            if (!window.localStorage.getItem(ACTIVATION_DAY_STORAGE_KEY)) {
+              window.localStorage.setItem(
+                ACTIVATION_DAY_STORAGE_KEY,
+                toUtcDateKey(new Date()),
+              );
+            }
+          } catch {
+            // O ref ainda evita duplicação durante a montagem atual.
+          }
+          return;
+        }
+      } catch {
+        // Telemetria de produto é best effort e não deve interromper o feedback.
+      }
+
+      if (!cancelled && attempt < 3) {
+        retryTimer = window.setTimeout(
+          () => void persistFeedbackView(attempt + 1),
+          attempt * 2_000,
+        );
+      }
+    };
+    void persistFeedbackView();
+
+    return () => {
+      cancelled = true;
+      if (retryTimer !== undefined) window.clearTimeout(retryTimer);
+    };
+  }, [attemptSession.phase, attemptSession.result?.attemptNumber, id, isAuthenticated]);
 
   const saveDraftBeforeAuthentication = () => {
     try {
@@ -548,6 +664,22 @@ export default function TrainArenaClient({
       data-challengers-screen="true"
       className="h-svh overflow-hidden bg-[var(--challengers-page)] text-[var(--challengers-ink)]"
     >
+      <ProductEventBeacon
+        event={{ name: "challenge_viewed", challengeId: id }}
+        dedupeKey={`challenge_viewed:${id}`}
+      />
+      {answerLength > 0 ? (
+        <ProductEventBeacon
+          event={{ name: "diagnosis_started", challengeId: id }}
+          dedupeKey={`diagnosis_started:${id}`}
+        />
+      ) : null}
+      {showAuthenticationDialog ? (
+        <ProductEventBeacon
+          event={{ name: "auth_gate_viewed", challengeId: id }}
+          dedupeKey={`auth_gate_viewed:${id}`}
+        />
+      ) : null}
       <div className="flex h-full min-w-0 flex-col">
         <ChallengeHeader
           challenge={challenge}
@@ -618,6 +750,8 @@ export default function TrainArenaClient({
                       }}
                       onReveal={() => void handleRevealSolution()}
                       revealing={attemptSession.phase === "revealing"}
+                      nextChallenge={nextChallenge}
+                      firstFeedbackCelebrated={firstFeedbackCelebrated}
                     />
                   )}
                 </div>
@@ -1192,6 +1326,8 @@ function FeedbackPanel({
   onRetry,
   onReveal,
   revealing,
+  nextChallenge,
+  firstFeedbackCelebrated,
 }: {
   result: ArenaAttemptResult;
   userAnswer: string;
@@ -1200,10 +1336,13 @@ function FeedbackPanel({
   onRetry: () => void;
   onReveal: () => void;
   revealing: boolean;
+  nextChallenge: { id: string; title: string } | null;
+  firstFeedbackCelebrated: boolean;
 }) {
   return (
     <section className="challengers-panel flex min-h-0 flex-col overflow-hidden rounded-[10px] border">
       <div className="min-h-0 flex-1 overflow-auto px-6 py-5">
+        {firstFeedbackCelebrated ? <FirstFeedbackCelebration /> : null}
         <div className="grid gap-3 sm:grid-cols-2">
           <FeedbackMetric
             label="Avaliação final"
@@ -1338,10 +1477,25 @@ function FeedbackPanel({
             {revealing ? <Loader2 className="size-4 animate-spin" /> : <Eye className="size-4" />}
             Revelar solução e encerrar
           </Button>
+        ) : nextChallenge ? (
+          <Link
+            href={`/treinar/${nextChallenge.id}`}
+            className="flex-1"
+            onClick={() => {
+              void sendProductEvent({
+                name: "next_challenge_started",
+                challengeId: nextChallenge.id,
+              });
+            }}
+          >
+            <Button className="h-10 w-full rounded-[8px] border-[color:var(--challengers-blue)] bg-[var(--challengers-blue)] text-[oklch(99%_0.003_248)] hover:bg-[var(--challengers-blue-strong)]">
+              {nextChallenge.title}
+            </Button>
+          </Link>
         ) : (
           <Link href="/desafios" className="flex-1">
             <Button className="h-10 w-full rounded-[8px] border-[color:var(--challengers-blue)] bg-[var(--challengers-blue)] text-[oklch(99%_0.003_248)] hover:bg-[var(--challengers-blue-strong)]">
-              Concluir arena
+              Escolher próximo desafio
             </Button>
           </Link>
         )}

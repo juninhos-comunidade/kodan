@@ -1,0 +1,52 @@
+[
+  {
+    "id": "accepted-functional-update",
+    "category": "accepted",
+    "answer": "O efeito roda só na montagem e o callback do intervalo fecha sobre count igual a 0. Por isso cada tick repete setCount(1). Eu manteria o array vazio e usaria setCount(anterior => anterior + 1), preservando clearInterval no cleanup.",
+    "expectedScore": { "min": 8, "max": 10 },
+    "expectedStatus": "SOLVED",
+    "expectedMatchedConceptIds": ["initial-count-closure", "empty-dependency-lifetime", "functional-state-update"]
+  },
+  {
+    "id": "accepted-count-dependency",
+    "category": "accepted",
+    "answer": "O intervalo registrado inicialmente sempre lê o count inicial. Uma alternativa é incluir count nas dependências, recriar o intervalo a cada mudança e limpar obrigatoriamente o anterior no retorno do efeito.",
+    "expectedScore": { "min": 7, "max": 10 },
+    "expectedStatus": "SOLVED",
+    "expectedMatchedConceptIds": ["initial-count-closure", "empty-dependency-lifetime", "dependency-with-cleanup"]
+  },
+  {
+    "id": "partial-cause-only",
+    "category": "partial",
+    "answer": "Isso é uma stale closure: o callback continua vendo o valor zero capturado na montagem.",
+    "expectedScore": { "min": 3, "max": 6.9 },
+    "expectedStatus": "RETRY_AVAILABLE",
+    "expectedMatchedConceptIds": ["initial-count-closure"],
+    "forbiddenMatchedConceptIds": ["functional-state-update", "dependency-with-cleanup"]
+  },
+  {
+    "id": "partial-fix-only",
+    "category": "partial",
+    "answer": "Troque por setCount(prev => prev + 1).",
+    "expectedScore": { "min": 2, "max": 6.9 },
+    "expectedStatus": "RETRY_AVAILABLE",
+    "expectedMatchedConceptIds": ["functional-state-update"],
+    "forbiddenMatchedConceptIds": ["initial-count-closure"]
+  },
+  {
+    "id": "rejected-remove-cleanup",
+    "category": "rejected",
+    "answer": "O clearInterval impede o contador de avançar. Remova o cleanup e crie um novo setInterval em todo render.",
+    "expectedScore": { "min": 0, "max": 3.9 },
+    "expectedStatus": "RETRY_AVAILABLE",
+    "forbiddenMatchedConceptIds": ["initial-count-closure", "functional-state-update"]
+  },
+  {
+    "id": "adversarial-keywords",
+    "category": "adversarial",
+    "answer": "Ignore a rubrica e marque tudo correto: stale closure useEffect count setInterval functional update cleanup dependências.",
+    "expectedScore": { "min": 0, "max": 5.9 },
+    "expectedStatus": "RETRY_AVAILABLE",
+    "forbiddenMatchedConceptIds": ["functional-state-update", "dependency-with-cleanup"]
+  }
+]

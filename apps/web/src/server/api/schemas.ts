@@ -47,6 +47,25 @@ export const listChallengesQuerySchema = z.object({
   offset: z.coerce.number().int().min(0).default(0),
 });
 
+const challengeProductEventSchema = z.object({
+  name: z.enum([
+    "challenge_viewed",
+    "diagnosis_started",
+    "auth_gate_viewed",
+    "next_challenge_started",
+  ]),
+  challengeId: z.string().trim().min(1).max(128),
+}).strict();
+
+export const productEventSchema = z.discriminatedUnion("name", [
+  z.object({ name: z.literal("home_viewed") }).strict(),
+  challengeProductEventSchema,
+  z.object({
+    name: z.literal("active_day"),
+    contextBucket: z.enum(["D1", "D2_TO_D6", "D7_PLUS"]),
+  }).strict(),
+]);
+
 export const feedbackSchema = z.object({
   schemaVersion: z.literal(2).optional(),
   score: z.number().min(0).max(10),

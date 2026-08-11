@@ -14,7 +14,7 @@ export default function HelpPage() {
   return (
     <main className="min-h-full bg-[var(--dojo-page)] px-6 py-12 text-[var(--dojo-ink)] sm:px-10">
       <div className="mx-auto max-w-4xl">
-        <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--dojo-accent)]"><CircleHelp className="size-4" aria-hidden="true" />Suporte</p>
+        <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--dojo-accent)]"><CircleHelp className="size-4" aria-hidden="true" />Central de ajuda</p>
         <h1 className="mt-3 font-serif text-4xl font-bold">Ajuda do Kodan</h1>
         <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--dojo-muted)]">{HELP_COPY.introduction}</p>
         <div className="mt-10 grid gap-4 md:grid-cols-3">

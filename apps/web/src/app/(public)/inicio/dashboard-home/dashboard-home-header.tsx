@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { useSession } from "@/hooks/use-session";
 import { useRouter } from "next/navigation";
+import { KodanLogo } from "@/components/kodan-logo";
 
 type DashboardHomeHeaderProps = {
   userName: string;
@@ -30,11 +31,11 @@ export function DashboardHomeHeader({ userName, userImage }: DashboardHomeHeader
   return (
     <header className="sticky top-0 z-20 flex min-h-28 items-center justify-between gap-5 bg-[var(--dojo-page)] px-5 pl-16 sm:px-8 lg:px-12">
       <div className="flex items-center gap-4">
-        <div className="hidden size-14 place-items-center rounded-full border border-[color:var(--dojo-border-strong)] font-serif text-2xl text-[var(--dojo-accent)] sm:grid">道</div>
+        <div className="hidden sm:block"><KodanLogo markOnly size="lg" /></div>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--dojo-accent)]">Seu dojo</p>
-          <h1 className="mt-1 font-serif text-2xl font-bold text-[var(--dojo-ink)] sm:text-3xl">Bem-vindo ao Dojo, {getFirstName(userName)}!</h1>
-          <p className="mt-1 hidden text-sm text-[var(--dojo-muted)] sm:block">Sua jornada de excelência começa agora.</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--dojo-accent)]">{session ? "Seu dojo" : "Prática aberta"}</p>
+          <h1 className="mt-1 font-serif text-2xl font-bold text-[var(--dojo-ink)] sm:text-3xl">{session ? `Bem-vindo ao Dojo, ${getFirstName(userName)}!` : "Comece seu primeiro diagnóstico"}</h1>
+          <p className="mt-1 hidden text-sm text-[var(--dojo-muted)] sm:block">{session ? "Sua jornada de excelência continua aqui." : "Experimente um desafio antes de criar sua conta."}</p>
         </div>
       </div>
 

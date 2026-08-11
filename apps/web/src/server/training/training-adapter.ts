@@ -2,6 +2,7 @@ import type {
   AttemptSessionStatus,
   FeedbackPayload,
 } from "./attempt-execution";
+import type { ProductEventInput } from "./product-event-store";
 
 export type TrainingUser = {
   id: string;
@@ -88,10 +89,26 @@ export interface AttemptAdapter {
   revealAttemptSolution(userId: string, challengeId: string): Promise<AttemptSubmission>;
 }
 
+export interface ProductTelemetryAdapter {
+  recordProductEvent(input: ProductEventInput): Promise<boolean>;
+  recordFeedbackViewed(
+    userId: string,
+    challengeId: string,
+    attemptNumber: number,
+    sessionAgeBucket: SessionAgeBucket,
+  ): Promise<boolean>;
+}
+
+export type SessionAgeBucket =
+  | "UNDER_10_MIN"
+  | "MIN_10_TO_30"
+  | "OVER_30_MIN";
+
 export type TrainingAdapter =
   & PractitionerAdapter
   & ChallengeCatalogAdapter
-  & AttemptAdapter;
+  & AttemptAdapter
+  & ProductTelemetryAdapter;
 
 export function selectTrainingAdapter<T>(
   mockMode: boolean,

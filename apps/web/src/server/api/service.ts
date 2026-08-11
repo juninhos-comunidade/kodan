@@ -8,8 +8,12 @@ import type {
   AttemptAdapter,
   ChallengeCatalogAdapter,
   PractitionerAdapter,
+  ProductTelemetryAdapter,
+  SessionAgeBucket,
 } from "@/server/training/training-adapter";
+import type { ProductEventInput } from "@/server/training/product-event-store";
 import { EvaluationUnavailableError } from "@/server/training/evaluation/errors";
+import { handleEvaluationUnavailable } from "./evaluation-failure-handler";
 import { submitAttemptSchema, updateCurrentUserSchema } from "./schemas";
 
 type SubmitAttemptInput = z.infer<typeof submitAttemptSchema>;
@@ -17,6 +21,7 @@ type SubmitAttemptInput = z.infer<typeof submitAttemptSchema>;
 const practitionerAdapter: PractitionerAdapter = trainingAdapter;
 const challengeCatalogAdapter: ChallengeCatalogAdapter = trainingAdapter;
 const attemptAdapter: AttemptAdapter = trainingAdapter;
+const productTelemetryAdapter: ProductTelemetryAdapter = trainingAdapter;
 
 async function requireAuthenticatedUser() {
   const user = await practitionerAdapter.getOptionalUser();
@@ -106,14 +111,11 @@ export async function submitChallengeAttempt(challengeId: string, input: SubmitA
     return { success: true as const, data: result };
   } catch (error: unknown) {
     if (error instanceof EvaluationUnavailableError) {
-      return {
-        success: false as const,
-        error: error.message,
-        code: error.code,
-        reason: error.reason,
-        retryable: error.retryable,
-        preserveAnswer: error.preserveAnswer,
-      };
+      return handleEvaluationUnavailable(
+        error,
+        challengeId,
+        (event) => productTelemetryAdapter.recordProductEvent(event),
+      );
     }
     return { success: false as const, error: getErrorMessage(error, "Erro ao enviar tentativa") };
   }
@@ -129,6 +131,47 @@ export async function revealChallengeSolution(challengeId: string) {
     return {
       success: false as const,
       error: getErrorMessage(error, "Erro ao revelar solução"),
+    };
+  }
+}
+
+export async function recordChallengeFeedbackViewed(
+  challengeId: string,
+  attemptNumber: number,
+  sessionAgeBucket: SessionAgeBucket,
+) {
+  try {
+    if (
+      !["UNDER_10_MIN", "MIN_10_TO_30", "OVER_30_MIN"].includes(
+        sessionAgeBucket,
+      )
+    ) {
+      throw new Error("Faixa de sessão inválida");
+    }
+    const user = await requireAuthenticatedUser();
+    const recorded = await productTelemetryAdapter.recordFeedbackViewed(
+      user.id,
+      challengeId,
+      attemptNumber,
+      sessionAgeBucket,
+    );
+    return { success: true as const, recorded };
+  } catch (error: unknown) {
+    return {
+      success: false as const,
+      error: getErrorMessage(error, "Erro ao registrar visualização do feedback"),
+    };
+  }
+}
+
+export async function recordAnonymousProductEvent(input: ProductEventInput) {
+  try {
+    const recorded = await productTelemetryAdapter.recordProductEvent(input);
+    return { success: true as const, recorded };
+  } catch (error: unknown) {
+    return {
+      success: false as const,
+      error: getErrorMessage(error, "Erro ao registrar evento de produto"),
     };
   }
 }

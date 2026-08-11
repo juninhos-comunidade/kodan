@@ -1,0 +1,53 @@
+{
+  "version": "1.0.0",
+  "questionKind": "debugging",
+  "centralAnswer": "O callback do intervalo foi criado pelo efeito da montagem e mantém o count inicial em sua closure. Como o efeito não é recriado, cada tick executa setCount(0 + 1). A correção deve ler o estado atual com uma atualização funcional ou recriar corretamente o intervalo quando count mudar, sempre preservando o cleanup.",
+  "evaluatorNotes": [
+    "Aceite tanto a atualização funcional quanto a dependência count com cleanup como soluções válidas.",
+    "Não exija o termo literal stale closure se a captura do valor inicial for explicada corretamente.",
+    "Uma correção sem explicação da captura obsoleta não demonstra a causa raiz."
+  ],
+  "concepts": [
+    {
+      "id": "initial-count-closure",
+      "importance": "critical",
+      "internalDescription": "O callback registrado no primeiro efeito captura count igual a zero e continua lendo esse valor inicial.",
+      "publicLabel": "A captura do valor inicial pelo callback do intervalo.",
+      "reflectionPrompt": "Qual valor o callback enxerga depois que o componente já renderizou outras vezes?"
+    },
+    {
+      "id": "empty-dependency-lifetime",
+      "importance": "essential",
+      "internalDescription": "O array vazio faz o efeito e o callback do intervalo permanecerem os mesmos durante toda a montagem.",
+      "publicLabel": "O efeito executado somente na montagem.",
+      "reflectionPrompt": "Em que momento esse efeito cria uma nova função para o intervalo?"
+    },
+    {
+      "id": "functional-state-update",
+      "importance": "critical",
+      "internalDescription": "setCount com callback recebe o estado anterior atual sem depender do count capturado pelo efeito.",
+      "publicLabel": "A atualização funcional baseada no estado anterior.",
+      "reflectionPrompt": "Como atualizar o contador sem ler count de dentro da closure?"
+    },
+    {
+      "id": "dependency-with-cleanup",
+      "importance": "complementary",
+      "internalDescription": "Adicionar count às dependências também funciona se cada intervalo anterior for limpo antes da recriação.",
+      "publicLabel": "A recriação controlada do intervalo com cleanup."
+    }
+  ],
+  "misconceptions": [
+    {
+      "id": "react-state-frozen",
+      "severity": "major",
+      "internalDescription": "Afirmar que o React congela o estado ou impede valores maiores que um.",
+      "publicCorrection": "O estado muda; o problema é o valor antigo lido pelo callback já registrado."
+    },
+    {
+      "id": "remove-cleanup",
+      "severity": "critical",
+      "internalDescription": "Sugerir remover o cleanup ou criar intervalos adicionais sem encerrá-los.",
+      "publicCorrection": "O cleanup continua necessário para não acumular intervalos após recriações ou desmontagem."
+    }
+  ]
+}

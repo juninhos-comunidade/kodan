@@ -32,6 +32,7 @@ export default async function ChallengesPage({
   return (
     <ChallengesPageClient
       user={user}
+      authenticated={Boolean(userResponse.success && userResponse.data)}
       initialData={
         response.success && response.data
           ? {

@@ -1,9 +1,14 @@
-import { mkdir, readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { env } from "@kodan/env/server";
 import { z } from "zod";
+
+import {
+  evaluationBenchmarkCasesSchema,
+  type EvaluationBenchmarkCase,
+} from "../../packages/content/src/challenge-schemas";
 
 import { evaluateAnswer } from "../../apps/web/src/server/training/evaluation/evaluation-service";
 import { resolveFreeOpenRouterModel } from "../../apps/web/src/server/training/evaluation/model-policy";
@@ -12,28 +17,15 @@ import { DEFAULT_EVALUATION_PROMPT_VERSION } from "../../apps/web/src/server/tra
 import { parseChallengeEvaluationRubric } from "../../apps/web/src/server/training/evaluation/schemas";
 import { createRequestPacer } from "./request-pacer";
 
-const evaluationCaseSchema = z.object({
-  id: z.string().min(1),
-  category: z.enum(["accepted", "partial", "rejected", "adversarial"]),
-  answer: z.string().min(1),
-  expectedScore: z.object({ min: z.number().min(0), max: z.number().max(10) }),
-  expectedStatus: z.enum(["SOLVED", "RETRY_AVAILABLE"]),
-  expectedMatchedConceptIds: z.array(z.string()).optional(),
-  forbiddenMatchedConceptIds: z.array(z.string()).optional(),
-}).strict();
-
-const evaluationCasesSchema = z.array(evaluationCaseSchema).min(1);
-type EvaluationCase = z.infer<typeof evaluationCaseSchema>;
-
 type BenchmarkRun = {
   caseId: string;
-  category: EvaluationCase["category"];
+  category: EvaluationBenchmarkCase["category"];
   repetition: number;
   answer: string;
-  expectedScore: EvaluationCase["expectedScore"];
-  expectedStatus: EvaluationCase["expectedStatus"];
+  expectedScore: EvaluationBenchmarkCase["expectedScore"];
+  expectedStatus: EvaluationBenchmarkCase["expectedStatus"];
   actualScore?: number;
-  actualStatus?: EvaluationCase["expectedStatus"];
+  actualStatus?: EvaluationBenchmarkCase["expectedStatus"];
   level?: string;
   summary?: string;
   conceptStates?: Record<string, string>;
@@ -46,15 +38,29 @@ type BenchmarkRun = {
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(scriptDir, "../..");
-const challengeDir = path.join(
-  repoRoot,
-  "content/challenges/react-state/race-condition-user-profile",
-);
 const args = new Map(
   process.argv.slice(2).map((argument) => {
     const [key, ...value] = argument.replace(/^--/, "").split("=");
     return [key, value.join("=") || "true"];
   }),
+);
+const benchmarkChallengeDirectories = {
+  "react-state-race-condition-user-profile": "react-state/race-condition-user-profile",
+  "react-hooks-stale-closure-useeffect": "react-hooks/stale-closure-useeffect",
+  "react-rendering-object-dependency-infinite-loop": "react-rendering/object-dependency-infinite-loop",
+  "react-medium-busca-incremental-de-clientes-1": "react-interview/medium/react-medium-busca-incremental-de-clientes-1",
+  "react-hard-dashboard-operacional-1": "react-interview/hard/react-hard-dashboard-operacional-1",
+} as const;
+const benchmarkChallengeId = z.enum(
+  Object.keys(benchmarkChallengeDirectories) as [
+    keyof typeof benchmarkChallengeDirectories,
+    ...(keyof typeof benchmarkChallengeDirectories)[],
+  ],
+).parse(args.get("challenge") ?? "react-state-race-condition-user-profile");
+const challengeDir = path.join(
+  repoRoot,
+  "content/challenges",
+  benchmarkChallengeDirectories[benchmarkChallengeId],
 );
 const repeat = z.coerce.number().int().min(1).max(3).parse(args.get("repeat") ?? "1");
 const timeoutMs = z.coerce.number().int().min(1_000).max(60_000)
@@ -77,9 +83,10 @@ const [challengeJson, code, rubricJson, casesJson] = await Promise.all([
 const challenge = z.object({ id: z.string(), title: z.string(), question: z.string() })
   .passthrough()
   .parse(JSON.parse(challengeJson));
-const rubric = parseChallengeEvaluationRubric(rubricJson);
-if (!rubric) throw new Error("Rubrica de benchmark inválida");
-const allCases = evaluationCasesSchema.parse(JSON.parse(casesJson));
+const parsedRubric = parseChallengeEvaluationRubric(rubricJson);
+if (!parsedRubric) throw new Error("Rubrica de benchmark inválida");
+const rubric = parsedRubric;
+const allCases = evaluationBenchmarkCasesSchema.parse(JSON.parse(casesJson));
 const requestedCaseId = args.get("case");
 const cases = requestedCaseId
   ? allCases.filter((evaluationCase) => evaluationCase.id === requestedCaseId)
@@ -123,15 +130,15 @@ await mkdir(outputDir, { recursive: true });
 const stamp = generatedAt.replace(/[:.]/g, "-");
 const jsonPath = path.join(outputDir, `${stamp}.json`);
 const markdownPath = path.join(outputDir, `${stamp}.md`);
-await Bun.write(jsonPath, JSON.stringify(report, null, 2));
-await Bun.write(markdownPath, renderMarkdown(report));
+await writeFile(jsonPath, JSON.stringify(report, null, 2), "utf-8");
+await writeFile(markdownPath, renderMarkdown(report), "utf-8");
 console.log(`Relatório JSON: ${jsonPath}`);
 console.log(`Relatório Markdown: ${markdownPath}`);
 console.log(`Resultado: ${report.summary.passed}/${report.summary.total} dentro do esperado`);
 if (failedRuns.length > 0) process.exitCode = 1;
 
 async function runBenchmarkCase(
-  evaluationCase: EvaluationCase,
+  evaluationCase: EvaluationBenchmarkCase,
   repetition: number,
 ): Promise<BenchmarkRun> {
   let providerDiagnostic: unknown;
@@ -199,9 +206,9 @@ async function runBenchmarkCase(
 }
 
 function findDivergences(
-  evaluationCase: EvaluationCase,
+  evaluationCase: EvaluationBenchmarkCase,
   score: number,
-  status: EvaluationCase["expectedStatus"],
+  status: EvaluationBenchmarkCase["expectedStatus"],
   conceptStates: Record<string, string>,
 ) {
   const divergences: string[] = [];
@@ -227,7 +234,7 @@ function findDivergences(
 }
 type BenchmarkReport = typeof report;
 
-function renderMarkdown(report: report) {
+function renderMarkdown(report: BenchmarkReport) {
   const rows = report.runs.map((run) => [
     run.divergences.length === 0 ? "PASS" : "FAIL",
     run.caseId,

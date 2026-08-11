@@ -1,5 +1,4 @@
-import { Terminal } from "lucide-react";
-
+import { KodanLogo } from "@/components/kodan-logo";
 import { AUTH_PROMISE } from "@/content/public-promises";
 
 export default function AuthLayout({
@@ -13,15 +12,8 @@ export default function AuthLayout({
       <div className="hidden lg:flex lg:w-1/2 flex-col justify-between bg-gradient-to-br from-[#2DADB9] via-[#2E6E99] to-[#314083] p-12 text-white">
         {/* Logo */}
         <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/15 border border-white/20 backdrop-blur-sm">
-            <Terminal className="h-6 w-6 text-white" />
-          </div>
-
           <div>
-            <h1 className="text-2xl font-bold tracking-wide">
-              KODAN
-            </h1>
-
+            <KodanLogo size="lg" wordmarkClassName="text-2xl text-white" />
             <p className="text-sm text-cyan-100">
               {AUTH_PROMISE.tagline}
             </p>
@@ -50,15 +42,8 @@ export default function AuthLayout({
         <div className="w-full max-w-md">
           {/* Logo Mobile */}
           <div className="mb-8 flex items-center gap-3 lg:hidden">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#2DADB9] via-[#2E6E99] to-[#314083]">
-              <Terminal className="h-5 w-5 text-white" />
-            </div>
-
             <div>
-              <p className="text-xl font-bold tracking-wide text-[#314083]">
-                KODAN
-              </p>
-
+              <KodanLogo wordmarkClassName="text-[#314083]" />
               <p className="text-xs text-slate-500">
                 {AUTH_PROMISE.tagline}
               </p>

@@ -4,9 +4,11 @@ import { headers } from "next/headers";
 
 import { isMockMode } from "@/lib/mock-mode";
 import { getRuntimeSession } from "@/lib/runtime-data";
+import type { SessionAgeBucket } from "@/server/training/training-adapter";
 import {
   getCurrentUser,
   listCurrentUserAttempts,
+  recordChallengeFeedbackViewed,
   revealChallengeSolution,
   submitChallengeAttempt,
   updateCurrentUserProfile,
@@ -46,6 +48,19 @@ export async function submitAttempt(challengeId: string, userAnswer: string, use
 export async function revealSolution(challengeId: string) {
   await requireAuth();
   return revealChallengeSolution(challengeId);
+}
+
+export async function recordFeedbackViewed(
+  challengeId: string,
+  attemptNumber: number,
+  sessionAgeBucket: SessionAgeBucket,
+) {
+  await requireAuth();
+  return recordChallengeFeedbackViewed(
+    challengeId,
+    attemptNumber,
+    sessionAgeBucket,
+  );
 }
 
 export async function getAttemptsHistory() {

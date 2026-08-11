@@ -11,7 +11,7 @@ import { ProfileTopicMasteryCard } from "@/app/(protected)/perfil/profile-topic-
 import type { ProfileViewModel } from "@/app/(protected)/perfil/profile-types";
 
 const profile: ProfileViewModel = {
-  user: { id: "user-1", name: "Gabriel Silva", bio: "Frontend engineer praticando diagnósticos React.", image: null, planLabel: "Praticante", tagline: "Consistência antes da velocidade", memberSinceLabel: "Membro desde jul. 2026", countryLabel: "Brasil", timezoneLabel: "São Paulo (UTC-3)", rank: "3º Kyu", rankKanji: "参", elo: 1460, topPercentLabel: "Top 18%" },
+  user: { id: "user-1", name: "Gabriel Silva", bio: "Frontend engineer praticando diagnósticos React.", image: null, tagline: "Consistência antes da velocidade", memberSinceLabel: "Membro desde jul. 2026", rank: "3º Kyu", rankKanji: "参", elo: 1460 },
   stats: [{ id: "streak", label: "Sequência", value: "7 dias", accent: "warning" }, { id: "solved", label: "Resolvidos", value: "24" }, { id: "accuracy", label: "Precisão", value: "82%" }, { id: "time", label: "Tempo médio", value: "11 min" }],
   eloSeries: [{ dateLabel: "01 jul", elo: 1120 }, { dateLabel: "08 jul", elo: 1210 }, { dateLabel: "15 jul", elo: 1320 }, { dateLabel: "22 jul", elo: 1390 }, { dateLabel: "29 jul", elo: 1460 }],
   topicMastery: [{ topicId: "effects", label: "Effects", proficiency: 86 }, { topicId: "state", label: "State", proficiency: 68 }, { topicId: "performance", label: "Performance", proficiency: 44 }, { topicId: "architecture", label: "Arquitetura", proficiency: 0, locked: true, unlockHint: "Resolva 3 desafios avançados" }],

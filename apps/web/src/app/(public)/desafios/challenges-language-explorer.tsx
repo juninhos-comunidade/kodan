@@ -12,6 +12,7 @@ import { ArrowLeft, ChevronRight } from "lucide-react";
 import { useState, type CSSProperties, type ReactNode } from "react";
 
 import { cn } from "@kodan/ui/lib/utils";
+import { KodanLogo } from "@/components/kodan-logo";
 import {
   buildChallengeTopicSections,
   type ChallengeTopicFilter,
@@ -77,6 +78,7 @@ export function getChallengeLanguageDefinition(language: ChallengeLanguage) {
 export function ChallengesLanguageExplorer({
   challenges,
   userElo,
+  authenticated,
   selectedLanguage,
   selectedTopic,
   children,
@@ -86,6 +88,7 @@ export function ChallengesLanguageExplorer({
 }: {
   challenges: Challenge[];
   userElo: number;
+  authenticated: boolean;
   selectedLanguage: ChallengeLanguage | null;
   selectedTopic: ChallengeTopicFilter;
   children: ReactNode;
@@ -146,7 +149,7 @@ export function ChallengesLanguageExplorer({
 
           <div className="mt-6 hidden overflow-x-auto pb-3 lg:block">
             <div className="relative min-w-[52rem] px-5 pb-8 pt-4">
-              <KodanRoot userElo={userElo} />
+              <KodanRoot userElo={userElo} authenticated={authenticated} />
               <LanguageConnectors count={visibleLanguages.length} />
               <div
                 className="relative z-10 mt-24 grid gap-4"
@@ -210,16 +213,14 @@ export function ChallengesLanguageExplorer({
   );
 }
 
-function KodanRoot({ userElo }: { userElo: number }) {
+function KodanRoot({ userElo, authenticated }: { userElo: number; authenticated: boolean }) {
   return (
     <div className="relative z-10 mx-auto flex w-56 items-center gap-3 rounded-xl border border-[color:var(--challengers-border-strong)] bg-[var(--challengers-panel-strong)] px-4 py-3">
-      <span className="grid size-10 place-items-center rounded-lg bg-[var(--challengers-blue-soft)] text-xl text-[var(--challengers-blue)]">
-        ⛩
-      </span>
+      <KodanLogo markOnly size="md" />
       <span className="min-w-0">
         <span className="block text-sm font-semibold">Kodan</span>
         <span className="mt-0.5 block text-xs text-[var(--challengers-muted)]">
-          {userElo} ELO · seu domínio
+          {authenticated ? `${userElo} ELO · seu domínio` : "Explore por linguagem"}
         </span>
       </span>
     </div>

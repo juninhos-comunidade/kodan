@@ -40,6 +40,8 @@ export function createInMemoryTrainingAdapter(
   async revealAttemptSolution(_userId, challengeId) {
     return store.revealSolution(challengeId);
   },
+  async recordFeedbackViewed() { return false; },
+  async recordProductEvent() { return false; },
   async listAttempts() {
     return store.listAttempts();
   },

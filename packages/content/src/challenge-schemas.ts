@@ -71,6 +71,33 @@ export const challengeEvaluationRubricSchema = z.object({
   });
 });
 
+const evaluationBenchmarkScoreRangeSchema = z.object({
+  min: z.number().min(0).max(10),
+  max: z.number().min(0).max(10),
+}).strict().refine((range) => range.min <= range.max, {
+  message: "A nota mínima não pode superar a máxima",
+});
+
+export const evaluationBenchmarkCaseSchema = z.object({
+  id: z.string().trim().min(1),
+  category: z.enum(["accepted", "partial", "rejected", "adversarial"]),
+  answer: z.string().trim().min(1),
+  expectedScore: evaluationBenchmarkScoreRangeSchema,
+  expectedStatus: z.enum(["SOLVED", "RETRY_AVAILABLE"]),
+  expectedMatchedConceptIds: z.array(z.string().trim().min(1)).optional(),
+  forbiddenMatchedConceptIds: z.array(z.string().trim().min(1)).optional(),
+}).strict();
+
+export const evaluationBenchmarkCasesSchema = z
+  .array(evaluationBenchmarkCaseSchema)
+  .min(1)
+  .superRefine((cases, context) => {
+    const caseIds = cases.map((evaluationCase) => evaluationCase.id);
+    if (new Set(caseIds).size !== caseIds.length) {
+      context.addIssue({ code: "custom", message: "IDs de casos devem ser únicos" });
+    }
+  });
+
 function normalizeEditorialText(value: string) {
   return value
     .normalize("NFKD")
@@ -130,3 +157,4 @@ export type ChallengeLegacy = z.infer<typeof challengeLegacySchema>;
 export type ChallengeSplitMeta = z.infer<typeof challengeSplitMetaSchema>;
 export type ChallengeIndexEntry = z.infer<typeof challengeIndexEntrySchema>;
 export type ChallengeEvaluationRubric = z.infer<typeof challengeEvaluationRubricSchema>;
+export type EvaluationBenchmarkCase = z.infer<typeof evaluationBenchmarkCaseSchema>;

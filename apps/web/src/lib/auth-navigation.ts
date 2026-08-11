@@ -22,3 +22,16 @@ export function getRegisterHref(callbackURL: string): Route {
   const searchParams = new URLSearchParams({ callbackURL });
   return `/cadastro?${searchParams.toString()}` as Route;
 }
+
+export function getPostSignupPath(
+  state: { emailVerified: boolean; sessionCreated: boolean },
+  callbackURL: string,
+): Route {
+  return state.emailVerified || state.sessionCreated
+    ? callbackURL as Route
+    : "/verificar-email";
+}
+
+export function requiresEmailVerification(status: number) {
+  return status === 403;
+}

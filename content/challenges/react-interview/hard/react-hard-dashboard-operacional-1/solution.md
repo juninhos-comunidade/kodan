@@ -5,10 +5,11 @@ Problemas de base:
 3. Falta cleanup do socket: listeners acumulam após remount/troca de workspace.
 4. `sort` mutável em `useMemo`: reordena o próprio estado.
 5. `key={index}` produz associações erradas ao reorder.
+6. Snapshot e stream não possuem estratégia de reconciliação: o `fetch` inicial pode terminar depois de eventos do socket e sobrescrever atualizações mais recentes.
 
 ### Plano de Correção
 - Hotfix: cleanup do socket + updates funcionais imutáveis + key por id.
-- Estabilização: isolar stream em reducer/event queue para evitar race de eventos.
+- Estabilização: reconciliar o snapshot inicial com o stream por versão, sequência ou fila, para que uma resposta atrasada não apague eventos mais novos.
 - Refactor: separar fetch inicial de stream, com protocolo de reconciliação (snapshot + eventos).
 
 ### Exemplo de correções críticas

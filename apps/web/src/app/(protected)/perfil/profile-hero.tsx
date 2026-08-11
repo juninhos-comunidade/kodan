@@ -9,10 +9,7 @@ import {
   CalendarDays,
   Camera,
   Check,
-  Globe2,
-  MapPin,
   Pencil,
-  ShieldCheck,
   X,
 } from "lucide-react";
 
@@ -122,10 +119,6 @@ export function ProfileHero({ user }: { user: ProfileUserSummary }) {
                 {name}
               </h1>
             )}
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--profile-accent-blue)] bg-[var(--profile-accent-blue-soft)] px-3 py-1 text-xs font-semibold text-[var(--profile-accent-blue)]">
-              <ShieldCheck className="size-3.5" aria-hidden="true" />
-              {user.planLabel}
-            </span>
             {editing ? (
               <div className="flex items-center gap-2">
                 <button
@@ -179,14 +172,6 @@ export function ProfileHero({ user }: { user: ProfileUserSummary }) {
               icon={<CalendarDays className="size-4" aria-hidden="true" />}
               value={user.memberSinceLabel}
             />
-            <ProfileMetaItem
-              icon={<MapPin className="size-4" aria-hidden="true" />}
-              value={user.countryLabel}
-            />
-            <ProfileMetaItem
-              icon={<Globe2 className="size-4" aria-hidden="true" />}
-              value={user.timezoneLabel}
-            />
           </ul>
         </div>
       </div>
@@ -212,9 +197,6 @@ export function ProfileHero({ user }: { user: ProfileUserSummary }) {
           </p>
           <p className="font-serif text-3xl font-semibold leading-tight text-[var(--profile-accent-blue)]">
             {user.elo}
-          </p>
-          <p className="mt-1 text-sm text-[var(--profile-text-secondary)]">
-            {user.topPercentLabel}
           </p>
         </div>
       </div>

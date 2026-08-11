@@ -69,4 +69,85 @@ describe("upsertChallengesFromContent", () => {
       }),
     });
   });
+
+  test("remove somente duplicatas órfãs quando a reconciliação é explicitamente habilitada", async () => {
+    const root = await mkdtemp(path.join(tmpdir(), "kodan-seed-"));
+    temporaryRoots.push(root);
+    const challengeDirectory = path.join(root, "challenge");
+    await mkdir(challengeDirectory);
+    await writeFile(path.join(challengeDirectory, "challenge.json"), JSON.stringify({
+      id: "challenge-stable-id",
+      title: "Desafio canônico",
+      difficulty: "EASY",
+      recommendedElo: 1100,
+      language: "react",
+      question: "Explique o comportamento.",
+      tags: ["react"],
+    }));
+    await writeFile(path.join(challengeDirectory, "code.tsx"), "const value = 1;");
+    await writeFile(path.join(challengeDirectory, "solution.md"), "O valor é constante.");
+
+    const deleteMany = mock(async () => ({ count: 1 }));
+    const updateMany = mock(async () => ({ count: 2 }));
+    const prisma = {
+      challenge: {
+        findMany: mock(async () => [
+          {
+            id: "legacy-duplicate-id",
+            title: "Desafio canônico",
+            _count: { attempts: 0 },
+          },
+          {
+            id: "protected-orphan-id",
+            title: "Desafio fora do catálogo",
+            _count: { attempts: 2 },
+          },
+          {
+            id: "legacy-duplicate-with-history",
+            title: "Desafio canônico",
+            _count: { attempts: 3 },
+          },
+        ]),
+        upsert: mock(async () => undefined),
+        deleteMany,
+        updateMany,
+      },
+    };
+
+    const result = await upsertChallengesFromContent(
+      prisma as never,
+      { root, pruneDuplicateOrphans: true } as never,
+    );
+
+    expect(deleteMany).toHaveBeenCalledWith({
+      where: {
+        OR: [{
+          id: "legacy-duplicate-id",
+          title: "Desafio canônico",
+          attempts: { none: {} },
+        }],
+      },
+    });
+    expect(updateMany).toHaveBeenCalledWith({
+      where: {
+        id: {
+          in: ["protected-orphan-id", "legacy-duplicate-with-history"],
+        },
+      },
+      data: { promoted: false },
+    });
+    expect(result).toMatchObject({
+      pruned: 1,
+      demoted: 2,
+      protectedOrphans: [{
+        id: "protected-orphan-id",
+        title: "Desafio fora do catálogo",
+        attemptCount: 2,
+      }, {
+        id: "legacy-duplicate-with-history",
+        title: "Desafio canônico",
+        attemptCount: 3,
+      }],
+    });
+  });
 });

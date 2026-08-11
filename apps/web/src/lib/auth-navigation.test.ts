@@ -1,6 +1,11 @@
 import { describe, expect, test } from "bun:test";
 
-import { getLoginHref, getSafeCallbackPath } from "./auth-navigation";
+import {
+  getLoginHref,
+  getPostSignupPath,
+  getSafeCallbackPath,
+  requiresEmailVerification,
+} from "./auth-navigation";
 
 describe("auth navigation", () => {
   test("keeps local callback paths", () => {
@@ -22,5 +27,32 @@ describe("auth navigation", () => {
     expect(getLoginHref("/train/challenge-1", "register")).toBe(
       "/login?mode=register&callbackURL=%2Ftrain%2Fchallenge-1",
     );
+  });
+
+  test("encaminha cadastro não verificado para a confirmação de e-mail", () => {
+    expect(String(getPostSignupPath(
+      { emailVerified: false, sessionCreated: false },
+      "/treinar/challenge-1",
+    ))).toBe(
+      "/verificar-email",
+    );
+    expect(String(getPostSignupPath(
+      { emailVerified: true, sessionCreated: true },
+      "/treinar/challenge-1",
+    ))).toBe(
+      "/treinar/challenge-1",
+    );
+  });
+
+  test("segue para a jornada quando a conta sem verificação já recebeu sessão", () => {
+    expect(String(getPostSignupPath(
+      { emailVerified: false, sessionCreated: true },
+      "/treinar/challenge-1",
+    ))).toBe("/treinar/challenge-1");
+  });
+
+  test("reconhece a resposta de login que exige verificação", () => {
+    expect(requiresEmailVerification(403)).toBe(true);
+    expect(requiresEmailVerification(401)).toBe(false);
   });
 });

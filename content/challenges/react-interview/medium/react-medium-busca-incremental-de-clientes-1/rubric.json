@@ -1,0 +1,60 @@
+{
+  "version": "1.0.0",
+  "questionKind": "debugging",
+  "centralAnswer": "options é recriado a cada render e dispara novamente o efeito; o próprio setLoading gera outro render e mantém o ciclo de requisições. Além disso, items.sort muta o estado e key por índice perde identidade após reordenação. A correção começa por dependências primitivas, segue com ordenação imutável e termina com item.id como chave; cancelamento real da requisição é uma melhoria adicional.",
+  "evaluatorNotes": [
+    "Para solução completa, exija o ciclo de requisições e os três problemas pedidos no enunciado.",
+    "Aceite AbortController como melhoria de cancelamento, mas ele não substitui a correção da dependência instável.",
+    "Não atribua stale closure a este código: o problema principal do efeito é a identidade de options."
+  ],
+  "concepts": [
+    {
+      "id": "unstable-options-dependency",
+      "importance": "critical",
+      "internalDescription": "options é um literal recriado em todo render e, por identidade, sempre aparece alterado para o efeito.",
+      "publicLabel": "A dependência options recriada em cada render.",
+      "reflectionPrompt": "A referência de options permanece igual depois de setLoading?"
+    },
+    {
+      "id": "request-render-cycle",
+      "importance": "essential",
+      "internalDescription": "O efeito chama setLoading e outras atualizações que renderizam, recriam options e disparam um novo fetch.",
+      "publicLabel": "O ciclo que mantém novas requisições sendo disparadas.",
+      "reflectionPrompt": "Qual atualização dentro do efeito já é suficiente para iniciar outro ciclo?"
+    },
+    {
+      "id": "immutable-sort",
+      "importance": "critical",
+      "internalDescription": "items.sort modifica o array mantido no estado; a ordenação deve operar sobre uma cópia.",
+      "publicLabel": "A ordenação sem mutar o array de estado.",
+      "reflectionPrompt": "sort devolve apenas uma nova visão ou também altera o array de origem?"
+    },
+    {
+      "id": "stable-item-key",
+      "importance": "essential",
+      "internalDescription": "key por índice não acompanha a identidade do cliente quando a lista é reordenada; item.id deve ser usado.",
+      "publicLabel": "Uma chave estável associada ao cliente.",
+      "reflectionPrompt": "O índice continua representando o mesmo cliente depois da ordenação?"
+    },
+    {
+      "id": "abort-in-flight-request",
+      "importance": "complementary",
+      "internalDescription": "AbortController encerra a requisição anterior quando teamId ou query muda e evita trabalho obsoleto.",
+      "publicLabel": "O cancelamento de requisições que perderam validade."
+    }
+  ],
+  "misconceptions": [
+    {
+      "id": "missing-effect-dependencies",
+      "severity": "critical",
+      "internalDescription": "Afirmar que o efeito repete porque options está ausente das dependências.",
+      "publicCorrection": "options está presente; o problema é receber uma nova referência em cada render."
+    },
+    {
+      "id": "sort-is-immutable",
+      "severity": "major",
+      "internalDescription": "Afirmar que Array.sort cria automaticamente um novo array.",
+      "publicCorrection": "Array.sort ordena o próprio array e, por isso, muta o estado neste código."
+    }
+  ]
+}

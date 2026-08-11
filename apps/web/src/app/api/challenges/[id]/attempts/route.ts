@@ -22,14 +22,16 @@ export async function POST(
 
   if (!result.success || !result.data) {
     const error = result.error ?? "Erro ao enviar tentativa";
-    const status = result.code === "EVALUATION_UNAVAILABLE"
+    const evaluationUnavailable = "code" in result &&
+      result.code === "EVALUATION_UNAVAILABLE";
+    const status = evaluationUnavailable
       ? 503
       : error === "Unauthorized"
         ? 401
         : error === "Desafio não encontrado"
           ? 404
           : 500;
-    return jsonFailure(error, status, result.code === "EVALUATION_UNAVAILABLE"
+    return jsonFailure(error, status, evaluationUnavailable
       ? {
           code: result.code,
           reason: result.reason,

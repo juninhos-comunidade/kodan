@@ -8,6 +8,7 @@ model Challenge {
   question       String    // Question to diagnose
   solution       String    // Senior solution template
   tags           String    // Comma-separated tags, e.g. "useEffect,stale-closure"
+  promoted       Boolean   @default(true)
   evaluationRubricJson String?
   attempts       Attempt[]
   createdAt      DateTime  @default(now())
@@ -15,6 +16,7 @@ model Challenge {
 
   @@map("challenge")
   @@index([language])
+  @@index([promoted])
 }
 
 enum AttemptSessionStatus {
@@ -36,9 +38,23 @@ model Attempt {
   eloChange    Int       // ELO variation (+/-)
   attemptNumber Int      @default(1)
   sessionStatus AttemptSessionStatus @default(RETRY_AVAILABLE)
+  activationCounted Boolean @default(false)
   createdAt    DateTime  @default(now())
 
   @@index([userId])
   @@index([challengeId])
   @@map("attempt")
+}
+
+model ProductEventAggregate {
+  name             String
+  scopeKey         String
+  contextBucket    String
+  day              DateTime  @db.Date
+  count            Int       @default(0)
+  updatedAt        DateTime  @updatedAt
+
+  @@id([name, scopeKey, contextBucket, day])
+  @@index([name, day])
+  @@map("product_event_aggregate")
 }

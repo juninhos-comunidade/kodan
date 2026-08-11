@@ -31,6 +31,7 @@ describe("selectTrainingAdapter", () => {
       "listRecommendations",
       "submitAttempt",
       "revealAttemptSolution",
+      "recordFeedbackViewed",
     ] as const;
 
     const adapter = createInMemoryTrainingAdapter(createMockTrainingStore());

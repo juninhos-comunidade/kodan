@@ -19,6 +19,12 @@ import {
   submitIntegratedAttempt,
   withSerializableRetry,
 } from "./integrated-attempt-submission";
+import {
+  recordFeedbackViewed,
+  recordProductEvent as recordAggregateProductEvent,
+  toEvaluationLatencyBucket,
+} from "./product-event-store";
+import { buildRecommendationWhere } from "./recommendation-query";
 import type { TrainingAdapter } from "./training-adapter";
 
 async function getPrisma() {
@@ -67,8 +73,9 @@ export const integratedTrainingAdapter: TrainingAdapter = {
     const prisma = await getPrisma();
     const [user, total, items] = await Promise.all([
       userId ? prisma.user.findUnique({ where: { id: userId } }) : null,
-      prisma.challenge.count(),
+      prisma.challenge.count({ where: { promoted: true } }),
       prisma.challenge.findMany({
+        where: { promoted: true },
         include: userId
           ? {
               attempts: {
@@ -101,7 +108,7 @@ export const integratedTrainingAdapter: TrainingAdapter = {
   async getChallengeById(id, userId) {
     const prisma = await getPrisma();
     const challenge = await prisma.challenge.findUnique({
-      where: { id },
+      where: { id, promoted: true },
       include: userId
         ? { attempts: { where: { userId }, orderBy: { createdAt: "desc" } } }
         : undefined,
@@ -119,14 +126,34 @@ export const integratedTrainingAdapter: TrainingAdapter = {
   },
   async submitAttempt(userId, challengeId, input) {
     const prisma = await getPrisma();
-    return submitIntegratedAttempt(
+    let successfulEvaluationLatencyMs: number | undefined;
+    const result = await submitIntegratedAttempt(
       prisma,
       await getConfiguredEvaluator(),
       userId,
       challengeId,
       input,
-      { telemetry: logEvaluationEvent },
+      {
+        telemetry: (event) => {
+          logEvaluationEvent(event);
+          if (event.name === "attempt_evaluation_succeeded") {
+            successfulEvaluationLatencyMs = event.latencyMs;
+          }
+        },
+      },
     );
+    if (successfulEvaluationLatencyMs !== undefined) {
+      try {
+        await recordAggregateProductEvent(prisma, {
+          name: "attempt_evaluation_succeeded",
+          challengeId,
+          contextBucket: toEvaluationLatencyBucket(successfulEvaluationLatencyMs),
+        });
+      } catch {
+        // A tentativa concluída não depende da telemetria agregada de saúde.
+      }
+    }
+    return result;
   },
   async revealAttemptSolution(userId, challengeId) {
     const prisma = await getPrisma();
@@ -134,7 +161,10 @@ export const integratedTrainingAdapter: TrainingAdapter = {
       prisma.$transaction(async (tx) => {
         const [user, challenge, latestAttempt] = await Promise.all([
           tx.user.findUnique({ where: { id: userId }, select: { elo: true } }),
-          tx.challenge.findUnique({ where: { id: challengeId }, select: { solution: true } }),
+          tx.challenge.findUnique({
+            where: { id: challengeId, promoted: true },
+            select: { solution: true },
+          }),
           tx.attempt.findFirst({
             where: { userId, challengeId },
             orderBy: { createdAt: "desc" },
@@ -171,6 +201,19 @@ export const integratedTrainingAdapter: TrainingAdapter = {
       }, { isolationLevel: "Serializable" })
     );
   },
+  async recordFeedbackViewed(userId, challengeId, attemptNumber, sessionAgeBucket) {
+    const prisma = await getPrisma();
+    return recordFeedbackViewed(prisma, {
+      userId,
+      challengeId,
+      attemptNumber,
+      sessionAgeBucket,
+    });
+  },
+  async recordProductEvent(input) {
+    const prisma = await getPrisma();
+    return recordAggregateProductEvent(prisma, input);
+  },
   async listAttempts(userId) {
     const prisma = await getPrisma();
     const attempts = await prisma.attempt.findMany({
@@ -186,7 +229,7 @@ export const integratedTrainingAdapter: TrainingAdapter = {
   async listRecommendations(_userId, attemptedChallengeIds, limit) {
     const prisma = await getPrisma();
     return prisma.challenge.findMany({
-      where: attemptedChallengeIds.length > 0 ? { id: { notIn: attemptedChallengeIds } } : undefined,
+      where: buildRecommendationWhere(attemptedChallengeIds),
       orderBy: [{ recommendedElo: "asc" }, { createdAt: "desc" }],
       take: limit,
     });

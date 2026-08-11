@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, LoaderCircle } from "lucide-react";
@@ -13,14 +13,19 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {authClient} from "@/lib/auth-client"
-import { getLoginHref, getSafeCallbackPath } from "@/lib/auth-navigation";
+import {
+  getLoginHref,
+  getPostSignupPath,
+  getSafeCallbackPath,
+} from "@/lib/auth-navigation";
 import { useAuthActionFeedback } from "@/components/auth-action-feedback";
+import { rememberPendingVerificationEmail } from "../verificar-email/verification-email-form";
 
 const registerSchema = z
   .object({
     name: z.string().min(3, "Informe seu nome"),
     email: z.email("E-mail inválido"),
-    password: z.string().min(6, "A senha deve ter no mínimo 6 caracteres"),
+    password: z.string().min(8, "A senha deve ter no mínimo 8 caracteres"),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -30,7 +35,7 @@ const registerSchema = z
 
 type RegisterForm = z.infer<typeof registerSchema>;
 
-export default function CadastroPage() {
+function CadastroForm() {
   const [showPwd, setShowPwd] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -56,7 +61,15 @@ export default function CadastroPage() {
   {
   onSuccess: (ctx)=> {
     finishAuthAction();
-    router.replace(callbackURL)
+    const emailVerified = Boolean(ctx.data.user.emailVerified);
+    const sessionCreated = Boolean(ctx.data.token);
+    if (!emailVerified && !sessionCreated) {
+      rememberPendingVerificationEmail(formData.email);
+    }
+    router.replace(getPostSignupPath(
+      { emailVerified, sessionCreated },
+      callbackURL,
+    ));
   },
   onError:(ctx)=>{
     finishAuthAction();
@@ -98,11 +111,11 @@ export default function CadastroPage() {
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="email">E-mail corporativo</Label>
+          <Label htmlFor="email">E-mail</Label>
           <Input
             id="email"
             type="email"
-            placeholder="voce@empresa.com"
+            placeholder="voce@exemplo.com"
             {...register("email")}
           />
         </div>
@@ -114,12 +127,14 @@ export default function CadastroPage() {
             <Input
               id="password"
               type={showPwd ? "text" : "password"}
-              placeholder="Mínimo 6 caracteres"
+              placeholder="Mínimo 8 caracteres"
+              autoComplete="new-password"
               {...register("password")}
             />
 
             <button
               type="button"
+              aria-label={showPwd ? "Ocultar senha" : "Mostrar senha"}
               onClick={() => setShowPwd(!showPwd)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
             >
@@ -139,6 +154,7 @@ export default function CadastroPage() {
             id="confirmPassword"
             type={showPwd ? "text" : "password"}
             placeholder="Repita a senha"
+            autoComplete="new-password"
             {...register("confirmPassword")}
           />
         </div>
@@ -153,22 +169,16 @@ export default function CadastroPage() {
       </form>
 
       <p className="text-center text-xs text-gray-400">
-        Ao criar uma conta você concorda com nossos{" "}
-        <a
-          href="#"
-          className="text-violet-600 hover:underline"
-        >
-          Termos de Uso
-        </a>{" "}
-        e{" "}
-        <a
-          href="#"
-          className="text-violet-600 hover:underline"
-        >
-          Política de Privacidade
-        </a>
-        .
+        Os Termos de Uso e a Política de Privacidade ainda não estão publicados.
       </p>
     </div>
+  );
+}
+
+export default function CadastroPage() {
+  return (
+    <Suspense fallback={<div className="min-h-72" aria-label="Carregando cadastro" />}>
+      <CadastroForm />
+    </Suspense>
   );
 }
