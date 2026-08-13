@@ -1,4 +1,5 @@
-import { Github } from "lucide-react";
+import { faGithub, faGoogle } from "@fortawesome/free-brands-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { ZenButton } from "@kodan/ui/components/zen";
 
@@ -23,7 +24,7 @@ export function SocialLoginSection({
           onClick={() => onSignIn("github")}
         >
           <span className="inline-flex items-center gap-3">
-            <Github className="size-4" />
+            <FontAwesomeIcon icon={faGithub} className="size-4" />
             Continuar com GitHub
           </span>
         </ZenButton>
@@ -37,12 +38,7 @@ export function SocialLoginSection({
           onClick={() => onSignIn("google")}
         >
           <span className="inline-flex items-center gap-3">
-            <span
-              aria-hidden="true"
-              className="grid size-4 place-items-center rounded-full border border-current font-mono text-[0.6rem] font-bold"
-            >
-              G
-            </span>
+            <FontAwesomeIcon icon={faGoogle} className="size-4" />
             Continuar com Google
           </span>
         </ZenButton>

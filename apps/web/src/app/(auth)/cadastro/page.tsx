@@ -3,15 +3,9 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
-import {
-  Eye,
-  EyeOff,
-  Github,
-  LoaderCircle,
-  Lock,
-  Mail,
-  User,
-} from "lucide-react";
+import { faGithub, faGoogle } from "@fortawesome/free-brands-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Eye, EyeOff, LoaderCircle, Lock, Mail, User } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -215,7 +209,7 @@ function CadastroForm() {
             onClick={() => signInWithProvider("github")}
           >
             <span className="inline-flex items-center gap-3">
-              <Github className="size-4" />
+              <FontAwesomeIcon icon={faGithub} className="size-4" />
               Continuar com GitHub
             </span>
           </ZenButton>
@@ -227,12 +221,7 @@ function CadastroForm() {
             onClick={() => signInWithProvider("google")}
           >
             <span className="inline-flex items-center gap-3">
-              <span
-                aria-hidden="true"
-                className="grid size-4 place-items-center rounded-full border border-current font-mono text-[0.6rem] font-bold"
-              >
-                G
-              </span>
+              <FontAwesomeIcon icon={faGoogle} className="size-4" />
               Continuar com Google
             </span>
           </ZenButton>
