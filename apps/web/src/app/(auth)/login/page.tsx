@@ -6,10 +6,15 @@ export default function LoginPage() {
   const githubEnabled = Boolean(
     process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET,
   );
+  const googleEnabled = Boolean(
+    process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET,
+  );
 
   return (
-    <Suspense fallback={<div className="min-h-72" aria-label="Carregando login" />}>
-      <LoginForm githubEnabled={githubEnabled} />
+    <Suspense
+      fallback={<div className="min-h-72" aria-label="Carregando login" />}
+    >
+      <LoginForm githubEnabled={githubEnabled} googleEnabled={googleEnabled} />
     </Suspense>
   );
 }

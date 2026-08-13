@@ -1,19 +1,20 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { LoaderCircle, MailCheck, MailWarning } from "lucide-react";
+import { useState } from "react";
+import { LoaderCircle, Mail, MailCheck, MailWarning } from "lucide-react";
 
-import { Button } from "@/components/button";
-import { Input } from "@/components/input";
-import { Label } from "@/components/label";
+import { ZenButton } from "@kodan/ui/components/zen";
+import { AuthInput } from "@/components/auth-input";
+import { AuthPage } from "@/components/auth-page";
 import { authClient } from "@/lib/auth-client";
 
 import { PASSWORD_RECOVERY_ACCEPTED_COPY } from "./password-recovery-copy";
 
 export function PasswordRecoveryForm({ enabled }: { enabled: boolean }) {
-  const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "submitting" | "accepted" | "error">("idle");
+  const [status, setStatus] = useState<
+    "idle" | "submitting" | "accepted" | "error"
+  >("idle");
 
   if (!enabled) {
     return (
@@ -26,90 +27,120 @@ export function PasswordRecoveryForm({ enabled }: { enabled: boolean }) {
 
   if (status === "accepted") {
     return (
-      <div className="space-y-6 text-center">
-        <div className="flex justify-center">
-          <span className="flex size-16 items-center justify-center rounded-full bg-emerald-100">
-            <MailCheck className="size-8 text-emerald-700" aria-hidden="true" />
-          </span>
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">
+      <AuthPage view="recover">
+        <div className="mx-auto max-w-[23.75rem] text-center">
+          <MailCheck
+            className="mx-auto size-10 text-[#c7a45d]"
+            aria-hidden="true"
+          />
+          <h2 className="mt-4 font-serif text-2xl text-[#f5f0e6]">
             {PASSWORD_RECOVERY_ACCEPTED_COPY.title}
           </h2>
-          <p className="mt-2 text-sm leading-6 text-gray-500">
+          <p className="mt-2 font-mono text-sm leading-6 text-[#f5f0e6]/60">
             {PASSWORD_RECOVERY_ACCEPTED_COPY.description}
           </p>
+          <ZenButton
+            variant="washi"
+            className="mt-5 w-full py-3"
+            onClick={() => setStatus("idle")}
+          >
+            Enviar novamente
+          </ZenButton>
+          <LoginLink />
         </div>
-        <Link href="/login">
-          <Button variant="outline" className="w-full text-black/80">Voltar ao login</Button>
-        </Link>
-      </div>
+      </AuthPage>
     );
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function handleSubmit(formData: FormData) {
     setStatus("submitting");
+    const email = String(formData.get("email") ?? "").trim();
     const { error } = await authClient.requestPasswordReset({
-      email: email.trim(),
+      email,
       redirectTo: "/redefinir-senha",
     });
     setStatus(error ? "error" : "accepted");
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900">Recuperar senha</h2>
-        <p className="mt-2 text-sm leading-6 text-gray-500">
-          Informe seu e-mail para solicitar um link de redefinição com validade limitada.
-        </p>
-      </div>
-      <form className="space-y-4" onSubmit={handleSubmit}>
-        <div className="space-y-1.5">
-          <Label htmlFor="recovery-email">E-mail</Label>
-          <Input
-            id="recovery-email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-          />
-        </div>
+    <AuthPage view="recover">
+      <form
+        className="mx-auto max-w-[23.75rem] space-y-3"
+        action={handleSubmit}
+      >
+        <label htmlFor="recovery-email" className="sr-only">
+          E-mail
+        </label>
+        <AuthInput
+          id="recovery-email"
+          name="email"
+          icon={Mail}
+          type="email"
+          autoComplete="email"
+          placeholder="E-mail"
+          required
+        />
         {status === "error" ? (
-          <p role="alert" className="text-sm text-red-700">
-            Não foi possível solicitar o link agora. Tente novamente em instantes.
+          <p role="alert" className="font-mono text-xs text-[#e98572]">
+            Não foi possível solicitar o link agora. Tente novamente em
+            instantes.
           </p>
         ) : null}
-        <Button type="submit" disabled={status === "submitting"} className="w-full">
-          {status === "submitting" ? <LoaderCircle className="size-4 animate-spin" /> : null}
-          Enviar link de recuperação
-        </Button>
+        <ZenButton
+          type="submit"
+          variant="hanko"
+          disabled={status === "submitting"}
+          className="mt-1.5 w-full py-3.5"
+        >
+          {status === "submitting" ? (
+            <span className="inline-flex items-center gap-2">
+              <LoaderCircle className="size-4 animate-spin" />
+              Solicitando…
+            </span>
+          ) : (
+            "Enviar link de recuperação"
+          )}
+        </ZenButton>
       </form>
-      <Link href="/login" className="block text-center text-sm text-gray-500 hover:text-gray-800">
-        Voltar ao login
-      </Link>
-    </div>
+      <LoginLink />
+    </AuthPage>
   );
 }
 
-function AccountEmailUnavailable({ title, description }: { title: string; description: string }) {
+function AccountEmailUnavailable({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
   return (
-    <div className="space-y-6 text-center">
-      <div className="flex justify-center">
-        <span className="flex size-16 items-center justify-center rounded-full bg-amber-100">
-          <MailWarning className="size-8 text-amber-700" aria-hidden="true" />
-        </span>
+    <AuthPage view="recover">
+      <div className="mx-auto max-w-[23.75rem] text-center">
+        <MailWarning
+          className="mx-auto size-10 text-[#c7a45d]"
+          aria-hidden="true"
+        />
+        <h2 className="mt-4 font-serif text-2xl text-[#f5f0e6]">{title}</h2>
+        <p className="mt-2 font-mono text-sm leading-6 text-[#f5f0e6]/60">
+          {description}
+        </p>
+        <LoginLink />
       </div>
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
-        <p className="mt-2 text-sm leading-6 text-gray-500">{description}</p>
-      </div>
-      <Link href="/login">
-        <Button variant="outline" className="w-full text-black/80">Voltar ao login</Button>
+    </AuthPage>
+  );
+}
+
+function LoginLink() {
+  return (
+    <p className="mt-6.5 text-center font-mono text-[0.78125rem] text-[#f5f0e6]/55">
+      Lembrou a senha?{" "}
+      <Link
+        href="/login"
+        className="text-[#c7a45d] underline underline-offset-3"
+      >
+        Entrar
       </Link>
-    </div>
+    </p>
   );
 }

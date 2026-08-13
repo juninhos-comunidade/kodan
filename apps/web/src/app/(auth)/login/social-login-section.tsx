@@ -1,39 +1,52 @@
-import { faGithub } from "@fortawesome/free-brands-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Github } from "lucide-react";
 
-import { Button } from "@/components/button";
+import { ZenButton } from "@kodan/ui/components/zen";
 
 export function SocialLoginSection({
   githubEnabled,
+  googleEnabled,
   onSignIn,
 }: {
   githubEnabled: boolean;
-  onSignIn: () => void;
+  googleEnabled: boolean;
+  onSignIn: (provider: "github" | "google") => void;
 }) {
-  if (!githubEnabled) return null;
+  if (!githubEnabled && !googleEnabled) return null;
 
   return (
-    <>
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-200" />
-        </div>
-        <div className="relative flex justify-center text-xs">
-          <span className="bg-white px-2 text-gray-400">ou continue com</span>
-        </div>
-      </div>
-      <Button
-        type="button"
-        variant="outline"
-        className="w-full"
-        onClick={onSignIn}
-      >
-        <FontAwesomeIcon
-          icon={faGithub}
-          className="mr-2 size-4 text-zinc-500"
-        />
-        <span className="text-black/60">Entrar com GitHub</span>
-      </Button>
-    </>
+    <div className="space-y-3">
+      {githubEnabled ? (
+        <ZenButton
+          type="button"
+          variant="washi"
+          className="w-full justify-start py-3"
+          onClick={() => onSignIn("github")}
+        >
+          <span className="inline-flex items-center gap-3">
+            <Github className="size-4" />
+            Continuar com GitHub
+          </span>
+        </ZenButton>
+      ) : null}
+      {googleEnabled ? (
+        <ZenButton
+          type="button"
+          variant="washi"
+          aria-label="Continuar com Google"
+          className="w-full justify-start py-3"
+          onClick={() => onSignIn("google")}
+        >
+          <span className="inline-flex items-center gap-3">
+            <span
+              aria-hidden="true"
+              className="grid size-4 place-items-center rounded-full border border-current font-mono text-[0.6rem] font-bold"
+            >
+              G
+            </span>
+            Continuar com Google
+          </span>
+        </ZenButton>
+      ) : null}
+    </div>
   );
 }
