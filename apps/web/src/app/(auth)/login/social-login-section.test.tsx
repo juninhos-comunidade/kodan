@@ -3,13 +3,11 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import { SocialLoginSection } from "./social-login-section";
 
-test("só oferece GitHub quando o provedor está configurado", () => {
-  const onSignIn = mock(() => undefined);
+test("mantém GitHub e Google sempre visíveis no login", () => {
+  const markup = renderToStaticMarkup(
+    <SocialLoginSection onSignIn={mock(() => undefined)} />,
+  );
 
-  expect(renderToStaticMarkup(
-    <SocialLoginSection githubEnabled={false} onSignIn={onSignIn} />,
-  )).toBe("");
-  expect(renderToStaticMarkup(
-    <SocialLoginSection githubEnabled onSignIn={onSignIn} />,
-  )).toContain("Entrar com GitHub");
+  expect(markup).toContain("Continuar com GitHub");
+  expect(markup).toContain("Continuar com Google");
 });
