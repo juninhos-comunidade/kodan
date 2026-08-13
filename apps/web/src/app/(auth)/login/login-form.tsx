@@ -28,13 +28,7 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
-export function LoginForm({
-  githubEnabled,
-  googleEnabled,
-}: {
-  githubEnabled: boolean;
-  googleEnabled: boolean;
-}) {
+export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -170,8 +164,6 @@ export function LoginForm({
         </div>
 
         <SocialLoginSection
-          githubEnabled={githubEnabled}
-          googleEnabled={googleEnabled}
           onSignIn={(provider) => void signInWithProvider(provider)}
         />
       </div>
