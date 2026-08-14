@@ -16,6 +16,11 @@ import { createOpenRouterEvaluator } from "../../apps/web/src/server/training/ev
 import { DEFAULT_EVALUATION_PROMPT_VERSION } from "../../apps/web/src/server/training/evaluation/prompt";
 import { parseChallengeEvaluationRubric } from "../../apps/web/src/server/training/evaluation/schemas";
 import { createRequestPacer } from "./request-pacer";
+import {
+  createBenchmarkBudgetController,
+  createBenchmarkCacheKey,
+  parseBenchmarkDailyBudget,
+} from "./benchmark-budget";
 
 type BenchmarkRun = {
   caseId: string;
@@ -34,6 +39,7 @@ type BenchmarkRun = {
   divergences: string[];
   latencyMs?: number;
   requestId?: string;
+  cacheHit?: boolean;
 };
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -71,8 +77,13 @@ const maxRetries = z.coerce.number().int().min(0).max(1)
   .parse(args.get("retries") ?? "1");
 const requestsPerMinute = z.coerce.number().int().min(1).max(20)
   .parse(args.get("rpm") ?? "18");
+const dailyBudget = parseBenchmarkDailyBudget(args.get("daily-budget"));
 const model = resolveFreeOpenRouterModel(args.get("model") ?? env.OPENROUTER_MODEL);
 const waitForRequestSlot = createRequestPacer({ requestsPerMinute });
+const budget = createBenchmarkBudgetController({
+  stateDirectory: path.join(repoRoot, ".cache/kodan/evaluation-benchmark"),
+  dailyBudget,
+});
 
 const [challengeJson, code, rubricJson, casesJson] = await Promise.all([
   readFile(path.join(challengeDir, "challenge.json"), "utf8"),
@@ -96,24 +107,54 @@ const tasks = cases.flatMap((evaluationCase) =>
   Array.from({ length: repeat }, (_, index) => ({
     evaluationCase,
     repetition: index + 1,
+    cacheKey: createBenchmarkCacheKey({
+      challengeId: challenge.id,
+      caseId: evaluationCase.id,
+      repetition: index + 1,
+      answer: evaluationCase.answer,
+      model,
+      promptVersion: DEFAULT_EVALUATION_PROMPT_VERSION,
+      rubricVersion: rubric.version,
+      expectation: {
+        expectedScore: evaluationCase.expectedScore,
+        expectedStatus: evaluationCase.expectedStatus,
+        expectedMatchedConceptIds: evaluationCase.expectedMatchedConceptIds,
+        forbiddenMatchedConceptIds: evaluationCase.forbiddenMatchedConceptIds,
+      },
+    }),
   }))
+);
+const preparedTasks = await Promise.all(tasks.map(async (task) => ({
+  ...task,
+  cachedRun: await budget.readApprovedCache<BenchmarkRun>(task.cacheKey),
+})));
+const uncachedTaskCount = preparedTasks.filter((task) => !task.cachedRun).length;
+const initialBudget = await budget.assertCanSchedule(uncachedTaskCount);
+console.log(
+  `Orçamento local: ${initialBudget.used}/${initialBudget.dailyBudget} usado; ${uncachedTaskCount} chamadas planejadas; ${preparedTasks.length - uncachedTaskCount} resultados em cache.`,
+);
+console.log(
+  "Observação: o ledger local não contabiliza chamadas feitas fora deste repositório.",
 );
 const runs = new Array<BenchmarkRun>(tasks.length);
 let nextTaskIndex = 0;
 await Promise.all(
-  Array.from({ length: Math.min(concurrency, tasks.length) }, async () => {
-    while (nextTaskIndex < tasks.length) {
+  Array.from({ length: Math.min(concurrency, preparedTasks.length) }, async () => {
+    while (nextTaskIndex < preparedTasks.length) {
       const taskIndex = nextTaskIndex;
       nextTaskIndex += 1;
-      const task = tasks[taskIndex];
+      const task = preparedTasks[taskIndex];
       if (!task) return;
-      runs[taskIndex] = await runBenchmarkCase(task.evaluationCase, task.repetition);
+      runs[taskIndex] = task.cachedRun
+        ? { ...task.cachedRun, cacheHit: true }
+        : await runBenchmarkCase(task.evaluationCase, task.repetition, task.cacheKey);
     }
   }),
 );
 
 const generatedAt = new Date().toISOString();
 const failedRuns = runs.filter((run) => run.divergences.length > 0);
+const finalBudget = await budget.getSnapshot();
 const report = {
   generatedAt,
   challengeId: challenge.id,
@@ -122,6 +163,9 @@ const report = {
   rubricVersion: rubric.version,
   repeat,
   requestsPerMinute,
+  dailyBudget,
+  budget: finalBudget,
+  cacheHits: runs.filter((run) => run.cacheHit).length,
   summary: { total: runs.length, passed: runs.length - failedRuns.length, failed: failedRuns.length },
   runs,
 };
@@ -140,6 +184,7 @@ if (failedRuns.length > 0) process.exitCode = 1;
 async function runBenchmarkCase(
   evaluationCase: EvaluationBenchmarkCase,
   repetition: number,
+  cacheKey: string,
 ): Promise<BenchmarkRun> {
   let providerDiagnostic: unknown;
   const evaluator = createOpenRouterEvaluator({
@@ -148,6 +193,20 @@ async function runBenchmarkCase(
     timeoutMs,
     maxRetries,
     fetchImplementation: async (input, init) => {
+      try {
+        await budget.consumeRequest();
+      } catch (error) {
+        providerDiagnostic = {
+          localBudget: "exhausted",
+          message: error instanceof Error ? error.message : "Orçamento local esgotado",
+        };
+        return new Response(JSON.stringify({
+          error: { code: 429, message: "Orçamento diário local do benchmark esgotado" },
+        }), {
+          status: 429,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
       await waitForRequestSlot();
       const response = await fetch(input, init);
       providerDiagnostic = await sanitizeProviderResponse(response.clone());
@@ -187,7 +246,7 @@ async function runBenchmarkCase(
   console.log(
     `${divergences.length === 0 ? "PASS" : "FAIL"} ${evaluationCase.id} #${repetition}: ${result.score.toFixed(1)} ${actualStatus}`,
   );
-  return {
+  const run: BenchmarkRun = {
     caseId: evaluationCase.id,
     category: evaluationCase.category,
     repetition,
@@ -203,6 +262,10 @@ async function runBenchmarkCase(
     latencyMs: result.metadata.latencyMs,
     ...(result.metadata.requestId ? { requestId: result.metadata.requestId } : {}),
   };
+  if (run.divergences.length === 0) {
+    await budget.writeApprovedCache(cacheKey, run);
+  }
+  return run;
 }
 
 function findDivergences(
@@ -251,6 +314,9 @@ function renderMarkdown(report: BenchmarkReport) {
     `- Prompt: ${report.promptVersion}`,
     `- Rubrica: ${report.rubricVersion}`,
     `- Limite do runner: ${report.requestsPerMinute} requisições/minuto`,
+    `- Orçamento diário local: ${report.budget.used}/${report.dailyBudget} chamadas usadas`,
+    `- Resultados reutilizados do cache aprovado: ${report.cacheHits}`,
+    "- Cobertura do ledger: somente chamadas feitas por este runner neste repositório",
     `- Resultado: ${report.summary.passed}/${report.summary.total}`,
     "",
     "| Resultado | Caso | Repetição | Nota/falha | Status | Divergências |",
