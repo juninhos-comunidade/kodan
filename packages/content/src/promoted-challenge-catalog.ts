@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import {
   challengeEvaluationRubricSchema,
+  evaluationBenchmarkCasesSchema,
   challengeIndexSchema,
   challengeLegacySchema,
   challengeSplitMetaSchema,
@@ -15,6 +16,7 @@ import {
   type ChallengePresentation,
   type ChallengeSplitMeta,
   type ChallengeTerminalArtifact,
+  type EvaluationBenchmarkCase,
 } from "./challenge-schemas";
 import { inferChallengeTopic } from "./challenge-taxonomy";
 
@@ -35,6 +37,7 @@ export type ChallengeContentEntry = {
   intent: ChallengeIntent;
   terminal?: ChallengeTerminalArtifact;
   evaluationRubric?: ChallengeEvaluationRubric;
+  evaluationCases?: EvaluationBenchmarkCase[];
 };
 
 type ChallengeLoadResult = {
@@ -179,6 +182,12 @@ async function loadSplitChallenge(filePath: string): Promise<ChallengeLoadResult
         await readJsonUnknown(path.resolve(path.dirname(filePath), parsed.rubricFile)),
       )
     : parsed.evaluationRubric;
+  const evaluationCasesPath = path.resolve(
+    path.dirname(filePath),
+    parsed.evaluationCasesFile ?? "evaluation-cases.json",
+  );
+  const evaluationCases = await readOptionalJsonUnknown(evaluationCasesPath)
+    .then((cases) => cases === undefined ? undefined : evaluationBenchmarkCasesSchema.parse(cases));
 
   return {
     challenge: {
@@ -198,6 +207,7 @@ async function loadSplitChallenge(filePath: string): Promise<ChallengeLoadResult
       ...(parsed.scenario ? { scenario: parsed.scenario } : {}),
       ...(terminal ? { terminal } : {}),
       ...(evaluationRubric ? { evaluationRubric } : {}),
+      ...(evaluationCases ? { evaluationCases } : {}),
     },
     indexEntry,
   };
@@ -251,4 +261,13 @@ async function readJsonUnknown(filePath: string): Promise<unknown> {
     if (error instanceof SyntaxError) throw new Error(`JSON inválido em ${filePath}`);
     throw error;
   }
+}
+
+async function readOptionalJsonUnknown(filePath: string): Promise<unknown | undefined> {
+  try {
+    await access(filePath);
+  } catch {
+    return undefined;
+  }
+  return readJsonUnknown(filePath);
 }

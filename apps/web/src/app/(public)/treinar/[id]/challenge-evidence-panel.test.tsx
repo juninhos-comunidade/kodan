@@ -52,6 +52,7 @@ describe("ChallengeEvidencePanel", () => {
     expect(markup).toContain('role="tab"');
     expect(markup).toContain("cart.py");
     expect(markup).toContain("Terminal");
+    expect(markup).toContain("O carrinho duplicou um item.");
     expect(markup).toContain('aria-selected="true"');
   });
 
@@ -84,6 +85,7 @@ describe("ChallengeEvidencePanel", () => {
     expect(markup).toContain("BUILD SUCCESS");
     expect(markup).toContain("Obtido");
     expect(markup).toContain("NullPointerException");
+    expect(markup).toContain("A suíte falhou após uma alteração.");
   });
 
   test("coloca contexto e pergunta no painel principal conceitual", () => {

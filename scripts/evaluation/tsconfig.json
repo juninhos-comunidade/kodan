@@ -8,5 +8,5 @@
       "@/*": ["../../apps/web/src/*"]
     }
   },
-  "include": ["benchmark.ts", "benchmark-budget.ts", "request-pacer.ts"]
+  "include": ["benchmark.ts", "benchmark-budget.ts", "benchmark-selection.ts", "request-pacer.ts"]
 }

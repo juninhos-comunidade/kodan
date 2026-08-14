@@ -166,6 +166,7 @@ export const challengeSplitMetaSchema = baseChallengeSchema.extend({
   solutionFile: z.string().trim().min(1).optional(),
   expectedAnswerFile: z.string().trim().min(1).optional(),
   rubricFile: z.string().trim().min(1).optional(),
+  evaluationCasesFile: z.string().trim().min(1).optional(),
   hintsFile: z.string().trim().min(1).optional(),
   commonMistakesFile: z.string().trim().min(1).optional(),
 }).superRefine((challenge, context) => {

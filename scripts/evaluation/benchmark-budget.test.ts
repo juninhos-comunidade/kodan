@@ -75,12 +75,14 @@ describe("orçamento diário do benchmark", () => {
     });
     const cacheKey = createBenchmarkCacheKey({
       challengeId: "react-state",
+      challengeContent: { question: "Por que o estado fica obsoleto?" },
       caseId: "accepted",
       repetition: 1,
       answer: "A atualização funcional evita o valor obsoleto.",
       model: "openrouter/free",
       promptVersion: "1.0.0",
       rubricVersion: "1.0.0",
+      rubric: { centralAnswer: "A atualização funcional evita o valor obsoleto." },
     });
     await controller.writeApprovedCache(cacheKey, { score: 9 });
 
@@ -88,12 +90,43 @@ describe("orçamento diário do benchmark", () => {
     expect((await controller.getSnapshot()).used).toBe(0);
     expect(createBenchmarkCacheKey({
       challengeId: "react-state",
+      challengeContent: { question: "Por que o estado fica obsoleto?" },
       caseId: "accepted",
       repetition: 1,
       answer: "Outra resposta.",
       model: "openrouter/free",
       promptVersion: "1.0.0",
       rubricVersion: "1.0.0",
+      rubric: { centralAnswer: "A atualização funcional evita o valor obsoleto." },
     })).not.toBe(cacheKey);
+  });
+
+  test("invalida o cache quando qualquer conteúdo editorial muda", () => {
+    const base = {
+      challengeId: "go-output",
+      challengeContent: {
+        question: "Explique a saída.",
+        scenario: "Um teste falhou.",
+        code: "fmt.Println(value)",
+        terminal: { command: "go test", blocks: [] },
+      },
+      caseId: "accepted",
+      repetition: 1,
+      answer: "A saída diverge por causa do valor capturado.",
+      model: "openrouter/free",
+      promptVersion: "1.0.0",
+      rubricVersion: "1.0.0",
+      rubric: { centralAnswer: "O valor capturado está obsoleto." },
+    };
+
+    const original = createBenchmarkCacheKey(base);
+    expect(createBenchmarkCacheKey({
+      ...base,
+      challengeContent: { ...base.challengeContent, question: "O código está correto?" },
+    })).not.toBe(original);
+    expect(createBenchmarkCacheKey({
+      ...base,
+      rubric: { centralAnswer: "A ordem de execução mudou." },
+    })).not.toBe(original);
   });
 });

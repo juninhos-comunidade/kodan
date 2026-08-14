@@ -15,11 +15,11 @@ export function ChallengeEditorialReview({
       aria-labelledby="editorial-review-title"
       className={cn(
         "border border-[color:var(--challengers-border-strong,var(--dojo-border))] bg-[var(--challengers-panel,var(--dojo-surface))]",
-        compact ? "rounded-lg p-4" : "mx-auto max-w-2xl rounded-2xl p-7 sm:p-10",
+        compact ? "p-4" : "mx-auto max-w-2xl p-7 sm:p-10",
       )}
     >
       <div className="flex items-start gap-4">
-        <span className="grid size-10 shrink-0 place-items-center rounded-full border border-[color:var(--challengers-border-strong,var(--dojo-border))] text-[var(--challengers-muted,var(--dojo-muted))]">
+        <span className="grid size-10 shrink-0 place-items-center border border-[color:var(--challengers-border-strong,var(--dojo-border))] text-[var(--challengers-muted,var(--dojo-muted))]">
           <LockKeyhole className="size-4" aria-hidden="true" />
         </span>
         <div>
@@ -34,7 +34,7 @@ export function ChallengeEditorialReview({
             Estamos validando o enunciado, a solução e os critérios de avaliação antes de liberar este desafio. Assim, um possível erro de conteúdo não afeta seu resultado nem seu ELO.
           </p>
           {showCatalogAction ? (
-            <Link href="/desafios" className="mt-6 inline-flex min-h-10 items-center rounded-lg border border-[color:var(--challengers-border-strong,var(--dojo-border))] px-4 text-sm font-semibold text-[var(--challengers-ink,var(--dojo-ink))]">
+            <Link href="/desafios" className="mt-6 inline-flex min-h-10 items-center border border-[color:var(--challengers-border-strong,var(--dojo-border))] px-4 text-sm font-semibold text-[var(--challengers-ink,var(--dojo-ink))]">
               Voltar aos desafios
             </Link>
           ) : null}

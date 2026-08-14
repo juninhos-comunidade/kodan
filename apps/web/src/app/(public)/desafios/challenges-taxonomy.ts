@@ -20,7 +20,7 @@ export function matchesChallengeTopic(
   challenge: Pick<Challenge, "topic">,
   topicFilter: ChallengeTopicFilter,
 ) {
-  return topicFilter === "ALL" || getChallengeTopicKey(challenge) === topicFilter;
+  return topicFilter === "ALL" || challenge.topic === topicFilter;
 }
 
 export function buildChallengeTopicSections(challenges: Challenge[]): ChallengeTopicSection[] {
@@ -35,7 +35,7 @@ export function buildChallengeTopicSections(challenges: Challenge[]): ChallengeT
     } satisfies Record<"ALL" | Difficulty, number>;
 
     for (const challenge of challenges) {
-      if (getChallengeTopicKey(challenge) !== topic.key) continue;
+      if (challenge.topic !== topic.key) continue;
       difficulties.ALL += 1;
       if (isDifficulty(challenge.difficulty)) difficulties[challenge.difficulty] += 1;
     }
@@ -64,10 +64,6 @@ export function getChallengeTopicTagline(
   }
 
   return topicTags.length === 0 ? topicLabel : `${topicLabel} · ${topicTags.join(" · ")}`;
-}
-
-export function getChallengeTopicKey(challenge: Pick<Challenge, "topic">) {
-  return challenge.topic;
 }
 
 export function getChallengeTopicLabel(

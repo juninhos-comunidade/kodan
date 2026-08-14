@@ -3,7 +3,6 @@ import { describe, expect, it } from "bun:test";
 import {
   CHALLENGE_TOPICS,
   buildChallengeTopicSections,
-  getChallengeTopicKey,
   getChallengeTopicTagline,
   matchesChallengeTopic,
 } from "./challenges-taxonomy";
@@ -27,46 +26,7 @@ function makeChallenge(overrides: Partial<Challenge> = {}): Challenge {
 }
 
 describe("challenges-taxonomy", () => {
-  it("classifica os desafios em secoes de produto coerentes", () => {
-    expect(getChallengeTopicKey(makeChallenge())).toBe("effects-lifecycle");
-    expect(
-      getChallengeTopicKey(
-        makeChallenge({
-          id: "react-medium-fetch-race",
-          tags: "react,race-condition,data-fetching",
-          topic: "async-races",
-        }),
-      ),
-    ).toBe("async-races");
-    expect(
-      getChallengeTopicKey(
-        makeChallenge({
-          id: "react-easy-state-mutation",
-          tags: "react,state-management,immutability",
-          topic: "state-rendering",
-        }),
-      ),
-    ).toBe("state-rendering");
-    expect(
-      getChallengeTopicKey(
-        makeChallenge({
-          id: "react-contracts-children-api",
-          tags: "react,composition,children,contracts",
-          topic: "component-patterns",
-        }),
-      ),
-    ).toBe("component-patterns");
-    expect(
-      getChallengeTopicKey(
-        makeChallenge({
-          id: "typescript-generics-inference",
-          title: "Inferência em tipos genéricos",
-          tags: "typescript,generics,type-inference",
-          language: "typescript",
-          topic: "generics-inference",
-        }),
-      ),
-    ).toBe("generics-inference");
+  it("expõe as seções editoriais de React", () => {
     expect(CHALLENGE_TOPICS.find((topic) => topic.key === "type-system")?.label).toBe(
       "Type System",
     );

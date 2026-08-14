@@ -12,28 +12,30 @@ import {
 } from "lucide-react";
 import { useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 
+import type {
+  ChallengePresentation,
+  ChallengeTerminalArtifact,
+} from "@kodan/content/challenge-schemas";
 import { cn } from "@kodan/ui/lib/utils";
 
-type Presentation = "code" | "code-terminal" | "terminal" | "concept";
 type EvidenceView = "code" | "terminal";
 type Language = "react" | "typescript" | "python" | "java" | "go";
-type TerminalArtifact = {
-  command: string;
-  blocks: Array<{
-    label: string;
-    content: string;
-    tone: "neutral" | "success" | "warning" | "error";
-  }>;
+const languageEvidence: Record<Language, { label: string; defaultFileName: string }> = {
+  react: { label: "React + TypeScript", defaultFileName: "App.tsx" },
+  typescript: { label: "TypeScript", defaultFileName: "challenge.ts" },
+  python: { label: "Python", defaultFileName: "main.py" },
+  java: { label: "Java", defaultFileName: "Main.java" },
+  go: { label: "Go", defaultFileName: "main.go" },
 };
 
 export type ChallengeEvidence = {
   language?: Language;
-  presentation?: Presentation;
+  presentation?: ChallengePresentation;
   code: string | null;
   codeFileName?: string | null;
   scenario?: string | null;
   question: string;
-  terminal?: TerminalArtifact | null;
+  terminal?: ChallengeTerminalArtifact | null;
 };
 
 export function ChallengeEvidencePanel({
@@ -53,7 +55,8 @@ export function ChallengeEvidencePanel({
       : (["code"] as const);
   const [activeView, setActiveView] = useState<EvidenceView>(tabs[0]);
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
-  const fileName = challenge.codeFileName ?? getDefaultFileName(challenge.language ?? "react");
+  const language = languageEvidence[challenge.language ?? "react"];
+  const fileName = challenge.codeFileName ?? language.defaultFileName;
 
   if (presentation === "concept") {
     return (
@@ -76,7 +79,7 @@ export function ChallengeEvidencePanel({
   return (
     <section
       data-presentation={presentation}
-      className="challengers-panel flex min-h-[560px] flex-col overflow-hidden rounded-[10px] border xl:min-h-0"
+      className="challengers-panel flex min-h-[560px] flex-col overflow-hidden border xl:min-h-0"
     >
       <div className="flex h-12 shrink-0 items-center justify-between border-b border-[color:var(--challengers-border)] bg-[var(--challengers-panel)]">
         <div role="tablist" aria-label="Evidências do desafio" className="flex h-full items-center">
@@ -111,13 +114,13 @@ export function ChallengeEvidencePanel({
         </div>
         {activeView === "code" ? (
           <div className="flex items-center gap-2 px-3">
-            <span className="hidden rounded-[7px] border border-[color:var(--challengers-border)] bg-[var(--challengers-surface)] px-2.5 py-1 text-[0.72rem] font-medium text-[var(--challengers-blue)] sm:inline-flex">
-              {getLanguageLabel(challenge.language ?? "react")}
+            <span className="hidden border border-[color:var(--challengers-border)] bg-[var(--challengers-surface)] px-2.5 py-1 text-[0.72rem] font-medium text-[var(--challengers-blue)] sm:inline-flex">
+              {language.label}
             </span>
             <button
               type="button"
               aria-label="Copiar código"
-              className="challengers-icon-button inline-flex size-8 items-center justify-center rounded-[8px] border"
+              className="challengers-icon-button inline-flex size-8 items-center justify-center border"
               onClick={onCopyCode}
             >
               <Copy className="size-4" aria-hidden="true" />
@@ -125,6 +128,8 @@ export function ChallengeEvidencePanel({
           </div>
         ) : null}
       </div>
+
+      {challenge.scenario ? <ScenarioContext scenario={challenge.scenario} /> : null}
 
       {activeView === "code" ? (
         <CodeEvidence
@@ -152,7 +157,7 @@ function CodeEvidence({ code, difficulty }: { code: string; difficulty: string }
           <div aria-hidden="true" className="select-none border-r border-[color:var(--challengers-border)] bg-[var(--challengers-panel)] px-3 py-4 text-right text-[0.72rem] font-medium leading-6 text-[var(--challengers-faint)]">
             {lines.map((_, index) => <div key={index} className="h-[1.45rem] min-w-5 tabular-nums">{index + 1}</div>)}
           </div>
-          <pre className="flex-1 overflow-visible px-4 py-4 text-[var(--challengers-ink)]">
+          <pre className="flex-1 overflow-visible p-4 text-[var(--challengers-ink)]">
             {lines.map((line, index) => <CodeLine key={`${index}:${line}`} line={line} />)}
           </pre>
         </div>
@@ -181,7 +186,7 @@ function CodeLine({ line }: { line: string }) {
   );
 }
 
-function TerminalEvidence({ terminal }: { terminal?: TerminalArtifact | null }) {
+function TerminalEvidence({ terminal }: { terminal?: ChallengeTerminalArtifact | null }) {
   return (
     <div
       id="evidence-panel-terminal"
@@ -191,12 +196,12 @@ function TerminalEvidence({ terminal }: { terminal?: TerminalArtifact | null }) 
     >
       {terminal ? (
         <div className="space-y-5">
-          <div className="flex items-center gap-3 border-b border-white/10 pb-4 text-[oklch(76%_0.03_220)]">
+          <div className="flex items-center gap-3 border-b border-[oklch(42%_0.018_250)] pb-4 text-[oklch(76%_0.03_220)]">
             <span aria-hidden="true" className="select-none text-[oklch(70%_0.11_155)]">$</span>
             <code>{terminal.command}</code>
           </div>
           {terminal.blocks.map((block, index) => (
-            <div key={`${block.label}:${index}`} className="rounded-lg border border-white/10 bg-white/[0.035] p-4">
+            <div key={`${block.label}:${index}`} className="border border-[oklch(42%_0.018_250)] bg-[oklch(22%_0.012_255)] p-4">
               <p className={cn("mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em]", getTerminalToneClass(block.tone))}>
                 <TerminalToneIcon tone={block.tone} />
                 {block.label}
@@ -214,7 +219,7 @@ function TerminalEvidence({ terminal }: { terminal?: TerminalArtifact | null }) 
 
 function ConceptEvidence({ scenario, question }: { scenario?: string | null; question: string }) {
   return (
-    <section data-presentation="concept" className="challengers-panel flex min-h-[560px] flex-col overflow-hidden rounded-[10px] border xl:min-h-0">
+    <section data-presentation="concept" className="challengers-panel flex min-h-[560px] flex-col overflow-hidden border xl:min-h-0">
       <div className="flex h-12 shrink-0 items-center gap-2 border-b border-[color:var(--challengers-border)] bg-[var(--challengers-panel)] px-4 text-sm font-medium text-[var(--challengers-blue)]">
         <BookOpenText className="size-4" aria-hidden="true" />
         Comparação conceitual
@@ -222,9 +227,8 @@ function ConceptEvidence({ scenario, question }: { scenario?: string | null; que
       <div className="flex flex-1 items-center bg-[var(--challengers-surface)] px-6 py-10 sm:px-10">
         <div className="max-w-3xl">
           {scenario ? (
-            <div className="mb-8 border-l-2 border-[color:var(--challengers-blue)] pl-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--challengers-blue)]">Contexto</p>
-              <p className="mt-3 text-base leading-7 text-[var(--challengers-muted)]">{scenario}</p>
+            <div className="mb-8">
+              <ScenarioContext scenario={scenario} />
             </div>
           ) : null}
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--challengers-muted)]">Questão</p>
@@ -235,7 +239,19 @@ function ConceptEvidence({ scenario, question }: { scenario?: string | null; que
   );
 }
 
-function TerminalToneIcon({ tone }: { tone: TerminalArtifact["blocks"][number]["tone"] }) {
+function ScenarioContext({ scenario }: { scenario: string }) {
+  return (
+    <div className="border-b border-[color:var(--challengers-border)] bg-[var(--challengers-panel)] px-5 py-4">
+      <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--challengers-blue)]">
+        <BookOpenText className="size-3.5" aria-hidden="true" />
+        Contexto
+      </p>
+      <p className="mt-2 max-w-[72ch] text-sm leading-6 text-[var(--challengers-muted)]">{scenario}</p>
+    </div>
+  );
+}
+
+function TerminalToneIcon({ tone }: { tone: ChallengeTerminalArtifact["blocks"][number]["tone"] }) {
   const Icon = tone === "success"
     ? CheckCircle2
     : tone === "warning"
@@ -246,25 +262,9 @@ function TerminalToneIcon({ tone }: { tone: TerminalArtifact["blocks"][number]["
   return <Icon className="size-3.5" aria-hidden="true" />;
 }
 
-function getTerminalToneClass(tone: TerminalArtifact["blocks"][number]["tone"]) {
+function getTerminalToneClass(tone: ChallengeTerminalArtifact["blocks"][number]["tone"]) {
   if (tone === "success") return "text-[oklch(78%_0.13_155)]";
   if (tone === "warning") return "text-[oklch(84%_0.13_85)]";
   if (tone === "error") return "text-[oklch(76%_0.15_25)]";
   return "text-[oklch(72%_0.03_240)]";
-}
-
-function getLanguageLabel(language: Language) {
-  if (language === "react") return "React + TypeScript";
-  if (language === "typescript") return "TypeScript";
-  if (language === "python") return "Python";
-  if (language === "java") return "Java";
-  return "Go";
-}
-
-function getDefaultFileName(language: Language) {
-  if (language === "react") return "App.tsx";
-  if (language === "typescript") return "challenge.ts";
-  if (language === "python") return "main.py";
-  if (language === "java") return "Main.java";
-  return "main.go";
 }

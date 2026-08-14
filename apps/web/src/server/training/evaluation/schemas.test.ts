@@ -54,6 +54,26 @@ describe("parseChallengeEvaluationRubric", () => {
 
     expect(rubric).toBeNull();
   });
+
+  test.each([
+    "output-diagnosis",
+    "compare-concepts",
+    "behavior-validation",
+  ] as const)("aceita o novo tipo de questão %s", (questionKind) => {
+    const parsed = parseChallengeEvaluationRubric(JSON.stringify({
+      version: "1.0.0",
+      questionKind,
+      centralAnswer: "Resposta central.",
+      concepts: [{
+        id: "critical",
+        importance: "critical",
+        internalDescription: "Conceito central.",
+        publicLabel: "Conceito central.",
+      }],
+    }));
+
+    expect(parsed?.questionKind).toBe(questionKind);
+  });
 });
 
 describe("parseModelEvaluation", () => {

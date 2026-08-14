@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+import {
+  challengeEvaluationRubricSchema,
+  challengeTerminalArtifactSchema,
+} from "@kodan/content/challenge-schemas";
+
 export type ChallengeRecord = {
   id: string;
   title: string;
@@ -41,14 +46,7 @@ export const challengeLanguageSchema = z.enum([
 export const challengePresentationSchema = z.enum(["code", "code-terminal", "terminal", "concept"]);
 export const challengeIntentSchema = z.enum(["diagnose", "compare", "validate"]);
 export const challengeAvailabilitySchema = z.enum(["READY", "EDITORIAL_REVIEW"]);
-export const challengeTerminalSchema = z.object({
-  command: z.string().min(1),
-  blocks: z.array(z.object({
-    label: z.string().min(1),
-    content: z.string().min(1),
-    tone: z.enum(["neutral", "success", "warning", "error"]),
-  })).min(1),
-});
+export const challengeTerminalSchema = challengeTerminalArtifactSchema;
 
 export const challengeAttemptSummarySchema = z.object({
   id: z.string(),
@@ -91,7 +89,7 @@ export const challengeDetailSchema = challengeSummarySchema.extend({
 });
 
 export function serializeChallengeSummary(challenge: ChallengeRecord) {
-  const evaluationAvailable = Boolean(challenge.evaluationRubricJson);
+  const evaluationAvailable = hasValidEvaluationRubric(challenge.evaluationRubricJson);
   return {
     id: challenge.id,
     title: challenge.title,
@@ -125,8 +123,17 @@ export function serializeChallengeDetail(challenge: ChallengeRecord) {
     scenario: challenge.scenario ?? null,
     question: challenge.question,
     terminal: parseTerminalArtifact(challenge.terminalJson),
-    evaluationAvailable: Boolean(challenge.evaluationRubricJson),
+    evaluationAvailable: hasValidEvaluationRubric(challenge.evaluationRubricJson),
   };
+}
+
+function hasValidEvaluationRubric(value: string | null | undefined) {
+  if (!value) return false;
+  try {
+    return challengeEvaluationRubricSchema.safeParse(JSON.parse(value)).success;
+  } catch {
+    return false;
+  }
 }
 
 function parseTerminalArtifact(value: string | null | undefined) {

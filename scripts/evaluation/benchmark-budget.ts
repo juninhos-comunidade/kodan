@@ -14,12 +14,14 @@ type BudgetSnapshot = {
 
 type CacheKeyInput = {
   challengeId: string;
+  challengeContent: unknown;
   caseId: string;
   repetition: number;
   answer: string;
   model: string;
   promptVersion: string;
   rubricVersion: string;
+  rubric: unknown;
   expectation?: unknown;
 };
 
@@ -36,7 +38,7 @@ export function parseBenchmarkDailyBudget(value: string | undefined) {
 
 export function createBenchmarkCacheKey(input: CacheKeyInput) {
   return createHash("sha256")
-    .update(JSON.stringify({ version: 1, ...input }))
+    .update(JSON.stringify({ version: 2, ...input }))
     .digest("hex");
 }
 

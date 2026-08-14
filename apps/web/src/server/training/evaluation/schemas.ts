@@ -1,52 +1,11 @@
 import { z } from "zod";
 
+import { challengeEvaluationRubricSchema } from "@kodan/content/challenge-schemas";
+
 import type {
   ChallengeEvaluationRubric,
   ModelEvaluation,
 } from "./types";
-
-const rubricConceptSchema = z.strictObject({
-  id: z.string().trim().min(1),
-  importance: z.enum(["critical", "essential", "complementary"]),
-  internalDescription: z.string().trim().min(1),
-  publicLabel: z.string().trim().min(1).refine((value) => value !== "???"),
-  reflectionPrompt: z.string().trim().min(1).optional(),
-});
-
-const rubricMisconceptionSchema = z.strictObject({
-  id: z.string().trim().min(1),
-  severity: z.enum(["minor", "major", "critical"]),
-  internalDescription: z.string().trim().min(1),
-  publicCorrection: z.string().trim().min(1).optional(),
-});
-
-const challengeEvaluationRubricSchema = z.strictObject({
-  version: z.string().trim().min(1),
-  questionKind: z.enum([
-    "debugging",
-    "explain-code",
-    "explain-concept",
-    "justify-use",
-    "explain-bad-practice",
-    "other",
-  ]),
-  centralAnswer: z.string().trim().min(1),
-  evaluatorNotes: z.array(z.string().trim().min(1)).optional(),
-  concepts: z.array(rubricConceptSchema).min(1),
-  misconceptions: z.array(rubricMisconceptionSchema).optional(),
-}).superRefine((rubric, context) => {
-  if (!rubric.concepts.some((concept) => concept.importance === "critical")) {
-    context.addIssue({ code: "custom", message: "Rubrica sem conceito critico" });
-  }
-  const conceptIds = rubric.concepts.map((concept) => concept.id);
-  if (new Set(conceptIds).size !== conceptIds.length) {
-    context.addIssue({ code: "custom", message: "IDs de conceitos duplicados" });
-  }
-  const misconceptionIds = rubric.misconceptions?.map((item) => item.id) ?? [];
-  if (new Set(misconceptionIds).size !== misconceptionIds.length) {
-    context.addIssue({ code: "custom", message: "IDs de erros duplicados" });
-  }
-});
 
 export function parseChallengeEvaluationRubric(
   serialized: string | null | undefined,

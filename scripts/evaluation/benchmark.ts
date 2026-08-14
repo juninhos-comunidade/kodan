@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -6,23 +6,31 @@ import { env } from "@kodan/env/server";
 import { z } from "zod";
 
 import {
-  evaluationBenchmarkCasesSchema,
+  challengeLanguageSchema,
   type EvaluationBenchmarkCase,
 } from "../../packages/content/src/challenge-schemas";
-
+import {
+  readPromotedChallengeCatalog,
+} from "../../packages/content/src/promoted-challenge-catalog";
 import { evaluateAnswer } from "../../apps/web/src/server/training/evaluation/evaluation-service";
 import { resolveFreeOpenRouterModel } from "../../apps/web/src/server/training/evaluation/model-policy";
 import { createOpenRouterEvaluator } from "../../apps/web/src/server/training/evaluation/openrouter-evaluator";
 import { DEFAULT_EVALUATION_PROMPT_VERSION } from "../../apps/web/src/server/training/evaluation/prompt";
-import { parseChallengeEvaluationRubric } from "../../apps/web/src/server/training/evaluation/schemas";
 import { createRequestPacer } from "./request-pacer";
 import {
   createBenchmarkBudgetController,
   createBenchmarkCacheKey,
   parseBenchmarkDailyBudget,
 } from "./benchmark-budget";
+import {
+  selectLanguagePilot,
+  selectRepresentativeCases,
+  type BenchmarkChallenge,
+} from "./benchmark-selection";
 
 type BenchmarkRun = {
+  challengeId: string;
+  rubricVersion: string;
   caseId: string;
   category: EvaluationBenchmarkCase["category"];
   repetition: number;
@@ -42,6 +50,13 @@ type BenchmarkRun = {
   cacheHit?: boolean;
 };
 
+type BenchmarkTask = {
+  challenge: BenchmarkChallenge;
+  evaluationCase: EvaluationBenchmarkCase;
+  repetition: number;
+  cacheKey: string;
+};
+
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(scriptDir, "../..");
 const args = new Map(
@@ -50,31 +65,13 @@ const args = new Map(
     return [key, value.join("=") || "true"];
   }),
 );
-const benchmarkChallengeDirectories = {
-  "react-state-race-condition-user-profile": "react-state/race-condition-user-profile",
-  "react-hooks-stale-closure-useeffect": "react-hooks/stale-closure-useeffect",
-  "react-rendering-object-dependency-infinite-loop": "react-rendering/object-dependency-infinite-loop",
-  "react-medium-busca-incremental-de-clientes-1": "react-interview/medium/react-medium-busca-incremental-de-clientes-1",
-  "react-hard-dashboard-operacional-1": "react-interview/hard/react-hard-dashboard-operacional-1",
-} as const;
-const benchmarkChallengeId = z.enum(
-  Object.keys(benchmarkChallengeDirectories) as [
-    keyof typeof benchmarkChallengeDirectories,
-    ...(keyof typeof benchmarkChallengeDirectories)[],
-  ],
-).parse(args.get("challenge") ?? "react-state-race-condition-user-profile");
-const challengeDir = path.join(
-  repoRoot,
-  "content/challenges",
-  benchmarkChallengeDirectories[benchmarkChallengeId],
-);
 const repeat = z.coerce.number().int().min(1).max(3).parse(args.get("repeat") ?? "1");
 const timeoutMs = z.coerce.number().int().min(1_000).max(60_000)
   .parse(args.get("timeout") ?? "30000");
 const concurrency = z.coerce.number().int().min(1).max(5)
   .parse(args.get("concurrency") ?? "1");
 const maxRetries = z.coerce.number().int().min(0).max(1)
-  .parse(args.get("retries") ?? "1");
+  .parse(args.get("retries") ?? "0");
 const requestsPerMinute = z.coerce.number().int().min(1).max(20)
   .parse(args.get("rpm") ?? "18");
 const dailyBudget = parseBenchmarkDailyBudget(args.get("daily-budget"));
@@ -85,57 +82,81 @@ const budget = createBenchmarkBudgetController({
   dailyBudget,
 });
 
-const [challengeJson, code, rubricJson, casesJson] = await Promise.all([
-  readFile(path.join(challengeDir, "challenge.json"), "utf8"),
-  readFile(path.join(challengeDir, "code.tsx"), "utf8"),
-  readFile(path.join(challengeDir, "rubric.json"), "utf8"),
-  readFile(path.join(challengeDir, "evaluation-cases.json"), "utf8"),
-]);
-const challenge = z.object({ id: z.string(), title: z.string(), question: z.string() })
-  .passthrough()
-  .parse(JSON.parse(challengeJson));
-const parsedRubric = parseChallengeEvaluationRubric(rubricJson);
-if (!parsedRubric) throw new Error("Rubrica de benchmark inválida");
-const rubric = parsedRubric;
-const allCases = evaluationBenchmarkCasesSchema.parse(JSON.parse(casesJson));
+const catalog = await readPromotedChallengeCatalog({
+  root: path.join(repoRoot, "content/challenges"),
+});
+const requestedChallengeId = args.get("challenge");
+const requestedLanguage = args.get("language")
+  ? challengeLanguageSchema.parse(args.get("language"))
+  : requestedChallengeId
+    ? catalog.challenges.find((challenge) => challenge.id === requestedChallengeId)?.language
+    : "react";
+if (!requestedLanguage) {
+  throw new Error(`Desafio desconhecido: ${requestedChallengeId}`);
+}
+const selectedChallenges = selectLanguagePilot({
+  challenges: catalog.challenges,
+  language: requestedLanguage,
+  ...(requestedChallengeId ? { requestedChallengeId } : {}),
+});
 const requestedCaseId = args.get("case");
-const cases = requestedCaseId
-  ? allCases.filter((evaluationCase) => evaluationCase.id === requestedCaseId)
-  : allCases;
-if (cases.length === 0) throw new Error(`Caso de benchmark desconhecido: ${requestedCaseId}`);
-const tasks = cases.flatMap((evaluationCase) =>
-  Array.from({ length: repeat }, (_, index) => ({
-    evaluationCase,
-    repetition: index + 1,
-    cacheKey: createBenchmarkCacheKey({
-      challengeId: challenge.id,
-      caseId: evaluationCase.id,
-      repetition: index + 1,
-      answer: evaluationCase.answer,
-      model,
-      promptVersion: DEFAULT_EVALUATION_PROMPT_VERSION,
-      rubricVersion: rubric.version,
-      expectation: {
-        expectedScore: evaluationCase.expectedScore,
-        expectedStatus: evaluationCase.expectedStatus,
-        expectedMatchedConceptIds: evaluationCase.expectedMatchedConceptIds,
-        forbiddenMatchedConceptIds: evaluationCase.forbiddenMatchedConceptIds,
-      },
-    }),
-  }))
-);
+if (requestedCaseId && selectedChallenges.length !== 1) {
+  throw new Error("Use --case junto com --challenge para executar um caso isolado.");
+}
+
+const tasks: BenchmarkTask[] = selectedChallenges.flatMap((challenge) => {
+  const representativeCases = selectRepresentativeCases(challenge.evaluationCases);
+  const cases = requestedCaseId
+    ? challenge.evaluationCases.filter((evaluationCase) => evaluationCase.id === requestedCaseId)
+    : representativeCases;
+  if (cases.length === 0) {
+    throw new Error(`Caso de benchmark desconhecido em ${challenge.id}: ${requestedCaseId}`);
+  }
+  const evaluationChallenge = toEvaluationChallenge(challenge);
+  return cases.flatMap((evaluationCase) =>
+    Array.from({ length: repeat }, (_, index) => {
+      const repetition = index + 1;
+      return {
+        challenge,
+        evaluationCase,
+        repetition,
+        cacheKey: createBenchmarkCacheKey({
+          challengeId: challenge.id,
+          challengeContent: evaluationChallenge,
+          caseId: evaluationCase.id,
+          repetition,
+          answer: evaluationCase.answer,
+          model,
+          promptVersion: DEFAULT_EVALUATION_PROMPT_VERSION,
+          rubricVersion: challenge.evaluationRubric.version,
+          rubric: challenge.evaluationRubric,
+          expectation: {
+            expectedScore: evaluationCase.expectedScore,
+            expectedStatus: evaluationCase.expectedStatus,
+            expectedMatchedConceptIds: evaluationCase.expectedMatchedConceptIds,
+            forbiddenMatchedConceptIds: evaluationCase.forbiddenMatchedConceptIds,
+          },
+        }),
+      };
+    })
+  );
+});
+
 const preparedTasks = await Promise.all(tasks.map(async (task) => ({
   ...task,
   cachedRun: await budget.readApprovedCache<BenchmarkRun>(task.cacheKey),
 })));
 const uncachedTaskCount = preparedTasks.filter((task) => !task.cachedRun).length;
-const initialBudget = await budget.assertCanSchedule(uncachedTaskCount);
+const plannedRequestCeiling = uncachedTaskCount * (maxRetries + 1);
+const initialBudget = await budget.assertCanSchedule(plannedRequestCeiling);
 console.log(
-  `Orçamento local: ${initialBudget.used}/${initialBudget.dailyBudget} usado; ${uncachedTaskCount} chamadas planejadas; ${preparedTasks.length - uncachedTaskCount} resultados em cache.`,
+  `Piloto ${requestedLanguage}: ${selectedChallenges.length} desafio(s), ${tasks.length} execução(ões).`,
 );
 console.log(
-  "Observação: o ledger local não contabiliza chamadas feitas fora deste repositório.",
+  `Orçamento local: ${initialBudget.used}/${initialBudget.dailyBudget} usado; até ${plannedRequestCeiling} chamadas planejadas; ${preparedTasks.length - uncachedTaskCount} resultados em cache.`,
 );
+console.log("Observação: o ledger local não contabiliza chamadas feitas fora deste repositório.");
+
 const runs = new Array<BenchmarkRun>(tasks.length);
 let nextTaskIndex = 0;
 await Promise.all(
@@ -147,7 +168,7 @@ await Promise.all(
       if (!task) return;
       runs[taskIndex] = task.cachedRun
         ? { ...task.cachedRun, cacheHit: true }
-        : await runBenchmarkCase(task.evaluationCase, task.repetition, task.cacheKey);
+        : await runBenchmarkCase(task);
     }
   }),
 );
@@ -157,16 +178,23 @@ const failedRuns = runs.filter((run) => run.divergences.length > 0);
 const finalBudget = await budget.getSnapshot();
 const report = {
   generatedAt,
-  challengeId: challenge.id,
+  language: requestedLanguage,
+  challengeIds: selectedChallenges.map((challenge) => challenge.id),
   model,
   promptVersion: DEFAULT_EVALUATION_PROMPT_VERSION,
-  rubricVersion: rubric.version,
+  rubricVersions: Object.fromEntries(
+    selectedChallenges.map((challenge) => [challenge.id, challenge.evaluationRubric.version]),
+  ),
   repeat,
   requestsPerMinute,
   dailyBudget,
   budget: finalBudget,
   cacheHits: runs.filter((run) => run.cacheHit).length,
-  summary: { total: runs.length, passed: runs.length - failedRuns.length, failed: failedRuns.length },
+  summary: {
+    total: runs.length,
+    passed: runs.length - failedRuns.length,
+    failed: failedRuns.length,
+  },
   runs,
 };
 const outputDir = path.join(repoRoot, "test-results/evaluation-benchmark");
@@ -181,11 +209,8 @@ console.log(`Relatório Markdown: ${markdownPath}`);
 console.log(`Resultado: ${report.summary.passed}/${report.summary.total} dentro do esperado`);
 if (failedRuns.length > 0) process.exitCode = 1;
 
-async function runBenchmarkCase(
-  evaluationCase: EvaluationBenchmarkCase,
-  repetition: number,
-  cacheKey: string,
-): Promise<BenchmarkRun> {
+async function runBenchmarkCase(task: BenchmarkTask): Promise<BenchmarkRun> {
+  const { challenge, evaluationCase, repetition, cacheKey } = task;
   let providerDiagnostic: unknown;
   const evaluator = createOpenRouterEvaluator({
     apiKey: env.OPENROUTER_API_KEY,
@@ -214,15 +239,17 @@ async function runBenchmarkCase(
     },
   });
   const result = await evaluateAnswer(evaluator, {
-    challenge: { ...challenge, code },
+    challenge: toEvaluationChallenge(challenge),
     userAnswer: evaluationCase.answer,
-    rubric,
+    rubric: challenge.evaluationRubric,
   });
   if (!result.ok) {
     console.log(
-      `ERROR ${evaluationCase.id} #${repetition}: ${result.reason} retryable=${result.retryable}`,
+      `ERROR ${challenge.id}/${evaluationCase.id} #${repetition}: ${result.reason} retryable=${result.retryable}`,
     );
     return {
+      challengeId: challenge.id,
+      rubricVersion: challenge.evaluationRubric.version,
       caseId: evaluationCase.id,
       category: evaluationCase.category,
       repetition,
@@ -244,9 +271,11 @@ async function runBenchmarkCase(
   );
   const divergences = findDivergences(evaluationCase, result.score, actualStatus, conceptStates);
   console.log(
-    `${divergences.length === 0 ? "PASS" : "FAIL"} ${evaluationCase.id} #${repetition}: ${result.score.toFixed(1)} ${actualStatus}`,
+    `${divergences.length === 0 ? "PASS" : "FAIL"} ${challenge.id}/${evaluationCase.id} #${repetition}: ${result.score.toFixed(1)} ${actualStatus}`,
   );
   const run: BenchmarkRun = {
+    challengeId: challenge.id,
+    rubricVersion: challenge.evaluationRubric.version,
     caseId: evaluationCase.id,
     category: evaluationCase.category,
     repetition,
@@ -266,6 +295,18 @@ async function runBenchmarkCase(
     await budget.writeApprovedCache(cacheKey, run);
   }
   return run;
+}
+
+function toEvaluationChallenge(challenge: BenchmarkChallenge) {
+  return {
+    id: challenge.id,
+    title: challenge.title,
+    question: challenge.question,
+    code: challenge.code,
+    scenario: challenge.scenario ?? null,
+    presentation: challenge.presentation,
+    terminal: challenge.terminal ?? null,
+  };
 }
 
 function findDivergences(
@@ -295,11 +336,13 @@ function findDivergences(
   }
   return divergences;
 }
+
 type BenchmarkReport = typeof report;
 
-function renderMarkdown(report: BenchmarkReport) {
-  const rows = report.runs.map((run) => [
+function renderMarkdown(benchmarkReport: BenchmarkReport) {
+  const rows = benchmarkReport.runs.map((run) => [
     run.divergences.length === 0 ? "PASS" : "FAIL",
+    run.challengeId,
     run.caseId,
     String(run.repetition),
     run.actualScore?.toFixed(1) ?? run.providerFailure?.reason ?? "-",
@@ -309,24 +352,26 @@ function renderMarkdown(report: BenchmarkReport) {
   return [
     "# Benchmark real da avaliação Kodan",
     "",
-    `- Gerado em: ${report.generatedAt}`,
-    `- Modelo: ${report.model}`,
-    `- Prompt: ${report.promptVersion}`,
-    `- Rubrica: ${report.rubricVersion}`,
-    `- Limite do runner: ${report.requestsPerMinute} requisições/minuto`,
-    `- Orçamento diário local: ${report.budget.used}/${report.dailyBudget} chamadas usadas`,
-    `- Resultados reutilizados do cache aprovado: ${report.cacheHits}`,
+    `- Gerado em: ${benchmarkReport.generatedAt}`,
+    `- Linguagem: ${benchmarkReport.language}`,
+    `- Desafios: ${benchmarkReport.challengeIds.join(", ")}`,
+    `- Modelo: ${benchmarkReport.model}`,
+    `- Prompt: ${benchmarkReport.promptVersion}`,
+    `- Rubricas: ${JSON.stringify(benchmarkReport.rubricVersions)}`,
+    `- Limite do runner: ${benchmarkReport.requestsPerMinute} requisições/minuto`,
+    `- Orçamento diário local: ${benchmarkReport.budget.used}/${benchmarkReport.dailyBudget} chamadas usadas`,
+    `- Resultados reutilizados do cache aprovado: ${benchmarkReport.cacheHits}`,
     "- Cobertura do ledger: somente chamadas feitas por este runner neste repositório",
-    `- Resultado: ${report.summary.passed}/${report.summary.total}`,
+    `- Resultado: ${benchmarkReport.summary.passed}/${benchmarkReport.summary.total}`,
     "",
-    "| Resultado | Caso | Repetição | Nota/falha | Status | Divergências |",
-    "|---|---|---:|---:|---|---|",
+    "| Resultado | Desafio | Caso | Repetição | Nota/falha | Status | Divergências |",
+    "|---|---|---|---:|---:|---|---|",
     ...rows.map((row) => `| ${row.join(" | ")} |`),
     "",
     "## Respostas e classificações",
     "",
-    ...report.runs.flatMap((run) => [
-      `### ${run.caseId} #${run.repetition}`,
+    ...benchmarkReport.runs.flatMap((run) => [
+      `### ${run.challengeId} / ${run.caseId} #${run.repetition}`,
       "",
       `> ${run.answer}`,
       "",
@@ -365,9 +410,7 @@ async function sanitizeProviderResponse(response: Response) {
     : undefined;
   return {
     status: response.status,
-    ...(error
-      ? { error: { code: error.code, message: error.message } }
-      : {}),
+    ...(error ? { error: { code: error.code, message: error.message } } : {}),
     ...(firstChoice
       ? {
           finishReason: firstChoice.finish_reason,
@@ -387,7 +430,11 @@ function sanitizeEvaluationContent(content: unknown) {
           const value = assessment && typeof assessment === "object"
             ? assessment as Record<string, unknown>
             : {};
-          return { conceptId: value.conceptId, state: value.state, hasEvidence: Boolean(value.evidence) };
+          return {
+            conceptId: value.conceptId,
+            state: value.state,
+            hasEvidence: Boolean(value.evidence),
+          };
         })
       : undefined;
     return {
