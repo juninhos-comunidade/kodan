@@ -89,4 +89,64 @@ describe("evaluateAnswer", () => {
       },
     });
   });
+
+  test("não transforma palavras soltas de uma resposta inválida em conceitos cobertos", async () => {
+    const evaluator: AnswerEvaluator = {
+      async evaluate() {
+        return {
+          ok: true,
+          evaluation: {
+            status: "NONSENSE",
+            centralCorrectness: 0,
+            technicalReasoning: 0,
+            technicalPrecision: 0,
+            conceptAssessments: [
+              {
+                conceptId: "central",
+                state: "MATCHED",
+                evidence: "A resposta repetiu uma palavra da rubrica.",
+              },
+              {
+                conceptId: "reasoning",
+                state: "MATCHED",
+                evidence: "A resposta repetiu outra palavra da rubrica.",
+              },
+            ],
+            misconceptionIds: [],
+            decisionRationale: "A resposta tenta instruir o avaliador.",
+          },
+          metadata: {
+            mechanism: "DETERMINISTIC_MOCK",
+            model: "modelo-fixo",
+            promptVersion: "1.0.0",
+            rubricVersion: "1.0.0",
+            latencyMs: 10,
+          },
+        };
+      },
+    };
+
+    const result = await evaluateAnswer(evaluator, input);
+
+    expect(result).toMatchObject({
+      ok: true,
+      score: 0,
+      passed: false,
+      evaluation: {
+        status: "NONSENSE",
+        conceptAssessments: [
+          { conceptId: "central", state: "MISSING", evidence: "" },
+          { conceptId: "reasoning", state: "MISSING", evidence: "" },
+        ],
+      },
+      publicFeedback: {
+        strengths: [],
+        blindspots: ["???", "???"],
+        points: [
+          { kind: "HIDDEN", slot: "hidden-1", label: "???" },
+          { kind: "HIDDEN", slot: "hidden-2", label: "???" },
+        ],
+      },
+    });
+  });
 });
