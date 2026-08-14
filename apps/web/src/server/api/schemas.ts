@@ -1,8 +1,11 @@
 import { z } from "zod";
 import {
   challengeDetailSchema,
+  challengeIntentSchema,
   challengeLanguageSchema,
+  challengePresentationSchema,
   challengeSummarySchema,
+  challengeTerminalSchema,
   difficultySchema,
 } from "./challenge-contract";
 import { validateTrainingAnswer } from "@/lib/training-input-guard";
@@ -10,8 +13,11 @@ import { validateTrainingAnswer } from "@/lib/training-input-guard";
 export {
   challengeAttemptSummarySchema,
   challengeDetailSchema,
+  challengeIntentSchema,
   challengeLanguageSchema,
+  challengePresentationSchema,
   challengeSummarySchema,
+  challengeTerminalSchema,
   difficultySchema,
 } from "./challenge-contract";
 

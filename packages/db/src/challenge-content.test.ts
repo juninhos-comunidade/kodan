@@ -70,6 +70,57 @@ describe("upsertChallengesFromContent", () => {
     });
   });
 
+  test("persiste um desafio conceitual sem código e um artefato de terminal", async () => {
+    const root = await mkdtemp(path.join(tmpdir(), "kodan-seed-concept-"));
+    temporaryRoots.push(root);
+    const challengeDirectory = path.join(root, "challenge");
+    await mkdir(challengeDirectory);
+    await writeFile(path.join(challengeDirectory, "challenge.json"), JSON.stringify({
+      id: "go-interface-vs-struct",
+      title: "Interface ou struct?",
+      difficulty: "EASY",
+      recommendedElo: 1100,
+      language: "go",
+      topic: "interfaces-methods",
+      presentation: "terminal",
+      intent: "compare",
+      terminalFile: "terminal.json",
+      scenario: "Um colega propôs duas estruturas.",
+      question: "Compare as estruturas.",
+      tags: ["go", "interfaces"],
+    }));
+    await writeFile(path.join(challengeDirectory, "terminal.json"), JSON.stringify({
+      command: "go test ./...",
+      blocks: [{ label: "Obtido", content: "PASS", tone: "success" }],
+    }));
+    await writeFile(path.join(challengeDirectory, "solution.md"), "A interface descreve comportamento.");
+    const upsert = mock(async () => undefined);
+    const prisma = {
+      challenge: {
+        findMany: mock(async () => []),
+        upsert,
+      },
+    };
+
+    await upsertChallengesFromContent(prisma as never, { root });
+
+    expect(upsert).toHaveBeenCalledWith({
+      where: { id: "go-interface-vs-struct" },
+      update: expect.objectContaining({
+        code: null,
+        scenario: "Um colega propôs duas estruturas.",
+        topic: "interfaces-methods",
+        presentation: "terminal",
+        intent: "compare",
+        terminalJson: JSON.stringify({
+          command: "go test ./...",
+          blocks: [{ label: "Obtido", content: "PASS", tone: "success" }],
+        }),
+      }),
+      create: expect.objectContaining({ id: "go-interface-vs-struct" }),
+    });
+  });
+
   test("remove somente duplicatas órfãs quando a reconciliação é explicitamente habilitada", async () => {
     const root = await mkdtemp(path.join(tmpdir(), "kodan-seed-"));
     temporaryRoots.push(root);

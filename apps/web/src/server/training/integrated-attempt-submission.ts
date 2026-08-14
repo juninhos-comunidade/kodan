@@ -54,6 +54,9 @@ export async function submitIntegratedAttempt(
       title: challenge.title,
       question: challenge.question,
       code: challenge.code,
+      scenario: challenge.scenario,
+      presentation: challenge.presentation as "code" | "code-terminal" | "terminal" | "concept",
+      terminal: parseTerminalArtifact(challenge.terminalJson),
     },
     userAnswer: input.userAnswer,
     attemptNumber,
@@ -160,6 +163,35 @@ export async function submitIntegratedAttempt(
     status: evaluation.status,
   });
   return evaluation;
+}
+
+function parseTerminalArtifact(value: string | null) {
+  if (!value) return null;
+  try {
+    const parsed = JSON.parse(value) as {
+      command?: unknown;
+      blocks?: Array<{ label?: unknown; content?: unknown; tone?: unknown }>;
+    };
+    if (
+      typeof parsed.command !== "string" ||
+      !Array.isArray(parsed.blocks) ||
+      !parsed.blocks.every((block) =>
+        typeof block.label === "string" &&
+        typeof block.content === "string" &&
+        ["neutral", "success", "warning", "error"].includes(String(block.tone))
+      )
+    ) return null;
+    return parsed as {
+      command: string;
+      blocks: Array<{
+        label: string;
+        content: string;
+        tone: "neutral" | "success" | "warning" | "error";
+      }>;
+    };
+  } catch {
+    return null;
+  }
 }
 
 function emitEvaluationFailure(

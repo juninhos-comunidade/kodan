@@ -5,8 +5,31 @@ export const challengeLanguageSchema = z.enum([
   "react",
   "typescript",
   "python",
-  "nodejs",
+  "java",
+  "go",
 ]);
+
+export const challengePresentationSchema = z.enum([
+  "code",
+  "code-terminal",
+  "terminal",
+  "concept",
+]);
+
+export const challengeIntentSchema = z.enum([
+  "diagnose",
+  "compare",
+  "validate",
+]);
+
+export const challengeTerminalArtifactSchema = z.object({
+  command: z.string().trim().min(1),
+  blocks: z.array(z.object({
+    label: z.string().trim().min(1),
+    content: z.string().trim().min(1),
+    tone: z.enum(["neutral", "success", "warning", "error"]).default("neutral"),
+  }).strict()).min(1),
+}).strict();
 
 export const rubricCriterionSchema = z.object({
   criterion: z.string().trim().min(1),
@@ -36,6 +59,9 @@ export const challengeEvaluationRubricSchema = z.object({
     "explain-concept",
     "justify-use",
     "explain-bad-practice",
+    "output-diagnosis",
+    "compare-concepts",
+    "behavior-validation",
     "other",
   ]),
   centralAnswer: z.string().trim().min(1),
@@ -113,8 +139,12 @@ const baseChallengeSchema = z.object({
   difficulty: difficultySchema,
   recommendedElo: z.number().int().min(0),
   question: z.string().trim().min(1),
+  scenario: z.string().trim().min(1).optional(),
   tags: z.array(z.string().trim().min(1)).min(1),
   language: challengeLanguageSchema.optional(),
+  topic: z.string().trim().min(1).optional(),
+  presentation: challengePresentationSchema.default("code"),
+  intent: challengeIntentSchema.default("diagnose"),
   type: z.string().trim().min(1).optional(),
   estimatedTime: z.number().int().min(1).max(180).optional(),
   status: z.string().trim().min(1).optional(),
@@ -132,17 +162,32 @@ export const challengeLegacySchema = baseChallengeSchema.extend({
 
 export const challengeSplitMetaSchema = baseChallengeSchema.extend({
   codeFile: z.string().trim().min(1).optional(),
+  terminalFile: z.string().trim().min(1).optional(),
   solutionFile: z.string().trim().min(1).optional(),
   expectedAnswerFile: z.string().trim().min(1).optional(),
   rubricFile: z.string().trim().min(1).optional(),
   hintsFile: z.string().trim().min(1).optional(),
   commonMistakesFile: z.string().trim().min(1).optional(),
+}).superRefine((challenge, context) => {
+  if (
+    (challenge.presentation === "terminal" || challenge.presentation === "code-terminal") &&
+    !challenge.terminalFile
+  ) {
+    context.addIssue({
+      code: "custom",
+      message: "Desafios com terminal devem declarar terminalFile",
+      path: ["terminalFile"],
+    });
+  }
 });
 
 export const challengeIndexEntrySchema = z.object({
   id: z.string().trim().min(1),
   title: z.string().trim().min(1),
   language: challengeLanguageSchema,
+  topic: z.string().trim().min(1),
+  presentation: challengePresentationSchema,
+  intent: challengeIntentSchema,
   difficulty: difficultySchema,
   type: z.string().trim().min(1),
   tags: z.array(z.string().trim().min(1)),
@@ -157,4 +202,7 @@ export type ChallengeLegacy = z.infer<typeof challengeLegacySchema>;
 export type ChallengeSplitMeta = z.infer<typeof challengeSplitMetaSchema>;
 export type ChallengeIndexEntry = z.infer<typeof challengeIndexEntrySchema>;
 export type ChallengeEvaluationRubric = z.infer<typeof challengeEvaluationRubricSchema>;
+export type ChallengeTerminalArtifact = z.infer<typeof challengeTerminalArtifactSchema>;
+export type ChallengePresentation = z.infer<typeof challengePresentationSchema>;
+export type ChallengeIntent = z.infer<typeof challengeIntentSchema>;
 export type EvaluationBenchmarkCase = z.infer<typeof evaluationBenchmarkCaseSchema>;

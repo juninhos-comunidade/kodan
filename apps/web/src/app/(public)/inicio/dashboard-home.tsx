@@ -21,7 +21,7 @@ export type DashboardChallenge = {
   title: string;
   difficulty: string;
   tags: string[];
-  code: string;
+  code: string | null;
   question: string;
 };
 
