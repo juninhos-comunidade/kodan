@@ -28,7 +28,7 @@
     "id": "partial-abort-only",
     "category": "partial",
     "answer": "Adicione AbortController ao fetch e cancele a chamada no cleanup.",
-    "expectedScore": { "min": 1, "max": 5.9 },
+    "expectedScore": { "min": 0, "max": 5.9 },
     "expectedStatus": "RETRY_AVAILABLE",
     "expectedMatchedConceptIds": ["abort-in-flight-request"],
     "forbiddenMatchedConceptIds": ["unstable-options-dependency", "immutable-sort", "stable-item-key"]

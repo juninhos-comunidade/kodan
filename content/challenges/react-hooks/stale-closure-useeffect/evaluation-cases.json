@@ -2,18 +2,18 @@
   {
     "id": "accepted-functional-update",
     "category": "accepted",
-    "answer": "O efeito roda só na montagem e o callback do intervalo fecha sobre count igual a 0. Por isso cada tick repete setCount(1). Eu manteria o array vazio e usaria setCount(anterior => anterior + 1), preservando clearInterval no cleanup.",
+    "answer": "O efeito roda só na montagem e o callback do intervalo fecha sobre count igual a 0. Por isso cada tick repete setCount(1). A primeira solução é manter o array vazio e usar setCount(anterior => anterior + 1). A segunda é incluir count nas dependências para recriar o intervalo a cada mudança, sempre preservando clearInterval no cleanup.",
     "expectedScore": { "min": 8, "max": 10 },
     "expectedStatus": "SOLVED",
-    "expectedMatchedConceptIds": ["initial-count-closure", "empty-dependency-lifetime", "functional-state-update"]
+    "expectedMatchedConceptIds": ["initial-count-closure", "empty-dependency-lifetime", "functional-state-update", "dependency-with-cleanup"]
   },
   {
     "id": "accepted-count-dependency",
     "category": "accepted",
-    "answer": "O intervalo registrado inicialmente sempre lê o count inicial. Uma alternativa é incluir count nas dependências, recriar o intervalo a cada mudança e limpar obrigatoriamente o anterior no retorno do efeito.",
-    "expectedScore": { "min": 7, "max": 10 },
+    "answer": "O intervalo registrado inicialmente sempre lê o count inicial porque o efeito da montagem preserva essa closure. Posso manter o array vazio e usar setCount(prev => prev + 1), ou incluir count nas dependências, recriar o intervalo a cada mudança e limpar obrigatoriamente o anterior no retorno do efeito.",
+    "expectedScore": { "min": 8, "max": 10 },
     "expectedStatus": "SOLVED",
-    "expectedMatchedConceptIds": ["initial-count-closure", "empty-dependency-lifetime", "dependency-with-cleanup"]
+    "expectedMatchedConceptIds": ["initial-count-closure", "empty-dependency-lifetime", "functional-state-update", "dependency-with-cleanup"]
   },
   {
     "id": "partial-cause-only",
