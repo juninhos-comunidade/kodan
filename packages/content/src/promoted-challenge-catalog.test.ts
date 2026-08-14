@@ -97,13 +97,11 @@ describe("findActiveChallengesWithoutEvaluationRubric", () => {
 });
 
 describe("trilha piloto de avaliação", () => {
-  test("ativa as rubricas fundamentais e prepara as candidatas de entrevista", async () => {
-    const validatedPilotIds = [
-      "react-state-race-condition-user-profile",
-      "react-hooks-stale-closure-useeffect",
-      "react-rendering-object-dependency-infinite-loop",
-    ];
-    const candidateChallenges = [
+  test("ativa cinco rubricas de React com casos de avaliação válidos", async () => {
+    const pilotChallenges = [
+      ["react-state-race-condition-user-profile", "react-state/race-condition-user-profile"],
+      ["react-hooks-stale-closure-useeffect", "react-hooks/stale-closure-useeffect"],
+      ["react-rendering-object-dependency-infinite-loop", "react-rendering/object-dependency-infinite-loop"],
       ["react-medium-busca-incremental-de-clientes-1", "react-interview/medium/react-medium-busca-incremental-de-clientes-1"],
       ["react-hard-dashboard-operacional-1", "react-interview/hard/react-hard-dashboard-operacional-1"],
     ];
@@ -116,14 +114,9 @@ describe("trilha piloto de avaliação", () => {
     const challengeById = new Map(
       catalog.challenges.map((challenge) => [challenge.id, challenge]),
     );
-    for (const validatedPilotId of validatedPilotIds) {
-      expect(activeIds.has(validatedPilotId)).toBe(true);
-      expect(challengeById.get(validatedPilotId)?.evaluationRubric).toBeDefined();
-    }
-
-    for (const [candidateId, challengeDirectory] of candidateChallenges) {
-      expect(activeIds.has(candidateId)).toBe(true);
-      expect(challengeById.get(candidateId)?.evaluationRubric).toBeUndefined();
+    for (const [pilotId, challengeDirectory] of pilotChallenges) {
+      expect(activeIds.has(pilotId)).toBe(true);
+      expect(challengeById.get(pilotId)?.evaluationRubric).toBeDefined();
 
       const rubric = challengeEvaluationRubricSchema.parse(JSON.parse(
         await readFile(
