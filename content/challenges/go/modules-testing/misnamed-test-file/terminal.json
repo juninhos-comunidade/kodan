@@ -1,0 +1,15 @@
+{
+  "command": "go test ./...",
+  "blocks": [
+    {
+      "label": "Esperado",
+      "content": "ok  example/checkout  0.003s",
+      "tone": "success"
+    },
+    {
+      "label": "Obtido",
+      "content": "?   example/checkout  [no test files]",
+      "tone": "error"
+    }
+  ]
+}

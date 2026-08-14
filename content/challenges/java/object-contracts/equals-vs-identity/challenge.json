@@ -1,0 +1,17 @@
+{
+  "id": "java-object-contracts-equals-vs-identity",
+  "title": "Mesma entidade ou mesma referência?",
+  "language": "java",
+  "topic": "object-contracts",
+  "presentation": "concept",
+  "intent": "compare",
+  "difficulty": "EASY",
+  "recommendedElo": 1240,
+  "scenario": "Duas instâncias de Customer foram carregadas em operações diferentes com o mesmo identificador. Uma revisão propôs trocar == por equals antes de usar esses objetos como chaves de um HashMap.",
+  "question": "Qual é a diferença entre == e equals para objetos Java? Explique quando identidade e igualdade lógica são apropriadas e por que sobrescrever equals exige um hashCode coerente para coleções baseadas em hash.",
+  "tags": ["java", "object", "equals", "hashcode", "identity"],
+  "type": "compare-concepts",
+  "estimatedTime": 9,
+  "status": "ACTIVE",
+  "solutionFile": "solution.md"
+}

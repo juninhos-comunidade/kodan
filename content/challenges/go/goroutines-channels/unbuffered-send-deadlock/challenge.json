@@ -1,0 +1,19 @@
+{
+  "id": "go-channels-unbuffered-send-deadlock",
+  "title": "O envio que bloqueou antes do consumidor",
+  "language": "go",
+  "topic": "goroutines-channels",
+  "presentation": "code-terminal",
+  "intent": "diagnose",
+  "difficulty": "MEDIUM",
+  "recommendedElo": 1430,
+  "scenario": "Um colega simplificou um pequeno pipeline e deixou produtor e consumidor na função main. O valor deveria atravessar o canal e aparecer no terminal, mas o processo parou antes da leitura.",
+  "question": "Relacione a ordem das operações ao deadlock mostrado no terminal. Explique a sincronização de um canal sem buffer e proponha uma correção coerente com um produtor e um consumidor concorrentes.",
+  "tags": ["go", "goroutine", "channel", "deadlock", "concurrency"],
+  "type": "output-diagnosis",
+  "estimatedTime": 12,
+  "status": "ACTIVE",
+  "codeFile": "pipeline.go",
+  "terminalFile": "terminal.json",
+  "solutionFile": "solution.md"
+}

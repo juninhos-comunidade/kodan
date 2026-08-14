@@ -1,0 +1,19 @@
+{
+  "id": "java-concurrency-lost-counter-updates",
+  "title": "O contador menor depois dos workers",
+  "language": "java",
+  "topic": "concurrency",
+  "presentation": "code-terminal",
+  "intent": "diagnose",
+  "difficulty": "MEDIUM",
+  "recommendedElo": 1460,
+  "scenario": "Um serviço dividiu o processamento entre quatro workers e usa um contador compartilhado para acompanhar os itens concluídos. Mesmo aguardando o encerramento do executor, o total varia e fica abaixo do esperado.",
+  "question": "Relacione a saída variável à operação value++. Explique por que visibilidade isolada não torna o incremento atômico e apresente correções adequadas para um contador concorrente.",
+  "tags": ["java", "thread", "concurrency", "executor", "atomic"],
+  "type": "output-diagnosis",
+  "estimatedTime": 13,
+  "status": "ACTIVE",
+  "codeFile": "SharedCounter.java",
+  "terminalFile": "terminal.json",
+  "solutionFile": "solution.md"
+}

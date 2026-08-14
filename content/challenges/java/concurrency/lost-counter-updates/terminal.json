@@ -1,0 +1,11 @@
+{
+  "command": "javac SharedCounter.java && java SharedCounter",
+  "blocks": [
+    { "label": "Esperado", "content": "100000", "tone": "success" },
+    {
+      "label": "Obtido",
+      "content": "73842\n(o valor muda entre execuções)",
+      "tone": "error"
+    }
+  ]
+}

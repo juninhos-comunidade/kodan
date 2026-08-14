@@ -1,0 +1,18 @@
+{
+  "id": "java-resources-suppressed-close-exception",
+  "title": "A exceção de fechamento que virou suprimida",
+  "language": "java",
+  "topic": "exceptions-resources",
+  "presentation": "terminal",
+  "intent": "diagnose",
+  "difficulty": "HARD",
+  "recommendedElo": 1580,
+  "scenario": "Dentro de um try-with-resources, a gravação lançou IOException e o fechamento do recurso também falhou. Um colega esperava que a falha de close substituísse a primeira exceção.",
+  "question": "Interprete a hierarquia mostrada no stack trace. Explique qual exceção é propagada, onde a falha de close fica disponível e por que try-with-resources preserva as duas informações dessa forma.",
+  "tags": ["java", "exception", "resource", "try-with-resources", "suppressed"],
+  "type": "output-diagnosis",
+  "estimatedTime": 14,
+  "status": "ACTIVE",
+  "terminalFile": "terminal.json",
+  "solutionFile": "solution.md"
+}

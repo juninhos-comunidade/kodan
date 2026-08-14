@@ -274,4 +274,34 @@ describe("blocos editoriais multiformato", () => {
     expect(asyncSolution).toContain("processPayment();");
     expect(asyncSolution).toContain("await expect(processPayment()).rejects");
   });
+
+  test.each(["python", "java", "go"] as const)(
+    "carrega cinco desafios %s bloqueados com um tema por filtro",
+    async (language) => {
+      const catalog = await readPromotedChallengeCatalog();
+      const languageChallenges = catalog.challenges.filter(
+        (challenge) => challenge.language === language,
+      );
+
+      expect(languageChallenges).toHaveLength(5);
+      expect(new Set(languageChallenges.map((challenge) => challenge.topic))).toEqual(
+        new Set(getChallengeTopicDefinitions(language).map((topic) => topic.key)),
+      );
+      expect(new Set(languageChallenges.map((challenge) => challenge.presentation))).toEqual(
+        new Set(["code", "code-terminal", "terminal", "concept"]),
+      );
+      expect(languageChallenges.every((challenge) => challenge.scenario)).toBe(true);
+      expect(languageChallenges.every((challenge) => !challenge.evaluationRubric)).toBe(true);
+      expect(
+        catalog.index.filter(
+          (entry) => entry.language === language && entry.status === "ACTIVE",
+        ),
+      ).toHaveLength(5);
+      expect(findActiveChallengesWithoutEvaluationRubric(catalog)).toEqual(
+        expect.arrayContaining(
+          languageChallenges.map(({ id, title }) => ({ id, title })),
+        ),
+      );
+    },
+  );
 });

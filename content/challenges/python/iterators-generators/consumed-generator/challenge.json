@@ -1,0 +1,18 @@
+{
+  "id": "python-generators-consumed-active-ids",
+  "title": "Os IDs que sumiram na segunda leitura",
+  "language": "python",
+  "topic": "iterators-generators",
+  "presentation": "code",
+  "intent": "diagnose",
+  "difficulty": "MEDIUM",
+  "recommendedElo": 1340,
+  "scenario": "Um colega criou um relatório que conta registros ativos e também retorna seus identificadores. A contagem está correta, mas a lista devolvida chega vazia ao chamador.",
+  "question": "Explique por que as duas operações não conseguem percorrer ids de forma independente. Proponha uma correção que preserve o resultado e discuta quando materializar a sequência é aceitável.",
+  "tags": ["python", "generator", "iterator", "lazy-evaluation"],
+  "type": "debugging",
+  "estimatedTime": 11,
+  "status": "ACTIVE",
+  "codeFile": "active_ids.py",
+  "solutionFile": "solution.md"
+}

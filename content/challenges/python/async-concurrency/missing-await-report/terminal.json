@@ -1,0 +1,15 @@
+{
+  "command": "python report.py",
+  "blocks": [
+    {
+      "label": "Esperado",
+      "content": "report-42",
+      "tone": "success"
+    },
+    {
+      "label": "Obtido",
+      "content": "TypeError: 'coroutine' object is not subscriptable\nsys:1: RuntimeWarning: coroutine 'fetch_report' was never awaited",
+      "tone": "error"
+    }
+  ]
+}

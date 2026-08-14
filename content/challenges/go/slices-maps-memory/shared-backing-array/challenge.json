@@ -1,0 +1,18 @@
+{
+  "id": "go-slices-shared-backing-array",
+  "title": "Dois appends, o mesmo array de apoio",
+  "language": "go",
+  "topic": "slices-maps-memory",
+  "presentation": "code",
+  "intent": "diagnose",
+  "difficulty": "MEDIUM",
+  "recommendedElo": 1410,
+  "scenario": "Uma função montou duas variações a partir do mesmo slice base para comparar cenários. Na inspeção seguinte, a primeira variação também carregava o valor adicionado à segunda.",
+  "question": "Determine o que será impresso e explique por que o segundo append pode alterar a primeira variação. Relacione len, cap e o array de apoio, depois proponha uma forma de obter resultados independentes.",
+  "tags": ["go", "slice", "append", "capacity", "memory"],
+  "type": "debugging",
+  "estimatedTime": 12,
+  "status": "ACTIVE",
+  "codeFile": "variants.go",
+  "solutionFile": "solution.md"
+}

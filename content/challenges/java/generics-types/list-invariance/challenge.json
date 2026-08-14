@@ -1,0 +1,18 @@
+{
+  "id": "java-generics-list-invariance",
+  "title": "Inteiros não são uma lista de números",
+  "language": "java",
+  "topic": "generics-types",
+  "presentation": "code",
+  "intent": "diagnose",
+  "difficulty": "MEDIUM",
+  "recommendedElo": 1380,
+  "scenario": "Um helper foi criado para inserir um valor padrão em listas numéricas. A chamada com List<Integer> foi recusada, embora Integer seja subtipo de Number.",
+  "question": "Explique por que a relação entre Integer e Number não se transfere para List<Integer> e List<Number>. Proponha contratos seguros para dois casos distintos: apenas ler números e inserir um valor do mesmo tipo da lista.",
+  "tags": ["java", "generic", "type", "invariance", "wildcard"],
+  "type": "debugging",
+  "estimatedTime": 12,
+  "status": "ACTIVE",
+  "codeFile": "NumericDefaults.java",
+  "solutionFile": "solution.md"
+}

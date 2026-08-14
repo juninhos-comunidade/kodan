@@ -1,5 +1,303 @@
 [
   {
+    "id": "go-errors-is-vs-equality",
+    "title": "Comparar o erro ou percorrer sua cadeia?",
+    "language": "go",
+    "topic": "errors-context",
+    "presentation": "concept",
+    "intent": "compare",
+    "difficulty": "EASY",
+    "type": "compare-concepts",
+    "tags": [
+      "go",
+      "errors",
+      "errors-is",
+      "wrapping",
+      "context"
+    ],
+    "estimatedTime": 9,
+    "recommendedElo": 1240,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "go-channels-unbuffered-send-deadlock",
+    "title": "O envio que bloqueou antes do consumidor",
+    "language": "go",
+    "topic": "goroutines-channels",
+    "presentation": "code-terminal",
+    "intent": "diagnose",
+    "difficulty": "MEDIUM",
+    "type": "output-diagnosis",
+    "tags": [
+      "go",
+      "goroutine",
+      "channel",
+      "deadlock",
+      "concurrency"
+    ],
+    "estimatedTime": 12,
+    "recommendedElo": 1430,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "go-interfaces-implicit-labeler",
+    "title": "A interface sem declaração de implementação",
+    "language": "go",
+    "topic": "interfaces-methods",
+    "presentation": "code",
+    "intent": "validate",
+    "difficulty": "EASY",
+    "type": "behavior-validation",
+    "tags": [
+      "go",
+      "interface",
+      "method-set",
+      "receiver",
+      "typing"
+    ],
+    "estimatedTime": 9,
+    "recommendedElo": 1180,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "go-testing-misnamed-test-file",
+    "title": "O teste que o comando não encontrou",
+    "language": "go",
+    "topic": "modules-testing",
+    "presentation": "terminal",
+    "intent": "diagnose",
+    "difficulty": "MEDIUM",
+    "type": "output-diagnosis",
+    "tags": [
+      "go",
+      "testing",
+      "modules",
+      "test-discovery",
+      "convention"
+    ],
+    "estimatedTime": 10,
+    "recommendedElo": 1320,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "go-slices-shared-backing-array",
+    "title": "Dois appends, o mesmo array de apoio",
+    "language": "go",
+    "topic": "slices-maps-memory",
+    "presentation": "code",
+    "intent": "diagnose",
+    "difficulty": "MEDIUM",
+    "type": "debugging",
+    "tags": [
+      "go",
+      "slice",
+      "append",
+      "capacity",
+      "memory"
+    ],
+    "estimatedTime": 12,
+    "recommendedElo": 1410,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "java-streams-unmodifiable-result-list",
+    "title": "A lista do stream que não aceita acréscimos",
+    "language": "java",
+    "topic": "collections-streams",
+    "presentation": "code",
+    "intent": "validate",
+    "difficulty": "EASY",
+    "type": "behavior-validation",
+    "tags": [
+      "java",
+      "stream",
+      "list",
+      "collection",
+      "immutability"
+    ],
+    "estimatedTime": 8,
+    "recommendedElo": 1200,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "java-concurrency-lost-counter-updates",
+    "title": "O contador menor depois dos workers",
+    "language": "java",
+    "topic": "concurrency",
+    "presentation": "code-terminal",
+    "intent": "diagnose",
+    "difficulty": "MEDIUM",
+    "type": "output-diagnosis",
+    "tags": [
+      "java",
+      "thread",
+      "concurrency",
+      "executor",
+      "atomic"
+    ],
+    "estimatedTime": 13,
+    "recommendedElo": 1460,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "java-resources-suppressed-close-exception",
+    "title": "A exceção de fechamento que virou suprimida",
+    "language": "java",
+    "topic": "exceptions-resources",
+    "presentation": "terminal",
+    "intent": "diagnose",
+    "difficulty": "HARD",
+    "type": "output-diagnosis",
+    "tags": [
+      "java",
+      "exception",
+      "resource",
+      "try-with-resources",
+      "suppressed"
+    ],
+    "estimatedTime": 14,
+    "recommendedElo": 1580,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "java-generics-list-invariance",
+    "title": "Inteiros não são uma lista de números",
+    "language": "java",
+    "topic": "generics-types",
+    "presentation": "code",
+    "intent": "diagnose",
+    "difficulty": "MEDIUM",
+    "type": "debugging",
+    "tags": [
+      "java",
+      "generic",
+      "type",
+      "invariance",
+      "wildcard"
+    ],
+    "estimatedTime": 12,
+    "recommendedElo": 1380,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "java-object-contracts-equals-vs-identity",
+    "title": "Mesma entidade ou mesma referência?",
+    "language": "java",
+    "topic": "object-contracts",
+    "presentation": "concept",
+    "intent": "compare",
+    "difficulty": "EASY",
+    "type": "compare-concepts",
+    "tags": [
+      "java",
+      "object",
+      "equals",
+      "hashcode",
+      "identity"
+    ],
+    "estimatedTime": 9,
+    "recommendedElo": 1240,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "python-async-missing-await-report",
+    "title": "A corrotina usada como relatório",
+    "language": "python",
+    "topic": "async-concurrency",
+    "presentation": "code-terminal",
+    "intent": "diagnose",
+    "difficulty": "MEDIUM",
+    "type": "output-diagnosis",
+    "tags": [
+      "python",
+      "async",
+      "await",
+      "coroutine",
+      "error"
+    ],
+    "estimatedTime": 12,
+    "recommendedElo": 1420,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "python-collections-safe-default-list",
+    "title": "A lista padrão que não é compartilhada",
+    "language": "python",
+    "topic": "collections-mutability",
+    "presentation": "code",
+    "intent": "validate",
+    "difficulty": "EASY",
+    "type": "behavior-validation",
+    "tags": [
+      "python",
+      "list",
+      "mutability",
+      "default-argument"
+    ],
+    "estimatedTime": 8,
+    "recommendedElo": 1160,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "python-errors-context-manager-vs-finally",
+    "title": "Fechamento explícito ou protocolo de contexto?",
+    "language": "python",
+    "topic": "errors-context-managers",
+    "presentation": "concept",
+    "intent": "compare",
+    "difficulty": "EASY",
+    "type": "compare-concepts",
+    "tags": [
+      "python",
+      "context-manager",
+      "with",
+      "exception",
+      "resource"
+    ],
+    "estimatedTime": 9,
+    "recommendedElo": 1220,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "python-generators-consumed-active-ids",
+    "title": "Os IDs que sumiram na segunda leitura",
+    "language": "python",
+    "topic": "iterators-generators",
+    "presentation": "code",
+    "intent": "diagnose",
+    "difficulty": "MEDIUM",
+    "type": "debugging",
+    "tags": [
+      "python",
+      "generator",
+      "iterator",
+      "lazy-evaluation"
+    ],
+    "estimatedTime": 11,
+    "recommendedElo": 1340,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "python-object-model-unbound-formatter",
+    "title": "O método que perdeu a instância",
+    "language": "python",
+    "topic": "object-model",
+    "presentation": "terminal",
+    "intent": "diagnose",
+    "difficulty": "MEDIUM",
+    "type": "output-diagnosis",
+    "tags": [
+      "python",
+      "class",
+      "method",
+      "descriptor",
+      "binding"
+    ],
+    "estimatedTime": 10,
+    "recommendedElo": 1390,
+    "status": "ACTIVE"
+  },
+  {
     "id": "react-hooks-stale-closure-useeffect",
     "title": "O Fechamento Obsoleto (Stale Closure) no useEffect",
     "language": "react",
