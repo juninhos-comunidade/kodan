@@ -17,6 +17,11 @@ function makeChallenge(overrides: Partial<Challenge> = {}): Challenge {
     difficulty: overrides.difficulty ?? "MEDIUM",
     recommendedElo: overrides.recommendedElo ?? 1400,
     tags: overrides.tags ?? "useEffect,stale-closure,react-hooks",
+    topic: overrides.topic ?? "effects-lifecycle",
+    presentation: overrides.presentation ?? "code",
+    intent: overrides.intent ?? "diagnose",
+    evaluationAvailable: overrides.evaluationAvailable ?? true,
+    availability: overrides.availability ?? "READY",
     attempts: overrides.attempts ?? [],
   };
 }
@@ -29,6 +34,7 @@ describe("challenges-taxonomy", () => {
         makeChallenge({
           id: "react-medium-fetch-race",
           tags: "react,race-condition,data-fetching",
+          topic: "async-races",
         }),
       ),
     ).toBe("async-races");
@@ -37,6 +43,7 @@ describe("challenges-taxonomy", () => {
         makeChallenge({
           id: "react-easy-state-mutation",
           tags: "react,state-management,immutability",
+          topic: "state-rendering",
         }),
       ),
     ).toBe("state-rendering");
@@ -45,6 +52,7 @@ describe("challenges-taxonomy", () => {
         makeChallenge({
           id: "react-contracts-children-api",
           tags: "react,composition,children,contracts",
+          topic: "component-patterns",
         }),
       ),
     ).toBe("component-patterns");
@@ -54,9 +62,11 @@ describe("challenges-taxonomy", () => {
           id: "typescript-generics-inference",
           title: "Inferência em tipos genéricos",
           tags: "typescript,generics,type-inference",
+          language: "typescript",
+          topic: "generics-inference",
         }),
       ),
-    ).toBe("type-system");
+    ).toBe("generics-inference");
     expect(CHALLENGE_TOPICS.find((topic) => topic.key === "type-system")?.label).toBe(
       "Type System",
     );
@@ -68,6 +78,7 @@ describe("challenges-taxonomy", () => {
         makeChallenge({
           id: "react-medium-fetch-race",
           tags: "react,race-condition,data-fetching",
+          topic: "async-races",
         }),
       ),
     ).toBe("Async UI & Races · Race Condition · Data Fetching");
@@ -80,16 +91,19 @@ describe("challenges-taxonomy", () => {
         id: "2",
         difficulty: "HARD",
         tags: "react,race-condition,data-fetching",
+        topic: "async-races",
       }),
       makeChallenge({
         id: "3",
         difficulty: "EASY",
         tags: "react,state-management,immutability",
+        topic: "state-rendering",
       }),
       makeChallenge({
         id: "4",
         difficulty: "HARD",
         tags: "react,composition,children,contracts",
+        topic: "component-patterns",
       }),
     ]);
 
@@ -121,6 +135,7 @@ describe("challenges-taxonomy", () => {
     const raceChallenge = makeChallenge({
       id: "react-medium-fetch-race",
       tags: "react,race-condition,data-fetching",
+      topic: "async-races",
     });
 
     expect(matchesChallengeTopic(raceChallenge, "ALL")).toBe(true);
@@ -128,5 +143,21 @@ describe("challenges-taxonomy", () => {
     expect(matchesChallengeTopic(raceChallenge, "effects-lifecycle")).toBe(
       false,
     );
+  });
+
+  it("monta filtros próprios para TypeScript, Python, Java e Go", () => {
+    const languages: Array<[Challenge["language"], string]> = [
+      ["typescript", "generics-inference"],
+      ["python", "collections-mutability"],
+      ["java", "collections-streams"],
+      ["go", "goroutines-channels"],
+    ];
+
+    for (const [language, topic] of languages) {
+      const sections = buildChallengeTopicSections([
+        makeChallenge({ language, topic, id: `${language}-challenge` }),
+      ]);
+      expect(sections.find((section) => section.key === topic)?.count).toBe(1);
+    }
   });
 });

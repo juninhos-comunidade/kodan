@@ -64,3 +64,30 @@ test("oferece o próximo desafio avaliável depois do feedback", () => {
   expect(markup).toContain('data-product-event="challenge_viewed"');
   expect(markup).toContain('data-product-event="diagnosis_started"');
 });
+
+test("bloqueia acesso direto a um desafio em revisão sem registrar início", () => {
+  const markup = renderToStaticMarkup(
+    <TrainArenaClient
+      id="desafio-em-revisao"
+      initialChallenge={{
+        id: "desafio-em-revisao",
+        title: "Desafio em revisão",
+        difficulty: "EASY",
+        recommendedElo: 1000,
+        code: "const value = true;",
+        question: "Explique.",
+        evaluationAvailable: false,
+        tags: "react",
+      }}
+      nextChallenge={null}
+      isAuthenticated
+      initialSession={{ phase: "answering", showComparison: false, result: null }}
+      initialUserAnswer=""
+    />,
+  );
+
+  expect(markup).toContain("Desafio em revisão editorial");
+  expect(markup).toContain("não afeta seu resultado nem seu ELO");
+  expect(markup).not.toContain('data-product-event="challenge_viewed"');
+  expect(markup).not.toContain("Enviar diagnóstico");
+});

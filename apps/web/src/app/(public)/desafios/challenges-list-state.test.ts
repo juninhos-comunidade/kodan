@@ -18,6 +18,11 @@ function makeChallenge(overrides: Partial<Challenge> = {}): Challenge {
     recommendedElo: overrides.recommendedElo ?? 1200,
     language: overrides.language ?? "react",
     tags: overrides.tags ?? "react,useEffect,closures",
+    topic: overrides.topic ?? "effects-lifecycle",
+    presentation: overrides.presentation ?? "code",
+    intent: overrides.intent ?? "diagnose",
+    evaluationAvailable: overrides.evaluationAvailable ?? true,
+    availability: overrides.availability ?? "READY",
     attempts: overrides.attempts ?? [],
   };
 }

@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@kodan/auth": "workspace:*",
+    "@kodan/content": "workspace:*",
     "@kodan/db": "workspace:*",
     "@kodan/env": "workspace:*",
     "@kodan/ui": "workspace:*",

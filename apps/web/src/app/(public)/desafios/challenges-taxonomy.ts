@@ -1,22 +1,13 @@
 import {
-  CHALLENGE_TOPICS,
-  getChallengeTopicDescription,
-  getChallengeTopicKey,
-  getChallengeTopicLabel,
+  getChallengeTopicDefinitions,
   type ChallengeTopicDefinition,
-  type ChallengeTopicKey,
-} from "@/lib/challenge-topics";
+} from "@kodan/content/challenge-taxonomy";
 import type { Challenge, Difficulty } from "./ema-challenge-card-helpers";
 import { getChallengeTags, isDifficulty } from "./ema-challenge-card-helpers";
 
-export {
-  CHALLENGE_TOPICS,
-  getChallengeTopicDescription,
-  getChallengeTopicKey,
-  getChallengeTopicLabel,
-  type ChallengeTopicDefinition,
-  type ChallengeTopicKey,
-};
+export const CHALLENGE_TOPICS = getChallengeTopicDefinitions("react");
+export type ChallengeTopicKey = string;
+export type { ChallengeTopicDefinition };
 
 export type ChallengeTopicFilter = "ALL" | ChallengeTopicKey;
 
@@ -26,14 +17,16 @@ export interface ChallengeTopicSection extends ChallengeTopicDefinition {
 }
 
 export function matchesChallengeTopic(
-  challenge: Pick<Challenge, "id" | "tags" | "title">,
+  challenge: Pick<Challenge, "topic">,
   topicFilter: ChallengeTopicFilter,
 ) {
   return topicFilter === "ALL" || getChallengeTopicKey(challenge) === topicFilter;
 }
 
 export function buildChallengeTopicSections(challenges: Challenge[]): ChallengeTopicSection[] {
-  return CHALLENGE_TOPICS.map((topic) => {
+  const language = challenges[0]?.language;
+  const topics = language ? getChallengeTopicDefinitions(language) : CHALLENGE_TOPICS;
+  return topics.map((topic) => {
     const difficulties = {
       ALL: 0,
       EASY: 0,
@@ -52,9 +45,9 @@ export function buildChallengeTopicSections(challenges: Challenge[]): ChallengeT
 }
 
 export function getChallengeTopicTagline(
-  challenge: Pick<Challenge, "id" | "tags" | "title">,
+  challenge: Pick<Challenge, "language" | "topic" | "tags">,
 ) {
-  const topicLabel = getChallengeTopicLabel(getChallengeTopicKey(challenge));
+  const topicLabel = getChallengeTopicLabel(challenge.topic, challenge.language);
   const topicTags: string[] = [];
 
   for (const rawTag of getChallengeTags(challenge.tags)) {
@@ -71,6 +64,32 @@ export function getChallengeTopicTagline(
   }
 
   return topicTags.length === 0 ? topicLabel : `${topicLabel} · ${topicTags.join(" · ")}`;
+}
+
+export function getChallengeTopicKey(challenge: Pick<Challenge, "topic">) {
+  return challenge.topic;
+}
+
+export function getChallengeTopicLabel(
+  topicKey: string,
+  language?: Challenge["language"],
+) {
+  return findTopic(topicKey, language)?.label ?? topicKey;
+}
+
+export function getChallengeTopicDescription(
+  topicKey: string,
+  language?: Challenge["language"],
+) {
+  return findTopic(topicKey, language)?.description ?? "Pratique o tema em desafios revisados.";
+}
+
+function findTopic(topicKey: string, language?: Challenge["language"]) {
+  const definitions = language
+    ? getChallengeTopicDefinitions(language)
+    : (["react", "typescript", "python", "java", "go"] as const)
+        .flatMap((candidate) => getChallengeTopicDefinitions(candidate));
+  return definitions.find((topic) => topic.key === topicKey);
 }
 
 function normalizeChallengeTag(tag: string) {

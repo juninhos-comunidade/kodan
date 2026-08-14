@@ -188,11 +188,11 @@ export default function ChallengesPageClient({
       ? selectedLanguage
         ? `Todos os desafios de ${getChallengeLanguageDefinition(selectedLanguage).name}`
         : "Todos os desafios"
-      : getChallengeTopicLabel(state.topicFilter);
+      : getChallengeTopicLabel(state.topicFilter, selectedLanguage ?? undefined);
   const topicDescription =
     state.topicFilter === "ALL"
       ? "Escolha um exercício e continue sua evolução no Dojo."
-      : getChallengeTopicDescription(state.topicFilter);
+      : getChallengeTopicDescription(state.topicFilter, selectedLanguage ?? undefined);
   const hasActiveFilters =
     state.searchQuery.trim().length > 0 ||
     state.filterDifficulty !== "ALL" ||

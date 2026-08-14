@@ -12,9 +12,9 @@ import { buildChallengeTopicSections } from "@/app/(public)/desafios/challenges-
 import type { Challenge } from "@/app/(public)/desafios/ema-challenge-card-helpers";
 
 const challenges: Challenge[] = [
-  { id: "effect-1", title: "Cleanup de WebSocket", language: "react", difficulty: "MEDIUM", recommendedElo: 1200, tags: "React,useEffect,cleanup", attempts: [{ id: "a1", score: 7 }] },
-  { id: "state-1", title: "Estado derivado", language: "react", difficulty: "EASY", recommendedElo: 900, tags: "React,state,rendering", attempts: [] },
-  { id: "perf-1", title: "Memoização seletiva", language: "react", difficulty: "HARD", recommendedElo: 1600, tags: "React,useMemo,advanced", attempts: [{ id: "a2", score: 3 }] },
+  { id: "effect-1", title: "Cleanup de WebSocket", language: "react", topic: "effects-lifecycle", presentation: "code", intent: "diagnose", evaluationAvailable: true, availability: "READY", difficulty: "MEDIUM", recommendedElo: 1200, tags: "React,useEffect,cleanup", attempts: [{ id: "a1", score: 7 }] },
+  { id: "state-1", title: "Estado derivado", language: "react", topic: "state-rendering", presentation: "code", intent: "diagnose", evaluationAvailable: true, availability: "READY", difficulty: "EASY", recommendedElo: 900, tags: "React,state,rendering", attempts: [] },
+  { id: "perf-1", title: "Memoização seletiva", language: "react", topic: "state-rendering", presentation: "code", intent: "diagnose", evaluationAvailable: true, availability: "READY", difficulty: "HARD", recommendedElo: 1600, tags: "React,useMemo,advanced", attempts: [{ id: "a2", score: 3 }] },
 ];
 const sections = buildChallengeTopicSections(challenges);
 const user = { name: "Gabriel Silva", image: null };

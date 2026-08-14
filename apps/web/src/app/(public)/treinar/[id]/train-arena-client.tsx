@@ -36,6 +36,7 @@ import { Button } from "@kodan/ui/components/button";
 import { ZenToast } from "@kodan/ui/components/zen";
 import { cn } from "@kodan/ui/lib/utils";
 import { ProductEventBeacon } from "@/components/product-event-beacon";
+import { ChallengeEditorialReview } from "@/components/challenge-editorial-review";
 import { getLoginHref } from "@/lib/auth-navigation";
 import {
   ACTIVATION_DAY_STORAGE_KEY,
@@ -73,7 +74,20 @@ export interface Challenge {
   title: string;
   difficulty: string;
   recommendedElo: number;
-  code: string;
+  code: string | null;
+  codeFileName?: string | null;
+  scenario?: string | null;
+  topic?: string;
+  presentation?: "code" | "code-terminal" | "terminal" | "concept";
+  intent?: "diagnose" | "compare" | "validate";
+  terminal?: {
+    command: string;
+    blocks: Array<{
+      label: string;
+      content: string;
+      tone: "neutral" | "success" | "warning" | "error";
+    }>;
+  } | null;
   question: string;
   evaluationAvailable: boolean;
   tags: string;
@@ -524,6 +538,17 @@ export default function TrainArenaClient({
     );
   }
 
+  if (!initialChallenge.evaluationAvailable) {
+    return (
+      <main
+        data-challengers-screen="true"
+        className="min-h-svh bg-[var(--challengers-page)] px-4 py-16 text-[var(--challengers-ink)]"
+      >
+        <ChallengeEditorialReview showCatalogAction />
+      </main>
+    );
+  }
+
   const challenge = initialChallenge;
   const { result, showComparison } = attemptSession;
   const submitting =
@@ -531,7 +556,7 @@ export default function TrainArenaClient({
     attemptSession.phase === "revealing";
   const answerLocked = attemptSession.phase !== "answering";
   const parsedQuestion = parseQuestion(challenge.question);
-  const lines = challenge.code.split("\n");
+  const lines = (challenge.code ?? "").split("\n");
   const answerLength = userAnswer.trim().length;
   const answerValidation = validateTrainingAnswer(userAnswer);
   const wordCount =
@@ -652,6 +677,7 @@ export default function TrainArenaClient({
 
   const handleCopyCode = async () => {
     try {
+      if (!challenge.code) return;
       await navigator.clipboard.writeText(challenge.code);
       showZenToast("info", "Código copiado", "O snippet foi enviado para a área de transferência.");
     } catch {
@@ -696,7 +722,7 @@ export default function TrainArenaClient({
 
               <div className="grid flex-1 gap-4 py-3 xl:min-h-[640px] xl:grid-cols-[minmax(0,1.08fr)_minmax(390px,0.92fr)]">
                 <CodePanel
-                  code={challenge.code}
+                  code={challenge.code ?? ""}
                   lineCount={lines.length}
                   difficulty={challenge.difficulty}
                   onCopyCode={handleCopyCode}

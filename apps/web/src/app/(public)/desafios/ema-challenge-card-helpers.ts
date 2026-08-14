@@ -1,5 +1,5 @@
 export type Difficulty = "EASY" | "MEDIUM" | "HARD";
-export type ChallengeLanguage = "react" | "typescript" | "python" | "nodejs";
+export type ChallengeLanguage = "react" | "typescript" | "python" | "java" | "go";
 export type ChallengeStatus = "resolved" | "in_progress" | "not_started";
 export type ChallengeKind =
   | "CONCEITO"
@@ -21,6 +21,11 @@ export interface Challenge {
   difficulty: Difficulty;
   recommendedElo: number;
   tags: string;
+  topic: string;
+  presentation: "code" | "code-terminal" | "terminal" | "concept";
+  intent: "diagnose" | "compare" | "validate";
+  evaluationAvailable: boolean;
+  availability: "READY" | "EDITORIAL_REVIEW";
   attempts: Attempt[];
 }
 
