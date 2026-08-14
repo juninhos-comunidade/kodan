@@ -16,12 +16,9 @@ import {
   ArrowUpRight,
   Bell,
   CheckCircle2,
-  ChevronDown,
   ChevronLeft,
-  Copy,
   Eye,
   EyeOff,
-  FileCode,
   HelpCircle,
   Info,
   Lightbulb,
@@ -61,6 +58,7 @@ import {
 } from "./attempt-session-state";
 import type { SessionAgeBucket } from "@/server/training/training-adapter";
 import { FirstFeedbackCelebration } from "./first-feedback-celebration";
+import { ChallengeEvidencePanel } from "./challenge-evidence-panel";
 
 interface AttemptSummary {
   id: string;
@@ -74,6 +72,7 @@ export interface Challenge {
   title: string;
   difficulty: string;
   recommendedElo: number;
+  language?: "react" | "typescript" | "python" | "java" | "go";
   code: string | null;
   codeFileName?: string | null;
   scenario?: string | null;
@@ -131,124 +130,6 @@ function zenToastReducer(
   };
 }
 
-function highlightCode(code: string) {
-  const lines = code.split("\n");
-  const lineOccurrence = new Map<string, number>();
-
-  return lines.map((line) => {
-    const seen = lineOccurrence.get(line) ?? 0;
-    lineOccurrence.set(line, seen + 1);
-    const lineKey = `${line}::${seen}`;
-
-    if (line.trim().startsWith("//")) {
-      return (
-        <span
-          key={lineKey}
-          className="whitespace-pre italic text-[var(--challengers-faint)]"
-        >
-          {line}
-        </span>
-      );
-    }
-
-    const tokenRegex =
-      /(\/\/.*)|("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)|(\b(?:const|let|var|function|export|default|import|from|return|if|else|try|catch|finally|type|interface|as|switch|case|break|async|await|new)\b)|(\b(?:useState|useEffect|useMemo|useCallback|useRef|useReducer)\b)|(\b(?:true|false|null|undefined)\b)|(\b\d+\b)|(<[^>]+>)|([a-zA-Z_$][a-zA-Z0-9_$]*)|([^\s\w]+)/g;
-
-    let match;
-    const elements: ReactNode[] = [];
-    let lastIndex = 0;
-
-    tokenRegex.lastIndex = 0;
-
-    while ((match = tokenRegex.exec(line)) !== null) {
-      const matchIndex = match.index;
-
-      if (matchIndex > lastIndex) {
-        elements.push(line.substring(lastIndex, matchIndex));
-      }
-
-      const [
-        full,
-        comment,
-        string,
-        keyword,
-        hook,
-        booleanNull,
-        number,
-        jsx,
-        _identifier,
-        punctuation,
-      ] = match;
-
-      const key = `${lineKey}-${matchIndex}`;
-
-      if (comment) {
-        elements.push(
-          <span key={key} className="italic text-[var(--challengers-faint)]">
-            {comment}
-          </span>,
-        );
-      } else if (string) {
-        elements.push(
-          <span
-            key={key}
-            className="font-medium text-[oklch(46%_0.13_154)] dark:text-[oklch(78%_0.11_154)]"
-          >
-            {string}
-          </span>,
-        );
-      } else if (keyword) {
-        elements.push(
-          <span key={key} className="font-semibold text-[var(--challengers-blue)]">
-            {keyword}
-          </span>,
-        );
-      } else if (hook) {
-        elements.push(
-          <span
-            key={key}
-            className="font-semibold text-[oklch(45%_0.11_286)] dark:text-[oklch(76%_0.1_286)]"
-          >
-            {hook}
-          </span>,
-        );
-      } else if (booleanNull || number) {
-        elements.push(
-          <span key={key} className="text-[var(--challengers-warning)]">
-            {full}
-          </span>,
-        );
-      } else if (jsx) {
-        elements.push(
-          <span key={key} className="text-[var(--challengers-blue-strong)]">
-            {jsx}
-          </span>,
-        );
-      } else if (punctuation) {
-        elements.push(
-          <span key={key} className="text-[var(--challengers-muted)]">
-            {punctuation}
-          </span>,
-        );
-      } else {
-        elements.push(full);
-      }
-
-      lastIndex = tokenRegex.lastIndex;
-    }
-
-    if (lastIndex < line.length) {
-      elements.push(line.substring(lastIndex));
-    }
-
-    return (
-      <div key={lineKey} className="min-h-[1.45rem] whitespace-pre">
-        {elements.length > 0 ? elements : " "}
-      </div>
-    );
-  });
-}
-
 function parseQuestion(questionText: string) {
   const splitKeywords = [
     "Na sua resposta, cubra:",
@@ -276,7 +157,7 @@ function parseQuestion(questionText: string) {
     return {
       mainPrompt:
         mainPrompt ||
-        "Este componente apresenta comportamento incorreto em produção. Diagnose o bug e explique a correção.",
+        "Analise as evidências e justifique sua conclusão.",
       hintText,
     };
   }
@@ -290,15 +171,14 @@ function parseQuestion(questionText: string) {
     return {
       mainPrompt:
         mainPrompt ||
-        "Este componente apresenta comportamento incorreto em produção. Diagnose o bug e explique a correção.",
+        "Analise as evidências e justifique sua conclusão.",
       hintText,
     };
   }
 
   return {
-    mainPrompt:
-      "Este componente apresenta comportamento incorreto em produção. Diagnose o bug e explique a correção.",
-    hintText: questionText,
+    mainPrompt: questionText || "Analise as evidências e justifique sua conclusão.",
+    hintText: "Separe o que as evidências comprovam das hipóteses que ainda precisariam ser verificadas.",
   };
 }
 
@@ -556,7 +436,6 @@ export default function TrainArenaClient({
     attemptSession.phase === "revealing";
   const answerLocked = attemptSession.phase !== "answering";
   const parsedQuestion = parseQuestion(challenge.question);
-  const lines = (challenge.code ?? "").split("\n");
   const answerLength = userAnswer.trim().length;
   const answerValidation = validateTrainingAnswer(userAnswer);
   const wordCount =
@@ -571,6 +450,11 @@ export default function TrainArenaClient({
     (!isAuthenticated || answerValidation.valid);
   const hasStartedAnalysis =
     answerLength > 0 || notes.trim().length > 0 || hintRevealed || submitting;
+  const answerGuidance = challenge.intent === "compare"
+    ? "Compare os conceitos, explicando seus contratos, diferenças e usos adequados."
+    : challenge.intent === "validate"
+      ? "Diga se o comportamento atende ao objetivo e sustente a conclusão com as evidências disponíveis."
+      : "Explique a causa provável e mostre como as evidências sustentam sua conclusão.";
 
   const handleSubmit = async (event?: FormEvent) => {
     if (event) {
@@ -716,14 +600,14 @@ export default function TrainArenaClient({
           <div className="mx-auto flex min-h-full max-w-[1500px] flex-col px-4 lg:px-5 xl:px-6">
               <ChallengeSteps
                 className="h-9 shrink-0"
+                presentation={challenge.presentation ?? "code"}
                 hasStartedAnalysis={hasStartedAnalysis}
                 hasResult={Boolean(result)}
               />
 
               <div className="grid flex-1 gap-4 py-3 xl:min-h-[640px] xl:grid-cols-[minmax(0,1.08fr)_minmax(390px,0.92fr)]">
-                <CodePanel
-                  code={challenge.code ?? ""}
-                  lineCount={lines.length}
+                <ChallengeEvidencePanel
+                  challenge={challenge}
                   difficulty={challenge.difficulty}
                   onCopyCode={handleCopyCode}
                 />
@@ -733,6 +617,7 @@ export default function TrainArenaClient({
                     activeTab={supportTab}
                     notes={notes}
                     parsedQuestion={parsedQuestion}
+                    conceptMode={challenge.presentation === "concept"}
                     hintRevealed={hintRevealed}
                     showHintConfirm={showHintConfirm}
                     onTabChange={setSupportTab}
@@ -757,6 +642,7 @@ export default function TrainArenaClient({
                       evaluationAvailable={challenge.evaluationAvailable}
                       submitting={submitting}
                       answerLocked={answerLocked}
+                      guidance={answerGuidance}
                       onAnswerChange={setUserAnswer}
                       onClear={() => setUserAnswer("")}
                       onKeyDown={handleKeyDown}
@@ -915,20 +801,26 @@ function AuthenticationRequiredDialog({
 
 function ChallengeSteps({
   className,
+  presentation,
   hasStartedAnalysis,
   hasResult,
 }: {
   className?: string;
+  presentation: "code" | "code-terminal" | "terminal" | "concept";
   hasStartedAnalysis: boolean;
   hasResult: boolean;
 }) {
   const steps = [
     {
-      label: "Leitura do código",
+      label: presentation === "concept"
+        ? "Leitura do enunciado"
+        : presentation === "terminal"
+          ? "Leitura da saída"
+          : "Leitura das evidências",
       state: "done",
     },
     {
-      label: "Análise das dependências",
+      label: presentation === "concept" ? "Análise conceitual" : "Análise técnica",
       state: hasResult ? "done" : hasStartedAnalysis ? "active" : "idle",
     },
     {
@@ -981,69 +873,11 @@ function ChallengeSteps({
   );
 }
 
-function CodePanel({
-  code,
-  lineCount,
-  difficulty,
-  onCopyCode,
-}: {
-  code: string;
-  lineCount: number;
-  difficulty: string;
-  onCopyCode: () => void;
-}) {
-  return (
-    <section className="challengers-panel flex min-h-[560px] flex-col overflow-hidden rounded-[10px] border xl:min-h-0">
-      <div className="flex h-12 shrink-0 items-center justify-between border-b border-[color:var(--challengers-border)] bg-[var(--challengers-panel)]">
-        <div className="flex h-full items-center">
-          <div className="relative flex h-full items-center gap-2 border-r border-[color:var(--challengers-border)] bg-[var(--challengers-surface)] px-4 text-sm font-medium text-[var(--challengers-blue)] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[var(--challengers-blue)]">
-            <FileCode className="size-4" />
-            <span>App.tsx</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 px-3">
-          <span className="hidden rounded-[7px] border border-[color:var(--challengers-border)] bg-[var(--challengers-surface)] px-2.5 py-1 text-[0.72rem] font-medium text-[var(--challengers-blue)] sm:inline-flex">
-            React + TypeScript
-            <ChevronDown className="ml-1.5 size-3.5" />
-          </span>
-          <button
-            type="button"
-            aria-label="Copiar código"
-            className="challengers-icon-button inline-flex size-8 items-center justify-center rounded-[8px] border"
-            onClick={onCopyCode}
-          >
-            <Copy className="size-4" />
-          </button>
-        </div>
-      </div>
-
-      <div className="min-h-0 flex-1 overflow-auto bg-[var(--challengers-surface)] font-mono text-[0.82rem] leading-6">
-        <div className="flex min-w-max">
-          <div className="select-none border-r border-[color:var(--challengers-border)] bg-[var(--challengers-panel)] px-3 py-4 text-right text-[0.72rem] font-medium leading-6 text-[var(--challengers-faint)]">
-            {Array.from({ length: lineCount }, (_, index) => (
-              <div key={index} className="h-[1.45rem] min-w-5 tabular-nums">
-                {index + 1}
-              </div>
-            ))}
-          </div>
-          <pre className="flex-1 overflow-visible px-4 py-4 text-[var(--challengers-ink)]">
-            {highlightCode(code)}
-          </pre>
-        </div>
-      </div>
-
-      <div className="flex h-9 shrink-0 items-center justify-between border-t border-[color:var(--challengers-border)] bg-[var(--challengers-panel)] px-4 text-[0.72rem] text-[var(--challengers-muted)]">
-        <span>{lineCount} linhas</span>
-        <span>{getDifficultyLabel(difficulty)}</span>
-      </div>
-    </section>
-  );
-}
-
 function StatementPanel({
   activeTab,
   notes,
   parsedQuestion,
+  conceptMode,
   hintRevealed,
   showHintConfirm,
   onTabChange,
@@ -1055,6 +889,7 @@ function StatementPanel({
   activeTab: "statement" | "notes";
   notes: string;
   parsedQuestion: { mainPrompt: string; hintText: string };
+  conceptMode: boolean;
   hintRevealed: boolean;
   showHintConfirm: boolean;
   onTabChange: (tab: "statement" | "notes") => void;
@@ -1071,7 +906,7 @@ function StatementPanel({
             active={activeTab === "statement"}
             onClick={() => onTabChange("statement")}
           >
-            Enunciado
+            {conceptMode ? "Apoio" : "Enunciado"}
           </TabButton>
           <TabButton
             active={activeTab === "notes"}
@@ -1090,18 +925,33 @@ function StatementPanel({
       {activeTab === "statement" ? (
         <div className="min-h-0 flex-1 overflow-auto px-6 py-5">
           <div className="max-w-[70ch] space-y-5">
+            {conceptMode ? (
+              <div>
+                <div className="mb-3 flex items-center gap-2 text-[0.76rem] font-semibold uppercase tracking-[0.12em] text-[var(--challengers-blue)]">
+                  <HelpCircle className="size-4" aria-hidden="true" />
+                  Como responder
+                </div>
+                <h2 className="font-serif text-xl font-bold leading-tight text-[var(--challengers-ink)]">
+                  Compare os conceitos pelos seus contratos
+                </h2>
+                <p className="mt-3 text-sm leading-7 text-[var(--challengers-muted)]">
+                  Explique o propósito de cada estrutura, onde elas se aproximam e em quais situações produzem decisões diferentes.
+                </p>
+              </div>
+            ) : (
             <div>
               <div className="mb-3 flex items-center gap-2 text-[0.76rem] font-semibold uppercase tracking-[0.12em] text-[var(--challengers-blue)]">
                 <HelpCircle className="size-4" />
                 Diagnóstico
               </div>
               <h2 className="font-serif text-xl font-bold leading-tight text-[var(--challengers-ink)]">
-                O que está errado neste componente?
+                O que as evidências indicam?
               </h2>
               <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-[var(--challengers-ink)]">
                 {parsedQuestion.mainPrompt}
               </p>
             </div>
+            )}
 
             <HintCallout
               hintText={parsedQuestion.hintText}
@@ -1217,8 +1067,8 @@ function HintCallout({
         </div>
       ) : (
         <p className="mt-3 text-sm leading-6 text-[var(--challengers-ink)]">
-          Use se estiver travado na relação entre dependências, ciclo de vida e
-          ordem das respostas.
+          Comece separando o comportamento observado, a causa provável e as
+          evidências que sustentam sua conclusão.
         </p>
       )}
     </div>
@@ -1233,6 +1083,7 @@ function DiagnosisPanel({
   evaluationAvailable,
   submitting,
   answerLocked,
+  guidance,
   onAnswerChange,
   onClear,
   onKeyDown,
@@ -1245,6 +1096,7 @@ function DiagnosisPanel({
   evaluationAvailable: boolean;
   submitting: boolean;
   answerLocked: boolean;
+  guidance: string;
   onAnswerChange: (answer: string) => void;
   onClear: () => void;
   onKeyDown: (event: KeyboardEvent<HTMLTextAreaElement>) => void;
@@ -1261,7 +1113,7 @@ function DiagnosisPanel({
             Seu diagnóstico
           </h2>
           <p className="mt-2 text-sm text-[var(--challengers-muted)]">
-            Explique o problema e mostre como corrigir o código.
+            {guidance}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-3 text-[0.78rem] text-[var(--challengers-muted)]">

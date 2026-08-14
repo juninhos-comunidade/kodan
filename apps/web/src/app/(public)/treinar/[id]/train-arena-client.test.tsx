@@ -63,6 +63,8 @@ test("oferece o próximo desafio avaliável depois do feedback", () => {
   expect(markup).not.toContain("Concluir arena");
   expect(markup).toContain('data-product-event="challenge_viewed"');
   expect(markup).toContain('data-product-event="diagnosis_started"');
+  expect(markup).toContain("Explique.");
+  expect(markup).not.toContain("Este componente apresenta comportamento incorreto");
 });
 
 test("bloqueia acesso direto a um desafio em revisão sem registrar início", () => {
