@@ -992,5 +992,104 @@
     "estimatedTime": 18,
     "recommendedElo": 1600,
     "status": "ACTIVE"
+  },
+  {
+    "id": "typescript-async-unhandled-rejection-test",
+    "title": "O teste que passou antes de falhar",
+    "language": "typescript",
+    "topic": "async-errors",
+    "presentation": "terminal",
+    "intent": "diagnose",
+    "difficulty": "MEDIUM",
+    "type": "output-diagnosis",
+    "tags": [
+      "typescript",
+      "async",
+      "promise",
+      "error",
+      "unhandled-rejection",
+      "testing"
+    ],
+    "estimatedTime": 10,
+    "recommendedElo": 1450,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "typescript-generics-read-field-constraint",
+    "title": "A chave genérica ampla demais",
+    "language": "typescript",
+    "topic": "generics-inference",
+    "presentation": "code",
+    "intent": "diagnose",
+    "difficulty": "MEDIUM",
+    "type": "debugging",
+    "tags": [
+      "typescript",
+      "generic",
+      "constraint",
+      "keyof",
+      "inference"
+    ],
+    "estimatedTime": 12,
+    "recommendedElo": 1360,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "typescript-modules-import-type-runtime",
+    "title": "Um import que desaparece no runtime",
+    "language": "typescript",
+    "topic": "modules-runtime",
+    "presentation": "concept",
+    "intent": "compare",
+    "difficulty": "EASY",
+    "type": "compare-concepts",
+    "tags": [
+      "typescript",
+      "module",
+      "import",
+      "runtime",
+      "type-only"
+    ],
+    "estimatedTime": 8,
+    "recommendedElo": 1240,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "typescript-narrowing-payment-result",
+    "title": "O recibo no ramo recusado",
+    "language": "typescript",
+    "topic": "narrowing",
+    "presentation": "code-terminal",
+    "intent": "diagnose",
+    "difficulty": "MEDIUM",
+    "type": "output-diagnosis",
+    "tags": [
+      "typescript",
+      "narrowing",
+      "discriminated-union",
+      "type-guard"
+    ],
+    "estimatedTime": 12,
+    "recommendedElo": 1400,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "typescript-type-system-structural-user-summary",
+    "title": "O contrato que aceita mais do que parece",
+    "language": "typescript",
+    "topic": "type-system",
+    "presentation": "code",
+    "intent": "validate",
+    "difficulty": "EASY",
+    "type": "behavior-validation",
+    "tags": [
+      "typescript",
+      "type-system",
+      "structural-typing",
+      "excess-property-check"
+    ],
+    "estimatedTime": 8,
+    "recommendedElo": 1180,
+    "status": "ACTIVE"
   }
 ]

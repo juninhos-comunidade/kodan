@@ -1,0 +1,25 @@
+{
+  "id": "typescript-async-unhandled-rejection-test",
+  "title": "O teste que passou antes de falhar",
+  "language": "typescript",
+  "topic": "async-errors",
+  "presentation": "terminal",
+  "intent": "diagnose",
+  "difficulty": "MEDIUM",
+  "recommendedElo": 1450,
+  "scenario": "Uma colega escreveu um teste para confirmar que o checkout rejeita pagamentos recusados. O runner marcou o teste como concluído, mas encerrou o processo com uma rejeição não tratada logo depois.",
+  "question": "O que a sequência exibida no terminal revela sobre o ciclo de vida assíncrono do teste? Descreva a correção necessária para que o runner espere e valide a rejeição em vez de finalizar cedo.",
+  "tags": [
+    "typescript",
+    "async",
+    "promise",
+    "error",
+    "unhandled-rejection",
+    "testing"
+  ],
+  "type": "output-diagnosis",
+  "estimatedTime": 10,
+  "status": "ACTIVE",
+  "terminalFile": "terminal.json",
+  "solutionFile": "solution.md"
+}

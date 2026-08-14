@@ -1,0 +1,23 @@
+{
+  "id": "typescript-type-system-structural-user-summary",
+  "title": "O contrato que aceita mais do que parece",
+  "language": "typescript",
+  "topic": "type-system",
+  "presentation": "code",
+  "intent": "validate",
+  "difficulty": "EASY",
+  "recommendedElo": 1180,
+  "scenario": "Uma IA foi chamada para adaptar os dados de uma API ao resumo de usuário do painel. Na revisão, um colega afirmou que a chamada abaixo necessariamente falha porque o objeto possui o campo extra role.",
+  "question": "A afirmação do colega está correta? Explique como a tipagem estrutural participa desta chamada e em que situação semelhante o TypeScript faria uma verificação mais restritiva sobre propriedades extras.",
+  "tags": [
+    "typescript",
+    "type-system",
+    "structural-typing",
+    "excess-property-check"
+  ],
+  "type": "behavior-validation",
+  "estimatedTime": 8,
+  "status": "ACTIVE",
+  "codeFile": "user-summary.ts",
+  "solutionFile": "solution.md"
+}

@@ -1,0 +1,15 @@
+{
+  "command": "bunx tsc --ignoreConfig --noEmit --strict payment-result.ts",
+  "blocks": [
+    {
+      "label": "Esperado",
+      "content": "Compilação concluída sem erros.",
+      "tone": "success"
+    },
+    {
+      "label": "Obtido",
+      "content": "payment-result.ts:10:30 - error TS2339: Property 'receipt' does not exist on type '{ status: \"declined\"; reason: string; }'.\n\n10   return `Recusado: ${result.receipt}`;\n                                ~~~~~~~\n\nFound 1 error.",
+      "tone": "error"
+    }
+  ]
+}

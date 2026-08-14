@@ -1,0 +1,23 @@
+{
+  "id": "typescript-modules-import-type-runtime",
+  "title": "Um import que desaparece no runtime",
+  "language": "typescript",
+  "topic": "modules-runtime",
+  "presentation": "concept",
+  "intent": "compare",
+  "difficulty": "EASY",
+  "recommendedElo": 1240,
+  "scenario": "Uma IA reorganizou os imports de um módulo que recebe dados de auditoria. Na revisão, surgiu a proposta de trocar o import de AuditEvent por import type para deixar explícito que ele participa apenas da checagem estática.",
+  "question": "Qual é a diferença entre um import normal e import type no TypeScript? Explique o que permanece no JavaScript emitido e quando fazer essa troca pode alterar o comportamento da aplicação.",
+  "tags": [
+    "typescript",
+    "module",
+    "import",
+    "runtime",
+    "type-only"
+  ],
+  "type": "compare-concepts",
+  "estimatedTime": 8,
+  "status": "ACTIVE",
+  "solutionFile": "solution.md"
+}

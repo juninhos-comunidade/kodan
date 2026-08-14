@@ -11,6 +11,7 @@ import {
   challengeEvaluationRubricSchema,
   evaluationBenchmarkCasesSchema,
 } from "./challenge-schemas";
+import { getChallengeTopicDefinitions } from "./challenge-taxonomy";
 
 const temporaryRoots: string[] = [];
 
@@ -233,5 +234,44 @@ describe("trilha piloto de avaliação", () => {
         }
       }
     }
+  });
+});
+
+describe("blocos editoriais multiformato", () => {
+  test("carrega cinco desafios TypeScript bloqueados com um tema por filtro", async () => {
+    const catalog = await readPromotedChallengeCatalog();
+    const typescriptChallenges = catalog.challenges.filter(
+      (challenge) => challenge.language === "typescript",
+    );
+
+    expect(typescriptChallenges).toHaveLength(5);
+    expect(new Set(typescriptChallenges.map((challenge) => challenge.topic))).toEqual(
+      new Set(getChallengeTopicDefinitions("typescript").map((topic) => topic.key)),
+    );
+    expect(new Set(typescriptChallenges.map((challenge) => challenge.presentation))).toEqual(
+      new Set(["code", "code-terminal", "terminal", "concept"]),
+    );
+    expect(typescriptChallenges.every((challenge) => challenge.scenario)).toBe(true);
+    expect(typescriptChallenges.every((challenge) => !challenge.evaluationRubric)).toBe(true);
+
+    const activeTypescriptIds = catalog.index
+      .filter((entry) => entry.language === "typescript" && entry.status === "ACTIVE")
+      .map((entry) => entry.id);
+    expect(activeTypescriptIds).toHaveLength(5);
+    expect(findActiveChallengesWithoutEvaluationRubric(catalog)).toEqual(
+      expect.arrayContaining(
+        typescriptChallenges.map(({ id, title }) => ({ id, title })),
+      ),
+    );
+
+    const asyncSolution = await readFile(
+      path.join(
+        catalog.root,
+        "typescript/async-errors/unhandled-rejection-test/solution.md",
+      ),
+      "utf-8",
+    );
+    expect(asyncSolution).toContain("processPayment();");
+    expect(asyncSolution).toContain("await expect(processPayment()).rejects");
   });
 });
