@@ -1,0 +1,15 @@
+{
+  "command": "bun test checkout.test.ts",
+  "blocks": [
+    {
+      "label": "Esperado",
+      "content": "checkout.test.ts:\n(pass) rejeita pagamento recusado\n\n1 pass\n0 fail",
+      "tone": "success"
+    },
+    {
+      "label": "Obtido",
+      "content": "checkout.test.ts:\n(pass) rejeita pagamento recusado\n\n1 pass\n0 fail\n\nUnhandled rejection: Error: payment declined\n    at processPayment (checkout.ts:18:11)\n\nerror: script exited with code 1",
+      "tone": "error"
+    }
+  ]
+}

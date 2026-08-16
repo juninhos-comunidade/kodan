@@ -1,0 +1,17 @@
+{
+  "id": "python-errors-context-manager-vs-finally",
+  "title": "Fechamento explícito ou protocolo de contexto?",
+  "language": "python",
+  "topic": "errors-context-managers",
+  "presentation": "concept",
+  "intent": "compare",
+  "difficulty": "EASY",
+  "recommendedElo": 1220,
+  "scenario": "Ao revisar um importador de arquivos, a equipe encontrou duas propostas: envolver open e close em try/finally ou usar with. Ambas pretendem liberar o recurso mesmo quando o processamento lança uma exceção.",
+  "question": "Qual é a diferença entre controlar o recurso manualmente com try/finally e usar um context manager com with? Compare garantias, composição e o papel de __enter__ e __exit__, incluindo o tratamento opcional de exceções.",
+  "tags": ["python", "context-manager", "with", "exception", "resource"],
+  "type": "compare-concepts",
+  "estimatedTime": 9,
+  "status": "ACTIVE",
+  "solutionFile": "solution.md"
+}

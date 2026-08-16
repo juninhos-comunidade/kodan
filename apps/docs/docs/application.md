@@ -99,14 +99,14 @@ Mostra a visão geral e um desafio em destaque com o código ao lado. Para visit
 <details>
 <summary><code>/(public)/desafios</code> · Catálogo canônico</summary>
 
-Mostra os desafios disponíveis, permite busca textual e concentra os filtros contextuais de dificuldade, status, tipo e ordenação. Ao escolher um item, a aplicação navega para <code>/treinar/[id]</code>.
+Mostra desafios de React, TypeScript, Python, Java e Go, com busca textual e filtros contextuais de linguagem, tópico, dificuldade, status, tipo e ordenação. Desafios com rubrica validada navegam para <code>/treinar/[id]</code>. Itens ainda não avaliáveis aparecem com cadeado e selo **Em revisão**; a ação abre uma explicação editorial sem iniciar tentativa, avaliação ou ELO.
 
 </details>
 
 <details>
 <summary><code>/(public)/treinar/[id]</code> · Arena canônica</summary>
 
-Recebe o identificador de um desafio, apresenta o enunciado e o código para diagnóstico. Depois de errar, o praticante pode continuar sem ver a solução e com menor ELO potencial, ou revelar a solução e encerrar a sessão. A sessão aceita no máximo três tentativas avaliadas.
+Recebe o identificador de um desafio avaliável e apresenta a evidência conforme o contrato editorial: código, código com terminal em abas, terminal ou comparação conceitual. O contexto narrativo acompanha qualquer formato. Depois de errar, o praticante pode continuar sem ver a solução e com menor ELO potencial, ou revelar a solução e encerrar a sessão. A sessão aceita no máximo três tentativas avaliadas. Um acesso direto a um desafio em revisão mostra o bloqueio editorial e não cria tentativa nem chama o provedor de avaliação.
 
 </details>
 
@@ -170,7 +170,7 @@ O cadastro cria um usuário para o praticante no sistemae preserva o destino loc
 
 1. O praticante ou visitante abre **Início** e escolhe entrar no catálogo.
 2. Busca por texto e abre **Filtros** para combinar dificuldade, status, tipo e ordenação.
-3. Seleciona um desafio e entra em `/treinar/[id]`.
+3. Seleciona um desafio avaliável e entra em `/treinar/[id]`; em um item bloqueado, consulta o motivo da revisão sem sair do catálogo.
 4. Envia a análise e decide entre tentar novamente ou revelar a solução quando não resolver o desafio.
 5. Consulta o resultado no **Perfil**.
 

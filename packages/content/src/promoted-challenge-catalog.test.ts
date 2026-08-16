@@ -11,6 +11,7 @@ import {
   challengeEvaluationRubricSchema,
   evaluationBenchmarkCasesSchema,
 } from "./challenge-schemas";
+import { getChallengeTopicDefinitions } from "./challenge-taxonomy";
 
 const temporaryRoots: string[] = [];
 
@@ -58,6 +59,87 @@ describe("readPromotedChallengeCatalog", () => {
       questionKind: "explain-code",
       concepts: [{ id: "declared-type", importance: "critical" }],
     });
+    expect(catalog.challenges.find((challenge) => challenge.id === "legacy")).toMatchObject({
+      presentation: "code",
+      intent: "diagnose",
+      topic: "type-system",
+    });
+  });
+
+  test("materializa desafio conceitual sem exigir arquivo de código", async () => {
+    const root = await mkdtemp(path.join(tmpdir(), "kodan-concept-catalog-"));
+    temporaryRoots.push(root);
+    const challengeDirectory = path.join(root, "concept");
+    await mkdir(challengeDirectory);
+    await writeFile(path.join(challengeDirectory, "challenge.json"), JSON.stringify({
+      id: "go-interface-vs-struct",
+      title: "Interface ou struct?",
+      language: "go",
+      topic: "interfaces-methods",
+      presentation: "concept",
+      intent: "compare",
+      difficulty: "EASY",
+      recommendedElo: 1100,
+      scenario: "Um colega sugeriu trocar uma struct por uma interface.",
+      question: "Qual é a diferença entre as duas estruturas?",
+      tags: ["go", "interfaces", "structs"],
+    }));
+    await writeFile(path.join(challengeDirectory, "solution.md"), "Uma interface descreve comportamento.");
+
+    const catalog = await readPromotedChallengeCatalog({ root });
+
+    expect(catalog.challenges[0]).toMatchObject({
+      id: "go-interface-vs-struct",
+      code: null,
+      scenario: "Um colega sugeriu trocar uma struct por uma interface.",
+      topic: "interfaces-methods",
+      presentation: "concept",
+      intent: "compare",
+    });
+    expect(catalog.challenges[0]?.terminal).toBeUndefined();
+  });
+
+  test("materializa código e terminal declarados pelo desafio", async () => {
+    const root = await mkdtemp(path.join(tmpdir(), "kodan-terminal-catalog-"));
+    temporaryRoots.push(root);
+    const challengeDirectory = path.join(root, "terminal");
+    await mkdir(challengeDirectory);
+    await writeFile(path.join(challengeDirectory, "challenge.json"), JSON.stringify({
+      id: "python-lista-compartilhada",
+      title: "A lista que cresceu duas vezes",
+      language: "python",
+      topic: "collections-mutability",
+      presentation: "code-terminal",
+      intent: "diagnose",
+      difficulty: "MEDIUM",
+      recommendedElo: 1300,
+      question: "Explique por que a saída obtida diverge da esperada.",
+      tags: ["python", "lists", "mutability"],
+      codeFile: "cart.py",
+      terminalFile: "terminal.json",
+    }));
+    await writeFile(path.join(challengeDirectory, "cart.py"), "items = []\nitems.append('livro')");
+    await writeFile(path.join(challengeDirectory, "terminal.json"), JSON.stringify({
+      command: "python cart.py",
+      blocks: [
+        { label: "Esperado", content: "['livro']", tone: "success" },
+        { label: "Obtido", content: "['livro', 'livro']", tone: "error" },
+      ],
+    }));
+    await writeFile(path.join(challengeDirectory, "solution.md"), "A lista mutável foi compartilhada.");
+
+    const catalog = await readPromotedChallengeCatalog({ root });
+
+    expect(catalog.challenges[0]).toMatchObject({
+      id: "python-lista-compartilhada",
+      codeFileName: "cart.py",
+      code: "items = []\nitems.append('livro')",
+      presentation: "code-terminal",
+      terminal: {
+        command: "python cart.py",
+        blocks: [{ label: "Esperado", tone: "success" }, { label: "Obtido", tone: "error" }],
+      },
+    });
   });
 });
 
@@ -70,9 +152,15 @@ describe("findActiveChallengesWithoutEvaluationRubric", () => {
       question: "Explique.",
       solution: "Resposta.",
       tags: ["react"],
+      topic: "state-rendering",
+      presentation: "code" as const,
+      intent: "diagnose" as const,
     };
     const baseIndex = {
-      language: "tsx",
+      language: "react" as const,
+      topic: "state-rendering",
+      presentation: "code" as const,
+      intent: "diagnose" as const,
       difficulty: "EASY" as const,
       type: "debugging",
       tags: ["react"],
@@ -147,4 +235,73 @@ describe("trilha piloto de avaliação", () => {
       }
     }
   });
+});
+
+describe("blocos editoriais multiformato", () => {
+  test("carrega cinco desafios TypeScript bloqueados com um tema por filtro", async () => {
+    const catalog = await readPromotedChallengeCatalog();
+    const typescriptChallenges = catalog.challenges.filter(
+      (challenge) => challenge.language === "typescript",
+    );
+
+    expect(typescriptChallenges).toHaveLength(5);
+    expect(new Set(typescriptChallenges.map((challenge) => challenge.topic))).toEqual(
+      new Set(getChallengeTopicDefinitions("typescript").map((topic) => topic.key)),
+    );
+    expect(new Set(typescriptChallenges.map((challenge) => challenge.presentation))).toEqual(
+      new Set(["code", "code-terminal", "terminal", "concept"]),
+    );
+    expect(typescriptChallenges.every((challenge) => challenge.scenario)).toBe(true);
+    expect(typescriptChallenges.every((challenge) => !challenge.evaluationRubric)).toBe(true);
+
+    const activeTypescriptIds = catalog.index
+      .filter((entry) => entry.language === "typescript" && entry.status === "ACTIVE")
+      .map((entry) => entry.id);
+    expect(activeTypescriptIds).toHaveLength(5);
+    expect(findActiveChallengesWithoutEvaluationRubric(catalog)).toEqual(
+      expect.arrayContaining(
+        typescriptChallenges.map(({ id, title }) => ({ id, title })),
+      ),
+    );
+
+    const asyncSolution = await readFile(
+      path.join(
+        catalog.root,
+        "typescript/async-errors/unhandled-rejection-test/solution.md",
+      ),
+      "utf-8",
+    );
+    expect(asyncSolution).toContain("processPayment();");
+    expect(asyncSolution).toContain("await expect(processPayment()).rejects");
+  });
+
+  test.each(["python", "java", "go"] as const)(
+    "carrega cinco desafios %s bloqueados com um tema por filtro",
+    async (language) => {
+      const catalog = await readPromotedChallengeCatalog();
+      const languageChallenges = catalog.challenges.filter(
+        (challenge) => challenge.language === language,
+      );
+
+      expect(languageChallenges).toHaveLength(5);
+      expect(new Set(languageChallenges.map((challenge) => challenge.topic))).toEqual(
+        new Set(getChallengeTopicDefinitions(language).map((topic) => topic.key)),
+      );
+      expect(new Set(languageChallenges.map((challenge) => challenge.presentation))).toEqual(
+        new Set(["code", "code-terminal", "terminal", "concept"]),
+      );
+      expect(languageChallenges.every((challenge) => challenge.scenario)).toBe(true);
+      expect(languageChallenges.every((challenge) => !challenge.evaluationRubric)).toBe(true);
+      expect(
+        catalog.index.filter(
+          (entry) => entry.language === language && entry.status === "ACTIVE",
+        ),
+      ).toHaveLength(5);
+      expect(findActiveChallengesWithoutEvaluationRubric(catalog)).toEqual(
+        expect.arrayContaining(
+          languageChallenges.map(({ id, title }) => ({ id, title })),
+        ),
+      );
+    },
+  );
 });

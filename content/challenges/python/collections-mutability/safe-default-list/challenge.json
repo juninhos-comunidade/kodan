@@ -1,0 +1,18 @@
+{
+  "id": "python-collections-safe-default-list",
+  "title": "A lista padrão que não é compartilhada",
+  "language": "python",
+  "topic": "collections-mutability",
+  "presentation": "code",
+  "intent": "validate",
+  "difficulty": "EASY",
+  "recommendedElo": 1160,
+  "scenario": "Uma IA ajustou um helper de tags depois de receber um alerta sobre argumentos mutáveis. Na revisão, um colega afirmou que duas chamadas ainda compartilham a mesma lista.",
+  "question": "A afirmação do colega procede para esta implementação? Explique o papel do valor None, quando a lista é criada e qual seria a versão realmente vulnerável ao compartilhamento entre chamadas.",
+  "tags": ["python", "list", "mutability", "default-argument"],
+  "type": "behavior-validation",
+  "estimatedTime": 8,
+  "status": "ACTIVE",
+  "codeFile": "tags.py",
+  "solutionFile": "solution.md"
+}

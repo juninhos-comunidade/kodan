@@ -1,0 +1,15 @@
+{
+  "command": "go run pipeline.go",
+  "blocks": [
+    {
+      "label": "Esperado",
+      "content": "42",
+      "tone": "success"
+    },
+    {
+      "label": "Obtido",
+      "content": "fatal error: all goroutines are asleep - deadlock!\n\ngoroutine 1 [chan send]:\nmain.main()",
+      "tone": "error"
+    }
+  ]
+}

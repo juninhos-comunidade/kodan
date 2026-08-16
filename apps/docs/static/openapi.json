@@ -294,7 +294,8 @@
                   "react",
                   "typescript",
                   "python",
-                  "nodejs"
+                  "java",
+                  "go"
                 ]
               },
               "difficulty": {
@@ -311,6 +312,26 @@
               "tags": {
                 "type": "string"
               },
+              "topic": {
+                "type": "string"
+              },
+              "presentation": {
+                "type": "string",
+                "enum": [
+                  "code",
+                  "code-terminal",
+                  "terminal",
+                  "concept"
+                ]
+              },
+              "intent": {
+                "type": "string",
+                "enum": [
+                  "diagnose",
+                  "compare",
+                  "validate"
+                ]
+              },
               "createdAt": {
                 "type": "string",
                 "format": "date-time"
@@ -321,6 +342,13 @@
               },
               "evaluationAvailable": {
                 "type": "boolean"
+              },
+              "availability": {
+                "type": "string",
+                "enum": [
+                  "READY",
+                  "EDITORIAL_REVIEW"
+                ]
               }
             },
             "required": [
@@ -330,9 +358,13 @@
               "difficulty",
               "recommendedElo",
               "tags",
+              "topic",
+              "presentation",
+              "intent",
               "createdAt",
               "updatedAt",
-              "evaluationAvailable"
+              "evaluationAvailable",
+              "availability"
             ]
           }
         },
@@ -417,7 +449,8 @@
                         "react",
                         "typescript",
                         "python",
-                        "nodejs"
+                        "java",
+                        "go"
                       ]
                     },
                     "difficulty": {
@@ -434,6 +467,26 @@
                     "tags": {
                       "type": "string"
                     },
+                    "topic": {
+                      "type": "string"
+                    },
+                    "presentation": {
+                      "type": "string",
+                      "enum": [
+                        "code",
+                        "code-terminal",
+                        "terminal",
+                        "concept"
+                      ]
+                    },
+                    "intent": {
+                      "type": "string",
+                      "enum": [
+                        "diagnose",
+                        "compare",
+                        "validate"
+                      ]
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time"
@@ -444,6 +497,13 @@
                     },
                     "evaluationAvailable": {
                       "type": "boolean"
+                    },
+                    "availability": {
+                      "type": "string",
+                      "enum": [
+                        "READY",
+                        "EDITORIAL_REVIEW"
+                      ]
                     }
                   },
                   "required": [
@@ -453,9 +513,13 @@
                     "difficulty",
                     "recommendedElo",
                     "tags",
+                    "topic",
+                    "presentation",
+                    "intent",
                     "createdAt",
                     "updatedAt",
-                    "evaluationAvailable"
+                    "evaluationAvailable",
+                    "availability"
                   ]
                 }
               },
@@ -515,7 +579,8 @@
                   "react",
                   "typescript",
                   "python",
-                  "nodejs"
+                  "java",
+                  "go"
                 ]
               },
               "difficulty": {
@@ -532,6 +597,26 @@
               "tags": {
                 "type": "string"
               },
+              "topic": {
+                "type": "string"
+              },
+              "presentation": {
+                "type": "string",
+                "enum": [
+                  "code",
+                  "code-terminal",
+                  "terminal",
+                  "concept"
+                ]
+              },
+              "intent": {
+                "type": "string",
+                "enum": [
+                  "diagnose",
+                  "compare",
+                  "validate"
+                ]
+              },
               "createdAt": {
                 "type": "string",
                 "format": "date-time"
@@ -542,6 +627,13 @@
               },
               "evaluationAvailable": {
                 "type": "boolean"
+              },
+              "availability": {
+                "type": "string",
+                "enum": [
+                  "READY",
+                  "EDITORIAL_REVIEW"
+                ]
               },
               "attempts": {
                 "type": "array",
@@ -585,10 +677,66 @@
                 }
               },
               "code": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
+              },
+              "codeFileName": {
+                "type": "string",
+                "nullable": true
+              },
+              "scenario": {
+                "type": "string",
+                "nullable": true
               },
               "question": {
                 "type": "string"
+              },
+              "terminal": {
+                "type": "object",
+                "nullable": true,
+                "properties": {
+                  "command": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "blocks": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "label": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "content": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "tone": {
+                          "type": "string",
+                          "enum": [
+                            "neutral",
+                            "success",
+                            "warning",
+                            "error"
+                          ],
+                          "default": "neutral"
+                        }
+                      },
+                      "required": [
+                        "label",
+                        "content"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "minItems": 1
+                  }
+                },
+                "required": [
+                  "command",
+                  "blocks"
+                ],
+                "additionalProperties": false
               }
             },
             "required": [
@@ -598,12 +746,19 @@
               "difficulty",
               "recommendedElo",
               "tags",
+              "topic",
+              "presentation",
+              "intent",
               "createdAt",
               "updatedAt",
               "evaluationAvailable",
+              "availability",
               "attempts",
               "code",
-              "question"
+              "codeFileName",
+              "scenario",
+              "question",
+              "terminal"
             ]
           }
         },
@@ -641,7 +796,8 @@
                         "react",
                         "typescript",
                         "python",
-                        "nodejs"
+                        "java",
+                        "go"
                       ]
                     },
                     "difficulty": {
@@ -658,6 +814,26 @@
                     "tags": {
                       "type": "string"
                     },
+                    "topic": {
+                      "type": "string"
+                    },
+                    "presentation": {
+                      "type": "string",
+                      "enum": [
+                        "code",
+                        "code-terminal",
+                        "terminal",
+                        "concept"
+                      ]
+                    },
+                    "intent": {
+                      "type": "string",
+                      "enum": [
+                        "diagnose",
+                        "compare",
+                        "validate"
+                      ]
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time"
@@ -668,6 +844,13 @@
                     },
                     "evaluationAvailable": {
                       "type": "boolean"
+                    },
+                    "availability": {
+                      "type": "string",
+                      "enum": [
+                        "READY",
+                        "EDITORIAL_REVIEW"
+                      ]
                     },
                     "attempts": {
                       "type": "array",
@@ -718,9 +901,13 @@
                     "difficulty",
                     "recommendedElo",
                     "tags",
+                    "topic",
+                    "presentation",
+                    "intent",
                     "createdAt",
                     "updatedAt",
                     "evaluationAvailable",
+                    "availability",
                     "attempts"
                   ]
                 }

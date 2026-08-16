@@ -37,13 +37,15 @@ describe("ChallengesLanguageExplorer", () => {
     );
   });
 
-  test("renderiza os ícones oficiais das quatro linguagens", () => {
+  test("renderiza os ícones oficiais das cinco linguagens", () => {
     const markup = renderExplorer();
 
     expect(markup).toContain('data-icon="react"');
     expect(markup).toContain('data-icon="typescript"');
     expect(markup).toContain('data-icon="python"');
-    expect(markup).toContain('data-icon="node-js"');
+    expect(markup).toContain('data-icon="java"');
+    expect(markup).toContain('data-icon="golang"');
+    expect(markup).not.toContain('data-icon="node-js"');
   });
 
   test("usa a marca do Kodan em vez do portão torii", () => {

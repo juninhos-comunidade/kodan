@@ -7,6 +7,18 @@ import {
 } from "./serializers";
 import { challengeDetailSchema } from "./schemas";
 
+const validEvaluationRubricJson = JSON.stringify({
+  version: "1.0.0",
+  questionKind: "debugging",
+  centralAnswer: "Resposta central secreta.",
+  concepts: [{
+    id: "critical",
+    importance: "critical",
+    internalDescription: "O conceito crítico.",
+    publicLabel: "O conceito crítico.",
+  }],
+});
+
 describe("challenge serializers", () => {
   test("expõe a linguagem no resumo público do desafio", () => {
     const serialized = serializeChallengeSummary({
@@ -37,7 +49,7 @@ describe("challenge serializers", () => {
       code: "const value = 1;",
       question: "Explique.",
       solution: "Segredo",
-      evaluationRubricJson: JSON.stringify({ version: "1.0.0" }),
+      evaluationRubricJson: validEvaluationRubricJson,
       tags: "react,effects",
       attempts: [],
       createdAt: new Date("2026-01-01T00:00:00.000Z"),
@@ -58,10 +70,7 @@ describe("challenge serializers", () => {
       code: "const value = 1;",
       question: "Explique o problema.",
       solution: "Resposta secreta",
-      evaluationRubricJson: JSON.stringify({
-        version: "1.0.0",
-        centralAnswer: "Resposta ainda mais secreta",
-      }),
+      evaluationRubricJson: validEvaluationRubricJson,
       tags: "react-hooks",
       attempts: [],
       createdAt: new Date("2026-01-01T00:00:00.000Z"),
@@ -93,7 +102,96 @@ describe("challenge serializers", () => {
     });
 
     expect(serialized.evaluationAvailable).toBe(false);
+    expect(serialized.availability).toBe("EDITORIAL_REVIEW");
     expect(serialized).not.toHaveProperty("evaluationRubricJson");
+  });
+
+  test("mantém em revisão um desafio com rubrica serializada mas inválida", () => {
+    const serialized = serializeChallengeSummary({
+      id: "challenge-invalid-rubric",
+      title: "Rubrica incompleta",
+      difficulty: "MEDIUM",
+      recommendedElo: 1300,
+      language: "react",
+      code: "const value = 1;",
+      question: "Explique.",
+      solution: "Segredo",
+      evaluationRubricJson: JSON.stringify({ version: "1.0.0" }),
+      tags: "react",
+      attempts: [],
+      createdAt: new Date("2026-01-01T00:00:00.000Z"),
+      updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+    });
+
+    expect(serialized.evaluationAvailable).toBe(false);
+    expect(serialized.availability).toBe("EDITORIAL_REVIEW");
+  });
+
+  test("serializa o contexto conceitual sem inventar código", () => {
+    const serialized = serializeChallengeDetail({
+      id: "go-interface-vs-struct",
+      title: "Interface ou struct?",
+      language: "go",
+      difficulty: "EASY",
+      recommendedElo: 1100,
+      code: null,
+      codeFileName: null,
+      scenario: "Um colega sugeriu trocar uma struct por uma interface.",
+      topic: "interfaces-methods",
+      presentation: "concept",
+      intent: "compare",
+      terminalJson: null,
+      question: "Qual é a diferença entre as duas estruturas?",
+      solution: "Segredo",
+      evaluationRubricJson: validEvaluationRubricJson,
+      tags: "go,interfaces,structs",
+      attempts: [],
+      createdAt: new Date("2026-01-01T00:00:00.000Z"),
+      updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+    });
+
+    expect(serialized).toMatchObject({
+      language: "go",
+      code: null,
+      scenario: "Um colega sugeriu trocar uma struct por uma interface.",
+      topic: "interfaces-methods",
+      presentation: "concept",
+      intent: "compare",
+      terminal: null,
+      availability: "READY",
+    });
+    expect(() => challengeDetailSchema.parse(serialized)).not.toThrow();
+  });
+
+  test("desserializa o artefato de terminal persistido", () => {
+    const serialized = serializeChallengeDetail({
+      id: "python-output",
+      title: "Saída inesperada",
+      language: "python",
+      difficulty: "MEDIUM",
+      recommendedElo: 1300,
+      code: "print(items)",
+      codeFileName: "cart.py",
+      topic: "collections-mutability",
+      presentation: "code-terminal",
+      intent: "diagnose",
+      terminalJson: JSON.stringify({
+        command: "python cart.py",
+        blocks: [{ label: "Obtido", content: "[]", tone: "error" }],
+      }),
+      question: "Explique a saída.",
+      solution: "Segredo",
+      evaluationRubricJson: validEvaluationRubricJson,
+      tags: "python,lists",
+      attempts: [],
+      createdAt: new Date("2026-01-01T00:00:00.000Z"),
+      updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+    });
+
+    expect(serialized.terminal).toEqual({
+      command: "python cart.py",
+      blocks: [{ label: "Obtido", content: "[]", tone: "error" }],
+    });
   });
 
   test("preserva o estado da sessão ao serializar uma tentativa", () => {

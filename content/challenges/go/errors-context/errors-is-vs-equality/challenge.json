@@ -1,0 +1,17 @@
+{
+  "id": "go-errors-is-vs-equality",
+  "title": "Comparar o erro ou percorrer sua cadeia?",
+  "language": "go",
+  "topic": "errors-context",
+  "presentation": "concept",
+  "intent": "compare",
+  "difficulty": "EASY",
+  "recommendedElo": 1240,
+  "scenario": "Um serviço passou a adicionar contexto aos erros com fmt.Errorf e %w. Depois da mudança, uma condição que comparava o erro retornado diretamente com ErrNotFound deixou de reconhecer alguns casos.",
+  "question": "Qual é a diferença entre usar err == ErrNotFound e errors.Is(err, ErrNotFound)? Compare identidade direta, erros encapsulados com %w, a cadeia de causas e o comportamento Is que um tipo de erro pode fornecer.",
+  "tags": ["go", "errors", "errors-is", "wrapping", "context"],
+  "type": "compare-concepts",
+  "estimatedTime": 9,
+  "status": "ACTIVE",
+  "solutionFile": "solution.md"
+}

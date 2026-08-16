@@ -1,0 +1,18 @@
+{
+  "id": "go-testing-misnamed-test-file",
+  "title": "O teste que o comando não encontrou",
+  "language": "go",
+  "topic": "modules-testing",
+  "presentation": "terminal",
+  "intent": "diagnose",
+  "difficulty": "MEDIUM",
+  "recommendedElo": 1320,
+  "scenario": "Uma IA criou os testes do handler em handler-tests.go. O arquivo contém funções que usam testing.T e está no mesmo pacote da implementação, mas o pipeline informa que não encontrou testes.",
+  "question": "Explique por que go test ignora o arquivo apesar de ele conter código de teste. Indique as convenções necessárias para descoberta de arquivo e função e descreva a correção mínima.",
+  "tags": ["go", "testing", "modules", "test-discovery", "convention"],
+  "type": "output-diagnosis",
+  "estimatedTime": 10,
+  "status": "ACTIVE",
+  "terminalFile": "terminal.json",
+  "solutionFile": "solution.md"
+}

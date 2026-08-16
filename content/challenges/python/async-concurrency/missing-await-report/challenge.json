@@ -1,0 +1,19 @@
+{
+  "id": "python-async-missing-await-report",
+  "title": "A corrotina usada como relatório",
+  "language": "python",
+  "topic": "async-concurrency",
+  "presentation": "code-terminal",
+  "intent": "diagnose",
+  "difficulty": "MEDIUM",
+  "recommendedElo": 1420,
+  "scenario": "Durante a geração de um relatório, uma chamada assíncrona foi integrada como se retornasse imediatamente um dicionário. O job terminou antes de produzir o identificador esperado.",
+  "question": "Relacione o objeto coroutine citado pelo terminal ao ponto incorreto do código. Explique o que await muda no fluxo e apresente a correção mínima sem criar uma nova task desnecessária.",
+  "tags": ["python", "async", "await", "coroutine", "error"],
+  "type": "output-diagnosis",
+  "estimatedTime": 12,
+  "status": "ACTIVE",
+  "codeFile": "report.py",
+  "terminalFile": "terminal.json",
+  "solutionFile": "solution.md"
+}

@@ -1,0 +1,18 @@
+{
+  "id": "python-object-model-unbound-formatter",
+  "title": "O método que perdeu a instância",
+  "language": "python",
+  "topic": "object-model",
+  "presentation": "terminal",
+  "intent": "diagnose",
+  "difficulty": "MEDIUM",
+  "recommendedElo": 1390,
+  "scenario": "Um registry recebeu PriceFormatter.format diretamente da classe para formatar valores. A implementação de format é um método de instância comum e espera acessar configurações guardadas no objeto.",
+  "question": "Interprete o argumento ausente indicado pelo terminal. Explique a diferença entre acessar format pela classe e por uma instância e proponha duas correções coerentes com contratos diferentes.",
+  "tags": ["python", "class", "method", "descriptor", "binding"],
+  "type": "output-diagnosis",
+  "estimatedTime": 10,
+  "status": "ACTIVE",
+  "terminalFile": "terminal.json",
+  "solutionFile": "solution.md"
+}

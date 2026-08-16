@@ -35,7 +35,7 @@ type Story = StoryObj<typeof meta>;
 export const DashboardCompleto: Story = {};
 export const Cabecalho: Story = { render: () => <DashboardHomeHeader userName="Gabriel" userImage={null} /> };
 export const DesafioRecomendado: Story = { render: () => <div className="p-6"><RecommendedChallengeCard challenge={challenge} recommendationReason="PERSONALIZED" /></div> };
-export const PreviewDeCodigo: Story = { parameters: { layout: "centered" }, render: () => <div className="h-[420px] w-[640px]"><ChallengeCodePreview code={challenge.code} /></div> };
+export const PreviewDeCodigo: Story = { parameters: { layout: "centered" }, render: () => <div className="h-[420px] w-[640px]"><ChallengeCodePreview code={challenge.code ?? ""} /></div> };
 export const MenuDeRank: Story = { parameters: { layout: "centered" }, render: () => <DashboardRankMenu userElo={1460} /> };
 export const NavegacaoDoDashboard: Story = { render: () => <DashboardAssetsDemo variant="navigation" /> };
 export const IniciacaoDoDojo: Story = { render: () => <div className="p-6"><DashboardAssetsDemo variant="initiation" /></div> };

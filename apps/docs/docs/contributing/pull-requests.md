@@ -28,8 +28,9 @@ title: Fluxo de contribuição e PR
 
 ### Conteúdo de treino
 
-- Use `content/challenges` para desafios prontos para o runtime.
-- Use o question bank para material editorial que ainda passará por curadoria.
+- Use `content/challenges` para desafios que já podem aparecer no catálogo público. Sem rubrica válida, eles permanecem bloqueados como **Em revisão** e não iniciam tentativa, avaliação ou ELO.
+- Use o question bank para seeds e material bruto que ainda não possui enunciado, evidência e solução revisáveis no contrato do runtime.
+- Só considere um desafio avaliável depois de validar e promover sua rubrica e seus casos editoriais.
 - Siga o [guia de autoria](../question-bank/authoring-guide) e valide o banco após alterações.
 
 ## Checklist antes do PR

@@ -1,0 +1,24 @@
+{
+  "id": "typescript-narrowing-payment-result",
+  "title": "O recibo no ramo recusado",
+  "language": "typescript",
+  "topic": "narrowing",
+  "presentation": "code-terminal",
+  "intent": "diagnose",
+  "difficulty": "MEDIUM",
+  "recommendedElo": 1400,
+  "scenario": "Durante a integração de pagamentos, um colega modelou os resultados como uma união discriminada. O pipeline parou na compilação depois que a mensagem do caso recusado foi alterada.",
+  "question": "Use o código e o diagnóstico do terminal para localizar a suposição inválida. Explique como o discriminante status permite corrigir a função sem asserções de tipo.",
+  "tags": [
+    "typescript",
+    "narrowing",
+    "discriminated-union",
+    "type-guard"
+  ],
+  "type": "output-diagnosis",
+  "estimatedTime": 12,
+  "status": "ACTIVE",
+  "codeFile": "payment-result.ts",
+  "terminalFile": "terminal.json",
+  "solutionFile": "solution.md"
+}

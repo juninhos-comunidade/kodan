@@ -1,0 +1,24 @@
+{
+  "id": "typescript-generics-read-field-constraint",
+  "title": "A chave genérica ampla demais",
+  "language": "typescript",
+  "topic": "generics-inference",
+  "presentation": "code",
+  "intent": "diagnose",
+  "difficulty": "MEDIUM",
+  "recommendedElo": 1360,
+  "scenario": "Um colega criou um helper para reaproveitar a leitura de campos em relatórios. A implementação parecia genérica o bastante, mas o compilador recusou o acesso indexado antes mesmo de o helper ser usado.",
+  "question": "Explique por que a relação atual entre T e K não garante um acesso seguro. Reescreva a assinatura para preservar a inferência da chave e do tipo retornado sem recorrer a any ou asserções.",
+  "tags": [
+    "typescript",
+    "generic",
+    "constraint",
+    "keyof",
+    "inference"
+  ],
+  "type": "debugging",
+  "estimatedTime": 12,
+  "status": "ACTIVE",
+  "codeFile": "read-field.ts",
+  "solutionFile": "solution.md"
+}

@@ -12,12 +12,14 @@ import {
   CircleDashed,
   Filter,
   Hourglass,
+  LockKeyhole,
   SlidersHorizontal,
   Zap,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 import { cn } from "@kodan/ui/lib/utils";
+import { ChallengeEditorialReview } from "@/components/challenge-editorial-review";
 import type {
   DifficultyFilter,
   SortBy,
@@ -314,6 +316,7 @@ function ChallengeList({
             index={(page - 1) * pageSize + index + 1}
             active={challenge.id === activeChallengeId}
             onFocusChallenge={onFocusChallenge}
+            onOpenChallenge={onOpenChallenge}
           />
         ))}
       </div>
@@ -386,17 +389,20 @@ function ChallengeTableRow({
   const progress = getChallengeProgress(challenge.attempts);
   const statusPresentation = getStatusPresentation(challenge.attempts);
   const challengeHref = getChallengeRoute(challenge.id);
+  const locked = !challenge.evaluationAvailable;
+  const [reviewOpen, setReviewOpen] = useState(false);
 
   return (
-    <tr
-      className={cn(
-        "challengers-row cursor-pointer border-t text-[0.82rem] transition-colors",
-        active && "challengers-row-active",
-      )}
-      onMouseEnter={() => onFocusChallenge(challenge.id)}
-      onFocus={() => onFocusChallenge(challenge.id)}
-      onClick={() => onOpenChallenge(challenge.id)}
-    >
+    <>
+      <tr
+        className={cn(
+          "challengers-row cursor-pointer border-t text-[0.82rem] transition-colors",
+          active && "challengers-row-active",
+        )}
+        onMouseEnter={() => onFocusChallenge(challenge.id)}
+        onFocus={() => onFocusChallenge(challenge.id)}
+        onClick={() => locked ? setReviewOpen((open) => !open) : onOpenChallenge(challenge.id)}
+      >
       <td className="px-4 py-5">
         <div className="flex items-center gap-3">
           <ChallengeIcon kind={kind} />
@@ -407,14 +413,30 @@ function ChallengeTableRow({
       </td>
       <td className="px-4 py-5">
         <div className="min-w-0">
-          <Link
-            href={challengeHref}
-            aria-label={`Abrir desafio ${challenge.title}`}
-            className="block truncate font-serif text-[0.96rem] font-bold text-[var(--challengers-ink)] outline-none transition-colors hover:text-[var(--challengers-blue)] focus-visible:text-[var(--challengers-blue)]"
-            onClick={(event) => event.stopPropagation()}
-          >
-            {challenge.title}
-          </Link>
+          {locked ? (
+            <button
+              type="button"
+              aria-expanded={reviewOpen}
+              aria-label={`Abrir informações sobre a revisão de ${challenge.title}`}
+              className="flex w-full items-center gap-2 truncate text-left font-serif text-[0.96rem] font-bold text-[var(--challengers-ink)] outline-none transition-colors hover:text-[var(--challengers-blue)] focus-visible:text-[var(--challengers-blue)]"
+              onClick={(event) => {
+                event.stopPropagation();
+                setReviewOpen((open) => !open);
+              }}
+            >
+              <LockKeyhole className="size-3.5 shrink-0" aria-hidden="true" />
+              {challenge.title}
+            </button>
+          ) : (
+            <Link
+              href={challengeHref}
+              aria-label={`Abrir desafio ${challenge.title}`}
+              className="block truncate font-serif text-[0.96rem] font-bold text-[var(--challengers-ink)] outline-none transition-colors hover:text-[var(--challengers-blue)] focus-visible:text-[var(--challengers-blue)]"
+              onClick={(event) => event.stopPropagation()}
+            >
+              {challenge.title}
+            </Link>
+          )}
           <p className="mt-1 line-clamp-2 text-[0.76rem] leading-5 text-[var(--challengers-muted)]">
             {getChallengeDescription(challenge)}
           </p>
@@ -434,15 +456,22 @@ function ChallengeTableRow({
         {challenge.recommendedElo}
       </td>
       <td className="px-4 py-5">
-        <StatusIndicator
-          label={statusPresentation.label}
-          status={statusPresentation.status}
-        />
+        {locked
+          ? <EditorialReviewStatus />
+          : <StatusIndicator label={statusPresentation.label} status={statusPresentation.status} />}
       </td>
       <td className="px-4 py-5">
         <ProgressBar percent={progress.percent} className={progress.barClassName} />
       </td>
-    </tr>
+      </tr>
+      {locked && reviewOpen ? (
+        <tr className="border-t border-[color:var(--challengers-border)]">
+          <td colSpan={7} className="bg-[var(--challengers-surface)] px-5 py-4">
+            <ChallengeEditorialReview compact />
+          </td>
+        </tr>
+      ) : null}
+    </>
   );
 }
 
@@ -451,16 +480,50 @@ function ChallengeCard({
   index,
   active,
   onFocusChallenge,
+  onOpenChallenge,
 }: {
   challenge: Challenge;
   index: number;
   active: boolean;
   onFocusChallenge: (id: string | null) => void;
+  onOpenChallenge: (id: string) => void;
 }) {
   const kind = getChallengeKind(challenge);
   const progress = getChallengeProgress(challenge.attempts);
   const statusPresentation = getStatusPresentation(challenge.attempts);
   const challengeHref = getChallengeRoute(challenge.id);
+  const locked = !challenge.evaluationAvailable;
+  const [reviewOpen, setReviewOpen] = useState(false);
+
+  const content = (
+    <>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-start gap-3">
+          <ChallengeIcon kind={kind} />
+          <div className="min-w-0">
+            <p className="text-[0.68rem] tabular-nums text-[var(--challengers-muted)]">
+              {String(index).padStart(3, "0")}
+            </p>
+            <h2 className="mt-1 line-clamp-2 font-serif text-[0.98rem] font-bold leading-tight text-[var(--challengers-ink)]">
+              {challenge.title}
+            </h2>
+          </div>
+        </div>
+        <div className="shrink-0 text-right">
+          <p className="text-[0.62rem] uppercase tracking-[0.16em] text-[var(--challengers-muted)]">Elo</p>
+          <p className="font-serif text-base font-bold text-[var(--challengers-ink)]">{challenge.recommendedElo}</p>
+        </div>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        <span className={cn("px-2 py-1 text-[0.64rem]", getDifficultyColor(challenge.difficulty))}>{getDifficultyLabel(challenge.difficulty)}</span>
+        <span className="challengers-badge px-2 py-1 text-[0.64rem]">{kind}</span>
+      </div>
+      <div className="mt-3 flex items-center gap-3">
+        {locked ? <EditorialReviewStatus /> : <StatusIndicator label={statusPresentation.label} status={statusPresentation.status} />}
+      </div>
+      {!locked ? <div className="mt-2"><ProgressBar percent={progress.percent} className={progress.barClassName} /></div> : null}
+    </>
+  );
 
   return (
     <article
@@ -471,53 +534,32 @@ function ChallengeCard({
       onMouseEnter={() => onFocusChallenge(challenge.id)}
       onFocus={() => onFocusChallenge(challenge.id)}
     >
-      <Link
-        href={challengeHref}
-        aria-label={`Abrir desafio ${challenge.title}`}
-        className="w-full text-left"
-      >
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex min-w-0 items-start gap-3">
-            <ChallengeIcon kind={kind} />
-            <div className="min-w-0">
-              <p className="text-[0.68rem] tabular-nums text-[var(--challengers-muted)]">
-                {String(index).padStart(3, "0")}
-              </p>
-              <h2 className="mt-1 line-clamp-2 font-serif text-[0.98rem] font-bold leading-tight text-[var(--challengers-ink)]">
-                {challenge.title}
-              </h2>
-            </div>
-          </div>
-          <div className="shrink-0 text-right">
-            <p className="text-[0.62rem] uppercase tracking-[0.16em] text-[var(--challengers-muted)]">
-              Elo
-            </p>
-            <p className="font-serif text-base font-bold text-[var(--challengers-ink)]">
-              {challenge.recommendedElo}
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          <span className={cn("px-2 py-1 text-[0.64rem]", getDifficultyColor(challenge.difficulty))}>
-            {getDifficultyLabel(challenge.difficulty)}
-          </span>
-          <span className="challengers-badge px-2 py-1 text-[0.64rem]">
-            {kind}
-          </span>
-        </div>
-
-        <div className="mt-3 flex items-center gap-3">
-          <StatusIndicator
-            label={statusPresentation.label}
-            status={statusPresentation.status}
-          />
-        </div>
-        <div className="mt-2">
-          <ProgressBar percent={progress.percent} className={progress.barClassName} />
-        </div>
-      </Link>
+      {locked ? (
+        <button
+          type="button"
+          aria-expanded={reviewOpen}
+          aria-label={`Abrir informações sobre a revisão de ${challenge.title}`}
+          className="w-full text-left"
+          onClick={() => setReviewOpen((open) => !open)}
+        >
+          {content}
+        </button>
+      ) : (
+        <Link href={challengeHref} aria-label={`Abrir desafio ${challenge.title}`} className="block w-full text-left">
+          {content}
+        </Link>
+      )}
+      {locked && reviewOpen ? <div className="mt-4"><ChallengeEditorialReview compact /></div> : null}
     </article>
+  );
+}
+
+function EditorialReviewStatus() {
+  return (
+    <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-[0.76rem] font-medium text-[var(--challengers-muted)]">
+      <LockKeyhole className="size-3.5" aria-hidden="true" />
+      Em revisão
+    </span>
   );
 }
 

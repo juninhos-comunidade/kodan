@@ -1,0 +1,15 @@
+{
+  "command": "python app.py",
+  "blocks": [
+    {
+      "label": "Esperado",
+      "content": "R$ 19,90",
+      "tone": "success"
+    },
+    {
+      "label": "Obtido",
+      "content": "TypeError: PriceFormatter.format() missing 1 required positional argument: 'value'",
+      "tone": "error"
+    }
+  ]
+}

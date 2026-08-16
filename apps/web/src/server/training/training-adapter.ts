@@ -34,7 +34,13 @@ export type TrainingChallenge = {
   difficulty: string;
   recommendedElo: number;
   tags: string;
-  code: string;
+  code: string | null;
+  codeFileName?: string | null;
+  scenario?: string | null;
+  topic?: string;
+  presentation?: string;
+  intent?: string;
+  terminalJson?: string | null;
   question: string;
   solution: string;
   evaluationRubricJson?: string | null;

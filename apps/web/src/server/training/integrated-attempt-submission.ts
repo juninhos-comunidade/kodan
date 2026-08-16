@@ -2,6 +2,7 @@ import {
   evaluateAttempt,
   MAX_EVALUATED_ATTEMPTS,
 } from "./attempt-execution";
+import { challengeTerminalArtifactSchema } from "@kodan/content/challenge-schemas";
 import { EvaluationUnavailableError } from "./evaluation/errors";
 import type { EvaluationTelemetry } from "./evaluation/evaluation-telemetry";
 import { evaluateAnswer } from "./evaluation/evaluation-service";
@@ -54,6 +55,9 @@ export async function submitIntegratedAttempt(
       title: challenge.title,
       question: challenge.question,
       code: challenge.code,
+      scenario: challenge.scenario,
+      presentation: challenge.presentation as "code" | "code-terminal" | "terminal" | "concept",
+      terminal: parseTerminalArtifact(challenge.terminalJson),
     },
     userAnswer: input.userAnswer,
     attemptNumber,
@@ -160,6 +164,16 @@ export async function submitIntegratedAttempt(
     status: evaluation.status,
   });
   return evaluation;
+}
+
+function parseTerminalArtifact(value: string | null) {
+  if (!value) return null;
+  try {
+    const parsed = challengeTerminalArtifactSchema.safeParse(JSON.parse(value));
+    return parsed.success ? parsed.data : null;
+  } catch {
+    return null;
+  }
 }
 
 function emitEvaluationFailure(

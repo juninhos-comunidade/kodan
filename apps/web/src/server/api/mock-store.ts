@@ -18,7 +18,7 @@ import type {
 type MockChallenge = {
   id: string;
   title: string;
-  language: "react" | "typescript" | "python" | "nodejs";
+  language: "react" | "typescript" | "python" | "java" | "go";
   difficulty: "EASY" | "MEDIUM" | "HARD";
   recommendedElo: number;
   tags: string;

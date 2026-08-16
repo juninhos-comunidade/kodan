@@ -4,14 +4,21 @@ import { fileURLToPath } from "node:url";
 
 import {
   challengeEvaluationRubricSchema,
+  evaluationBenchmarkCasesSchema,
   challengeIndexSchema,
   challengeLegacySchema,
   challengeSplitMetaSchema,
+  challengeTerminalArtifactSchema,
   type ChallengeIndexEntry,
   type ChallengeEvaluationRubric,
+  type ChallengeIntent,
   type ChallengeLegacy,
+  type ChallengePresentation,
   type ChallengeSplitMeta,
+  type ChallengeTerminalArtifact,
+  type EvaluationBenchmarkCase,
 } from "./challenge-schemas";
+import { inferChallengeTopic } from "./challenge-taxonomy";
 
 export type ChallengeContentEntry = {
   id: string;
@@ -19,11 +26,18 @@ export type ChallengeContentEntry = {
   language: ChallengeIndexEntry["language"];
   difficulty: string;
   recommendedElo: number;
-  code: string;
+  code: string | null;
+  codeFileName?: string;
   question: string;
+  scenario?: string;
   solution: string;
   tags: string[];
+  topic: string;
+  presentation: ChallengePresentation;
+  intent: ChallengeIntent;
+  terminal?: ChallengeTerminalArtifact;
   evaluationRubric?: ChallengeEvaluationRubric;
+  evaluationCases?: EvaluationBenchmarkCase[];
 };
 
 type ChallengeLoadResult = {
@@ -133,6 +147,10 @@ async function loadLegacyChallenge(filePath: string): Promise<ChallengeLoadResul
       question: parsed.question,
       solution: parsed.solution ?? parsed.expectedAnswer ?? "",
       tags: parsed.tags,
+      topic: indexEntry.topic,
+      presentation: indexEntry.presentation,
+      intent: indexEntry.intent,
+      ...(parsed.scenario ? { scenario: parsed.scenario } : {}),
       ...(parsed.evaluationRubric ? { evaluationRubric: parsed.evaluationRubric } : {}),
     },
     indexEntry,
@@ -142,19 +160,34 @@ async function loadLegacyChallenge(filePath: string): Promise<ChallengeLoadResul
 async function loadSplitChallenge(filePath: string): Promise<ChallengeLoadResult> {
   const parsed = challengeSplitMetaSchema.parse(await readJsonUnknown(filePath)) as ChallengeSplitMeta;
   const indexEntry = buildIndexEntryFromMeta(parsed);
-  const codeFileName = parsed.codeFile ?? "code.tsx";
+  const hasCode = parsed.presentation === "code" || parsed.presentation === "code-terminal";
+  const codeFileName = hasCode ? parsed.codeFile ?? "code.tsx" : undefined;
   const solutionFileName = parsed.solutionFile ?? parsed.expectedAnswerFile ?? "solution.md";
-  const [code, solution] = await Promise.all([
-    readFile(path.resolve(path.dirname(filePath), codeFileName), "utf-8"),
+  const [code, solution, terminal] = await Promise.all([
+    codeFileName
+      ? readFile(path.resolve(path.dirname(filePath), codeFileName), "utf-8")
+      : Promise.resolve(null),
     readFile(path.resolve(path.dirname(filePath), solutionFileName), "utf-8"),
+    parsed.terminalFile
+      ? readJsonUnknown(path.resolve(path.dirname(filePath), parsed.terminalFile))
+          .then((artifact) => challengeTerminalArtifactSchema.parse(artifact))
+      : Promise.resolve(undefined),
   ]);
-  if (code.trim().length === 0) throw new Error(`Desafio inválido em ${filePath}: arquivo "${codeFileName}" vazio`);
+  if (code !== null && code.trim().length === 0) {
+    throw new Error(`Desafio inválido em ${filePath}: arquivo "${codeFileName}" vazio`);
+  }
   if (solution.trim().length === 0) throw new Error(`Desafio inválido em ${filePath}: arquivo "${solutionFileName}" vazio`);
   const evaluationRubric = parsed.rubricFile
     ? challengeEvaluationRubricSchema.parse(
         await readJsonUnknown(path.resolve(path.dirname(filePath), parsed.rubricFile)),
       )
     : parsed.evaluationRubric;
+  const evaluationCasesPath = path.resolve(
+    path.dirname(filePath),
+    parsed.evaluationCasesFile ?? "evaluation-cases.json",
+  );
+  const evaluationCases = await readOptionalJsonUnknown(evaluationCasesPath)
+    .then((cases) => cases === undefined ? undefined : evaluationBenchmarkCasesSchema.parse(cases));
 
   return {
     challenge: {
@@ -166,8 +199,15 @@ async function loadSplitChallenge(filePath: string): Promise<ChallengeLoadResult
       question: parsed.question,
       tags: parsed.tags,
       code,
+      ...(codeFileName ? { codeFileName } : {}),
       solution,
+      topic: indexEntry.topic,
+      presentation: indexEntry.presentation,
+      intent: indexEntry.intent,
+      ...(parsed.scenario ? { scenario: parsed.scenario } : {}),
+      ...(terminal ? { terminal } : {}),
       ...(evaluationRubric ? { evaluationRubric } : {}),
+      ...(evaluationCases ? { evaluationCases } : {}),
     },
     indexEntry,
   };
@@ -180,14 +220,21 @@ function buildIndexEntryFromMeta(meta: {
   recommendedElo: number;
   tags: string[];
   language?: ChallengeIndexEntry["language"];
+  topic?: string;
+  presentation?: ChallengePresentation;
+  intent?: ChallengeIntent;
   type?: string;
   estimatedTime?: number;
   status?: string;
 }): ChallengeIndexEntry {
+  const language = meta.language ?? inferLanguage(meta.tags);
   return {
     id: meta.id,
     title: meta.title,
-    language: meta.language ?? inferLanguage(meta.tags),
+    language,
+    topic: meta.topic ?? inferChallengeTopic({ language, id: meta.id, title: meta.title, tags: meta.tags }),
+    presentation: meta.presentation ?? "code",
+    intent: meta.intent ?? "diagnose",
     difficulty: meta.difficulty,
     type: meta.type ?? "debugging",
     tags: meta.tags,
@@ -201,7 +248,8 @@ function inferLanguage(tags: string[]): ChallengeIndexEntry["language"] {
   const normalized = tags.map((tag) => tag.toLowerCase());
   if (normalized.includes("react")) return "react";
   if (normalized.includes("typescript")) return "typescript";
-  if (normalized.some((tag) => ["node", "nodejs", "node.js"].includes(tag))) return "nodejs";
+  if (normalized.includes("java")) return "java";
+  if (normalized.some((tag) => ["go", "golang"].includes(tag))) return "go";
   if (normalized.includes("python")) return "python";
   return "react";
 }
@@ -213,4 +261,13 @@ async function readJsonUnknown(filePath: string): Promise<unknown> {
     if (error instanceof SyntaxError) throw new Error(`JSON inválido em ${filePath}`);
     throw error;
   }
+}
+
+async function readOptionalJsonUnknown(filePath: string): Promise<unknown | undefined> {
+  try {
+    await access(filePath);
+  } catch {
+    return undefined;
+  }
+  return readJsonUnknown(filePath);
 }

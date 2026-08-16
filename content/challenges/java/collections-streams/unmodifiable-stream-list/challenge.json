@@ -1,0 +1,18 @@
+{
+  "id": "java-streams-unmodifiable-result-list",
+  "title": "A lista do stream que não aceita acréscimos",
+  "language": "java",
+  "topic": "collections-streams",
+  "presentation": "code",
+  "intent": "validate",
+  "difficulty": "EASY",
+  "recommendedElo": 1200,
+  "scenario": "Uma IA implementou a seleção de nomes ativos com Stream.toList(). Na revisão, um colega afirmou que o retorno é obrigatoriamente um ArrayList mutável e que o chamador pode adicionar novos nomes.",
+  "question": "A afirmação do colega está correta para Stream.toList()? Explique o contrato de mutabilidade do resultado, diferencie-o de Collectors.toList() e diga quando o método atual é uma escolha válida.",
+  "tags": ["java", "stream", "list", "collection", "immutability"],
+  "type": "behavior-validation",
+  "estimatedTime": 8,
+  "status": "ACTIVE",
+  "codeFile": "ActiveUsers.java",
+  "solutionFile": "solution.md"
+}

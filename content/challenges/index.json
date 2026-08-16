@@ -1,8 +1,309 @@
 [
   {
+    "id": "go-errors-is-vs-equality",
+    "title": "Comparar o erro ou percorrer sua cadeia?",
+    "language": "go",
+    "topic": "errors-context",
+    "presentation": "concept",
+    "intent": "compare",
+    "difficulty": "EASY",
+    "type": "compare-concepts",
+    "tags": [
+      "go",
+      "errors",
+      "errors-is",
+      "wrapping",
+      "context"
+    ],
+    "estimatedTime": 9,
+    "recommendedElo": 1240,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "go-channels-unbuffered-send-deadlock",
+    "title": "O envio que bloqueou antes do consumidor",
+    "language": "go",
+    "topic": "goroutines-channels",
+    "presentation": "code-terminal",
+    "intent": "diagnose",
+    "difficulty": "MEDIUM",
+    "type": "output-diagnosis",
+    "tags": [
+      "go",
+      "goroutine",
+      "channel",
+      "deadlock",
+      "concurrency"
+    ],
+    "estimatedTime": 12,
+    "recommendedElo": 1430,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "go-interfaces-implicit-labeler",
+    "title": "A interface sem declaração de implementação",
+    "language": "go",
+    "topic": "interfaces-methods",
+    "presentation": "code",
+    "intent": "validate",
+    "difficulty": "EASY",
+    "type": "behavior-validation",
+    "tags": [
+      "go",
+      "interface",
+      "method-set",
+      "receiver",
+      "typing"
+    ],
+    "estimatedTime": 9,
+    "recommendedElo": 1180,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "go-testing-misnamed-test-file",
+    "title": "O teste que o comando não encontrou",
+    "language": "go",
+    "topic": "modules-testing",
+    "presentation": "terminal",
+    "intent": "diagnose",
+    "difficulty": "MEDIUM",
+    "type": "output-diagnosis",
+    "tags": [
+      "go",
+      "testing",
+      "modules",
+      "test-discovery",
+      "convention"
+    ],
+    "estimatedTime": 10,
+    "recommendedElo": 1320,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "go-slices-shared-backing-array",
+    "title": "Dois appends, o mesmo array de apoio",
+    "language": "go",
+    "topic": "slices-maps-memory",
+    "presentation": "code",
+    "intent": "diagnose",
+    "difficulty": "MEDIUM",
+    "type": "debugging",
+    "tags": [
+      "go",
+      "slice",
+      "append",
+      "capacity",
+      "memory"
+    ],
+    "estimatedTime": 12,
+    "recommendedElo": 1410,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "java-streams-unmodifiable-result-list",
+    "title": "A lista do stream que não aceita acréscimos",
+    "language": "java",
+    "topic": "collections-streams",
+    "presentation": "code",
+    "intent": "validate",
+    "difficulty": "EASY",
+    "type": "behavior-validation",
+    "tags": [
+      "java",
+      "stream",
+      "list",
+      "collection",
+      "immutability"
+    ],
+    "estimatedTime": 8,
+    "recommendedElo": 1200,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "java-concurrency-lost-counter-updates",
+    "title": "O contador menor depois dos workers",
+    "language": "java",
+    "topic": "concurrency",
+    "presentation": "code-terminal",
+    "intent": "diagnose",
+    "difficulty": "MEDIUM",
+    "type": "output-diagnosis",
+    "tags": [
+      "java",
+      "thread",
+      "concurrency",
+      "executor",
+      "atomic"
+    ],
+    "estimatedTime": 13,
+    "recommendedElo": 1460,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "java-resources-suppressed-close-exception",
+    "title": "A exceção de fechamento que virou suprimida",
+    "language": "java",
+    "topic": "exceptions-resources",
+    "presentation": "terminal",
+    "intent": "diagnose",
+    "difficulty": "HARD",
+    "type": "output-diagnosis",
+    "tags": [
+      "java",
+      "exception",
+      "resource",
+      "try-with-resources",
+      "suppressed"
+    ],
+    "estimatedTime": 14,
+    "recommendedElo": 1580,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "java-generics-list-invariance",
+    "title": "Inteiros não são uma lista de números",
+    "language": "java",
+    "topic": "generics-types",
+    "presentation": "code",
+    "intent": "diagnose",
+    "difficulty": "MEDIUM",
+    "type": "debugging",
+    "tags": [
+      "java",
+      "generic",
+      "type",
+      "invariance",
+      "wildcard"
+    ],
+    "estimatedTime": 12,
+    "recommendedElo": 1380,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "java-object-contracts-equals-vs-identity",
+    "title": "Mesma entidade ou mesma referência?",
+    "language": "java",
+    "topic": "object-contracts",
+    "presentation": "concept",
+    "intent": "compare",
+    "difficulty": "EASY",
+    "type": "compare-concepts",
+    "tags": [
+      "java",
+      "object",
+      "equals",
+      "hashcode",
+      "identity"
+    ],
+    "estimatedTime": 9,
+    "recommendedElo": 1240,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "python-async-missing-await-report",
+    "title": "A corrotina usada como relatório",
+    "language": "python",
+    "topic": "async-concurrency",
+    "presentation": "code-terminal",
+    "intent": "diagnose",
+    "difficulty": "MEDIUM",
+    "type": "output-diagnosis",
+    "tags": [
+      "python",
+      "async",
+      "await",
+      "coroutine",
+      "error"
+    ],
+    "estimatedTime": 12,
+    "recommendedElo": 1420,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "python-collections-safe-default-list",
+    "title": "A lista padrão que não é compartilhada",
+    "language": "python",
+    "topic": "collections-mutability",
+    "presentation": "code",
+    "intent": "validate",
+    "difficulty": "EASY",
+    "type": "behavior-validation",
+    "tags": [
+      "python",
+      "list",
+      "mutability",
+      "default-argument"
+    ],
+    "estimatedTime": 8,
+    "recommendedElo": 1160,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "python-errors-context-manager-vs-finally",
+    "title": "Fechamento explícito ou protocolo de contexto?",
+    "language": "python",
+    "topic": "errors-context-managers",
+    "presentation": "concept",
+    "intent": "compare",
+    "difficulty": "EASY",
+    "type": "compare-concepts",
+    "tags": [
+      "python",
+      "context-manager",
+      "with",
+      "exception",
+      "resource"
+    ],
+    "estimatedTime": 9,
+    "recommendedElo": 1220,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "python-generators-consumed-active-ids",
+    "title": "Os IDs que sumiram na segunda leitura",
+    "language": "python",
+    "topic": "iterators-generators",
+    "presentation": "code",
+    "intent": "diagnose",
+    "difficulty": "MEDIUM",
+    "type": "debugging",
+    "tags": [
+      "python",
+      "generator",
+      "iterator",
+      "lazy-evaluation"
+    ],
+    "estimatedTime": 11,
+    "recommendedElo": 1340,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "python-object-model-unbound-formatter",
+    "title": "O método que perdeu a instância",
+    "language": "python",
+    "topic": "object-model",
+    "presentation": "terminal",
+    "intent": "diagnose",
+    "difficulty": "MEDIUM",
+    "type": "output-diagnosis",
+    "tags": [
+      "python",
+      "class",
+      "method",
+      "descriptor",
+      "binding"
+    ],
+    "estimatedTime": 10,
+    "recommendedElo": 1390,
+    "status": "ACTIVE"
+  },
+  {
     "id": "react-hooks-stale-closure-useeffect",
     "title": "O Fechamento Obsoleto (Stale Closure) no useEffect",
     "language": "react",
+    "topic": "effects-lifecycle",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "MEDIUM",
     "type": "debugging",
     "tags": [
@@ -18,6 +319,9 @@
     "id": "react-easy-agenda-de-entrevistas-10",
     "title": "Agenda de Entrevistas com Busca Travada",
     "language": "react",
+    "topic": "effects-lifecycle",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "EASY",
     "type": "debugging",
     "tags": [
@@ -35,6 +339,9 @@
     "id": "react-easy-carrinho-de-compras-9",
     "title": "Carrinho de Compras que Não Atualiza",
     "language": "react",
+    "topic": "effects-lifecycle",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "EASY",
     "type": "debugging",
     "tags": [
@@ -52,6 +359,9 @@
     "id": "react-easy-catalogo-de-cursos-13",
     "title": "Catálogo de Cursos com Lista Congelada",
     "language": "react",
+    "topic": "effects-lifecycle",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "EASY",
     "type": "debugging",
     "tags": [
@@ -69,6 +379,9 @@
     "id": "react-easy-contador-de-notificacoes-3",
     "title": "Contador de Notificações que Não Reage",
     "language": "react",
+    "topic": "effects-lifecycle",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "EASY",
     "type": "debugging",
     "tags": [
@@ -86,6 +399,9 @@
     "id": "react-easy-dashboard-financeiro-12",
     "title": "Dashboard Financeiro com Métricas Congeladas",
     "language": "react",
+    "topic": "effects-lifecycle",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "EASY",
     "type": "debugging",
     "tags": [
@@ -103,6 +419,9 @@
     "id": "react-easy-feed-de-artigos-8",
     "title": "Feed de Artigos com Busca Desatualizada",
     "language": "react",
+    "topic": "effects-lifecycle",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "EASY",
     "type": "debugging",
     "tags": [
@@ -120,6 +439,9 @@
     "id": "react-easy-filtro-de-produtos-1",
     "title": "Filtro de Produtos com Busca Travada",
     "language": "react",
+    "topic": "effects-lifecycle",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "EASY",
     "type": "debugging",
     "tags": [
@@ -137,6 +459,9 @@
     "id": "react-easy-grade-de-tickets-5",
     "title": "Grade de Tickets que Não Re-renderiza",
     "language": "react",
+    "topic": "effects-lifecycle",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "EASY",
     "type": "debugging",
     "tags": [
@@ -154,6 +479,9 @@
     "id": "react-easy-lista-de-alunos-2",
     "title": "Lista de Alunos com Estado Mutado",
     "language": "react",
+    "topic": "effects-lifecycle",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "EASY",
     "type": "debugging",
     "tags": [
@@ -171,6 +499,9 @@
     "id": "react-easy-lista-de-tarefas-11",
     "title": "Lista de Tarefas que Não Atualiza",
     "language": "react",
+    "topic": "component-patterns",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "EASY",
     "type": "debugging",
     "tags": [
@@ -188,6 +519,9 @@
     "id": "react-easy-monitor-de-deploy-14",
     "title": "Monitor de Deploy com Status Congelado",
     "language": "react",
+    "topic": "effects-lifecycle",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "EASY",
     "type": "debugging",
     "tags": [
@@ -205,6 +539,9 @@
     "id": "react-easy-painel-de-pedidos-4",
     "title": "Painel de Pedidos com Atualização Quebrada",
     "language": "react",
+    "topic": "effects-lifecycle",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "EASY",
     "type": "debugging",
     "tags": [
@@ -222,6 +559,9 @@
     "id": "react-easy-ranking-de-jogadores-7",
     "title": "Ranking de Jogadores com Pontuação Travada",
     "language": "react",
+    "topic": "effects-lifecycle",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "EASY",
     "type": "debugging",
     "tags": [
@@ -239,6 +579,9 @@
     "id": "react-easy-tabela-de-usuarios-15",
     "title": "Tabela de Usuários com Busca Inconsistente",
     "language": "react",
+    "topic": "effects-lifecycle",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "EASY",
     "type": "debugging",
     "tags": [
@@ -256,6 +599,9 @@
     "id": "react-easy-timeline-de-eventos-6",
     "title": "Timeline de Eventos com Lista Desatualizada",
     "language": "react",
+    "topic": "effects-lifecycle",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "EASY",
     "type": "debugging",
     "tags": [
@@ -273,6 +619,9 @@
     "id": "react-hard-backoffice-de-pagamentos-5",
     "title": "Backoffice de Pagamentos com Estado em Tempo Real Quebrado",
     "language": "react",
+    "topic": "component-patterns",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "HARD",
     "type": "debugging",
     "tags": [
@@ -290,6 +639,9 @@
     "id": "react-hard-central-de-incidentes-criticos-15",
     "title": "Central de Incidentes Críticos com Atualização em Tempo Real Quebrada",
     "language": "react",
+    "topic": "component-patterns",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "HARD",
     "type": "debugging",
     "tags": [
@@ -307,6 +659,9 @@
     "id": "react-hard-console-de-feature-flags-7",
     "title": "Console de Feature Flags com Eventos Fora de Sincronia",
     "language": "react",
+    "topic": "component-patterns",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "HARD",
     "type": "debugging",
     "tags": [
@@ -324,6 +679,9 @@
     "id": "react-hard-controle-de-comissoes-13",
     "title": "Controle de Comissões com Estado Mutável em Produção",
     "language": "react",
+    "topic": "component-patterns",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "HARD",
     "type": "debugging",
     "tags": [
@@ -341,6 +699,9 @@
     "id": "react-hard-dashboard-operacional-1",
     "title": "Dashboard Operacional com Eventos Fora de Sincronia",
     "language": "react",
+    "topic": "component-patterns",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "HARD",
     "type": "debugging",
     "tags": [
@@ -358,6 +719,9 @@
     "id": "react-hard-gestao-de-inventario-8",
     "title": "Gestão de Inventário com Painel em Tempo Real Quebrado",
     "language": "react",
+    "topic": "component-patterns",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "HARD",
     "type": "debugging",
     "tags": [
@@ -375,6 +739,9 @@
     "id": "react-hard-hub-de-integracoes-11",
     "title": "Hub de Integrações com Eventos Fora de Sincronia",
     "language": "react",
+    "topic": "component-patterns",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "HARD",
     "type": "debugging",
     "tags": [
@@ -392,6 +759,9 @@
     "id": "react-hard-mesa-de-operacoes-financeiras-14",
     "title": "Mesa de Operações Financeiras com Sincronização Quebrada",
     "language": "react",
+    "topic": "component-patterns",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "HARD",
     "type": "debugging",
     "tags": [
@@ -409,6 +779,9 @@
     "id": "react-hard-monitor-de-fraude-6",
     "title": "Monitor de Fraude com Eventos Fora de Sincronia",
     "language": "react",
+    "topic": "component-patterns",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "HARD",
     "type": "debugging",
     "tags": [
@@ -426,6 +799,9 @@
     "id": "react-hard-motor-de-busca-interno-3",
     "title": "Motor de Busca Interno com Painel em Tempo Real Quebrado",
     "language": "react",
+    "topic": "component-patterns",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "HARD",
     "type": "debugging",
     "tags": [
@@ -443,6 +819,9 @@
     "id": "react-hard-orquestrador-de-deploy-4",
     "title": "Orquestrador de Deploy com Eventos Fora de Sincronia",
     "language": "react",
+    "topic": "component-patterns",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "HARD",
     "type": "debugging",
     "tags": [
@@ -460,6 +839,9 @@
     "id": "react-hard-painel-de-atendimento-em-tempo-real-2",
     "title": "Painel de Atendimento em Tempo Real com Estado Quebrado",
     "language": "react",
+    "topic": "component-patterns",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "HARD",
     "type": "debugging",
     "tags": [
@@ -477,6 +859,9 @@
     "id": "react-hard-painel-de-observabilidade-10",
     "title": "Painel de Observabilidade com Sincronização em Tempo Real Quebrada",
     "language": "react",
+    "topic": "component-patterns",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "HARD",
     "type": "debugging",
     "tags": [
@@ -494,6 +879,9 @@
     "id": "react-hard-pipeline-de-aprovacao-9",
     "title": "Pipeline de Aprovação com Estado Mutável em Tempo Real",
     "language": "react",
+    "topic": "component-patterns",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "HARD",
     "type": "debugging",
     "tags": [
@@ -511,6 +899,9 @@
     "id": "react-hard-sistema-de-agendamento-12",
     "title": "Sistema de Agendamento com Eventos Fora de Sincronia",
     "language": "react",
+    "topic": "component-patterns",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "HARD",
     "type": "debugging",
     "tags": [
@@ -528,6 +919,9 @@
     "id": "react-medium-busca-incremental-de-clientes-1",
     "title": "Busca Incremental de Clientes com Efeito Instável",
     "language": "react",
+    "topic": "async-races",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "MEDIUM",
     "type": "debugging",
     "tags": [
@@ -545,6 +939,9 @@
     "id": "react-medium-chat-de-suporte-5",
     "title": "Chat de Suporte com Busca Intermitente",
     "language": "react",
+    "topic": "async-races",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "MEDIUM",
     "type": "debugging",
     "tags": [
@@ -562,6 +959,9 @@
     "id": "react-medium-editor-colaborativo-12",
     "title": "Editor Colaborativo com Requisições em Loop",
     "language": "react",
+    "topic": "async-races",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "MEDIUM",
     "type": "debugging",
     "tags": [
@@ -579,6 +979,9 @@
     "id": "react-medium-feed-de-recomendacoes-16",
     "title": "Feed de Recomendações com Ordenação Mutável",
     "language": "react",
+    "topic": "async-races",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "MEDIUM",
     "type": "debugging",
     "tags": [
@@ -596,6 +999,9 @@
     "id": "react-medium-filtro-avancado-de-logs-4",
     "title": "Filtro Avançado de Logs com Efeito Instável",
     "language": "react",
+    "topic": "async-races",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "MEDIUM",
     "type": "debugging",
     "tags": [
@@ -613,6 +1019,9 @@
     "id": "react-medium-grade-de-permissoes-7",
     "title": "Grade de Permissões com Requisições em Cascata",
     "language": "react",
+    "topic": "async-races",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "MEDIUM",
     "type": "debugging",
     "tags": [
@@ -630,6 +1039,9 @@
     "id": "react-medium-lista-paginada-de-vendas-9",
     "title": "Lista Paginada de Vendas com Ordenação Mutável",
     "language": "react",
+    "topic": "async-races",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "MEDIUM",
     "type": "debugging",
     "tags": [
@@ -647,6 +1059,9 @@
     "id": "react-medium-monitor-de-filas-11",
     "title": "Monitor de Filas com Busca Intermitente",
     "language": "react",
+    "topic": "async-races",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "MEDIUM",
     "type": "debugging",
     "tags": [
@@ -664,6 +1079,9 @@
     "id": "react-medium-painel-de-metricas-6",
     "title": "Painel de Métricas com Re-fetch Instável",
     "language": "react",
+    "topic": "async-races",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "MEDIUM",
     "type": "debugging",
     "tags": [
@@ -681,6 +1099,9 @@
     "id": "react-medium-painel-de-sla-13",
     "title": "Painel de SLA com Ordenação Mutável",
     "language": "react",
+    "topic": "async-races",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "MEDIUM",
     "type": "debugging",
     "tags": [
@@ -698,6 +1119,9 @@
     "id": "react-medium-resumo-de-assinaturas-10",
     "title": "Resumo de Assinaturas com Requisições em Cascata",
     "language": "react",
+    "topic": "async-races",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "MEDIUM",
     "type": "debugging",
     "tags": [
@@ -715,6 +1139,9 @@
     "id": "react-medium-resumo-de-faturamento-15",
     "title": "Resumo de Faturamento com Efeito Instável",
     "language": "react",
+    "topic": "async-races",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "MEDIUM",
     "type": "debugging",
     "tags": [
@@ -732,6 +1159,9 @@
     "id": "react-medium-sincronizacao-de-perfil-2",
     "title": "Sincronização de Perfil com Requisições em Loop",
     "language": "react",
+    "topic": "async-races",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "MEDIUM",
     "type": "debugging",
     "tags": [
@@ -749,6 +1179,9 @@
     "id": "react-medium-timeline-de-auditoria-14",
     "title": "Timeline de Auditoria com Lista Mutável",
     "language": "react",
+    "topic": "async-races",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "MEDIUM",
     "type": "debugging",
     "tags": [
@@ -766,6 +1199,9 @@
     "id": "react-medium-triagem-de-incidentes-17",
     "title": "Triagem de Incidentes com Busca Intermitente",
     "language": "react",
+    "topic": "async-races",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "MEDIUM",
     "type": "debugging",
     "tags": [
@@ -783,6 +1219,9 @@
     "id": "react-medium-upload-de-arquivos-8",
     "title": "Upload de Arquivos com Re-fetch em Loop",
     "language": "react",
+    "topic": "async-races",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "MEDIUM",
     "type": "debugging",
     "tags": [
@@ -800,6 +1239,9 @@
     "id": "react-medium-wizard-de-checkout-3",
     "title": "Wizard de Checkout com Requisições em Cascata",
     "language": "react",
+    "topic": "async-races",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "MEDIUM",
     "type": "debugging",
     "tags": [
@@ -817,6 +1259,9 @@
     "id": "react-rendering-object-dependency-infinite-loop",
     "title": "Loop Infinito por Dependência de Objeto",
     "language": "react",
+    "topic": "effects-lifecycle",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "EASY",
     "type": "debugging",
     "tags": [
@@ -832,6 +1277,9 @@
     "id": "react-state-race-condition-user-profile",
     "title": "Race Condition não Tratada em Requisições",
     "language": "react",
+    "topic": "async-races",
+    "presentation": "code",
+    "intent": "diagnose",
     "difficulty": "HARD",
     "type": "debugging",
     "tags": [
@@ -841,6 +1289,105 @@
     ],
     "estimatedTime": 18,
     "recommendedElo": 1600,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "typescript-async-unhandled-rejection-test",
+    "title": "O teste que passou antes de falhar",
+    "language": "typescript",
+    "topic": "async-errors",
+    "presentation": "terminal",
+    "intent": "diagnose",
+    "difficulty": "MEDIUM",
+    "type": "output-diagnosis",
+    "tags": [
+      "typescript",
+      "async",
+      "promise",
+      "error",
+      "unhandled-rejection",
+      "testing"
+    ],
+    "estimatedTime": 10,
+    "recommendedElo": 1450,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "typescript-generics-read-field-constraint",
+    "title": "A chave genérica ampla demais",
+    "language": "typescript",
+    "topic": "generics-inference",
+    "presentation": "code",
+    "intent": "diagnose",
+    "difficulty": "MEDIUM",
+    "type": "debugging",
+    "tags": [
+      "typescript",
+      "generic",
+      "constraint",
+      "keyof",
+      "inference"
+    ],
+    "estimatedTime": 12,
+    "recommendedElo": 1360,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "typescript-modules-import-type-runtime",
+    "title": "Um import que desaparece no runtime",
+    "language": "typescript",
+    "topic": "modules-runtime",
+    "presentation": "concept",
+    "intent": "compare",
+    "difficulty": "EASY",
+    "type": "compare-concepts",
+    "tags": [
+      "typescript",
+      "module",
+      "import",
+      "runtime",
+      "type-only"
+    ],
+    "estimatedTime": 8,
+    "recommendedElo": 1240,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "typescript-narrowing-payment-result",
+    "title": "O recibo no ramo recusado",
+    "language": "typescript",
+    "topic": "narrowing",
+    "presentation": "code-terminal",
+    "intent": "diagnose",
+    "difficulty": "MEDIUM",
+    "type": "output-diagnosis",
+    "tags": [
+      "typescript",
+      "narrowing",
+      "discriminated-union",
+      "type-guard"
+    ],
+    "estimatedTime": 12,
+    "recommendedElo": 1400,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "typescript-type-system-structural-user-summary",
+    "title": "O contrato que aceita mais do que parece",
+    "language": "typescript",
+    "topic": "type-system",
+    "presentation": "code",
+    "intent": "validate",
+    "difficulty": "EASY",
+    "type": "behavior-validation",
+    "tags": [
+      "typescript",
+      "type-system",
+      "structural-typing",
+      "excess-property-check"
+    ],
+    "estimatedTime": 8,
+    "recommendedElo": 1180,
     "status": "ACTIVE"
   }
 ]

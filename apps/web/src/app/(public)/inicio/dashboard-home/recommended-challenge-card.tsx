@@ -68,7 +68,13 @@ export function RecommendedChallengeCard({
           </div>
         </div>
         <div className="p-4 sm:p-6 xl:pl-8">
-          <ChallengeCodePreview code={challenge.code} />
+          {challenge.code
+            ? <ChallengeCodePreview code={challenge.code} />
+            : (
+                <div className="flex min-h-80 items-center rounded-xl border border-[color:var(--dojo-border)] bg-[var(--dojo-surface)] p-8">
+                  <p className="font-serif text-2xl leading-relaxed text-[var(--dojo-ink)]">{challenge.question}</p>
+                </div>
+              )}
         </div>
       </div>
     </article>

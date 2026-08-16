@@ -1,0 +1,15 @@
+{
+  "command": "java ExportJob",
+  "blocks": [
+    {
+      "label": "Esperado pelo colega",
+      "content": "java.io.IOException: close failed",
+      "tone": "warning"
+    },
+    {
+      "label": "Obtido",
+      "content": "java.io.IOException: write failed\n    at ExportJob.run(ExportJob.java:18)\n    Suppressed: java.io.IOException: close failed\n        at ReportWriter.close(ReportWriter.java:31)",
+      "tone": "error"
+    }
+  ]
+}

@@ -2,7 +2,8 @@
 
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import {
-  faNodeJs,
+  faGolang,
+  faJava,
   faPython,
   faReact,
   faTypescript,
@@ -57,11 +58,18 @@ export const CHALLENGE_LANGUAGES: readonly ChallengeLanguageDefinition[] = [
     accent: "#d8aa2f",
   },
   {
-    id: "nodejs",
-    name: "Node.js",
-    icon: faNodeJs,
+    id: "java",
+    name: "Java",
+    icon: faJava,
     category: "Back-end",
-    accent: "#69ad51",
+    accent: "#d06b3c",
+  },
+  {
+    id: "go",
+    name: "Go",
+    icon: faGolang,
+    category: "Back-end",
+    accent: "#3f9fb8",
   },
 ] as const;
 

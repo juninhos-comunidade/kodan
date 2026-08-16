@@ -36,6 +36,9 @@ export type ChallengeQuestionKind =
   | "explain-concept"
   | "justify-use"
   | "explain-bad-practice"
+  | "output-diagnosis"
+  | "compare-concepts"
+  | "behavior-validation"
   | "other";
 
 export type ChallengeEvaluationRubric = {
@@ -63,7 +66,17 @@ export type EvaluationInput = {
     id: string;
     title: string;
     question: string;
-    code: string;
+    code: string | null;
+    scenario?: string | null;
+    presentation?: "code" | "code-terminal" | "terminal" | "concept";
+    terminal?: {
+      command: string;
+      blocks: Array<{
+        label: string;
+        content: string;
+        tone: "neutral" | "success" | "warning" | "error";
+      }>;
+    } | null;
     type?: string;
   };
   userAnswer: string;

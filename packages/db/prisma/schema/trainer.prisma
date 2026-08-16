@@ -4,7 +4,13 @@ model Challenge {
   language       String    @default("react")
   difficulty     String    // EASY, MEDIUM, HARD
   recommendedElo Int       @default(1200)
-  code           String    // React code snippet
+  code           String?   // Optional for conceptual and terminal-only challenges
+  codeFileName   String?
+  scenario       String?
+  topic          String    @default("state-rendering")
+  presentation   String    @default("code")
+  intent         String    @default("diagnose")
+  terminalJson   String?
   question       String    // Question to diagnose
   solution       String    // Senior solution template
   tags           String    // Comma-separated tags, e.g. "useEffect,stale-closure"
@@ -16,6 +22,7 @@ model Challenge {
 
   @@map("challenge")
   @@index([language])
+  @@index([language, topic])
   @@index([promoted])
 }
 

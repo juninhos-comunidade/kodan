@@ -1,0 +1,18 @@
+{
+  "id": "go-interfaces-implicit-labeler",
+  "title": "A interface sem declaração de implementação",
+  "language": "go",
+  "topic": "interfaces-methods",
+  "presentation": "code",
+  "intent": "validate",
+  "difficulty": "EASY",
+  "recommendedElo": 1180,
+  "scenario": "Durante a revisão de uma integração, um colega afirmou que Job não poderia ser enviado a printLabel porque o tipo nunca declara que implementa Labeler. O trecho compila na versão atual do serviço.",
+  "question": "A afirmação do colega está correta? Analise o conjunto de métodos de Job, explique como a satisfação de interfaces funciona em Go e diga em que situação um receiver por ponteiro mudaria o resultado.",
+  "tags": ["go", "interface", "method-set", "receiver", "typing"],
+  "type": "behavior-validation",
+  "estimatedTime": 9,
+  "status": "ACTIVE",
+  "codeFile": "labeler.go",
+  "solutionFile": "solution.md"
+}
