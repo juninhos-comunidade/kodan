@@ -272,20 +272,6 @@ export function ${`MediumCase${index + 1}`}({ teamId }: { teamId: string }) {
     `- Depois tornar ordenação imutável: \`[...items].sort(...)\`.`,
     `- Por fim corrigir chave para \`item.id\`.`,
     ``,
-    `### Patch sugerido`,
-    "```tsx",
-    "useEffect(() => {",
-    "  const ctrl = new AbortController();",
-    "  setLoading(true);",
-    "  fetch(`/api/${item.api}?teamId=${teamId}&q=${query}`, { signal: ctrl.signal })",
-    "    .then(r => r.json())",
-    "    .then(data => setItems(data.items))",
-    "    .finally(() => setLoading(false));",
-    "  return () => ctrl.abort();",
-    "}, [teamId, query]);",
-    "",
-    "const top = useMemo(() => [...items].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 5), [items]);",
-    "```",
   ].join("\n");
 
   return {

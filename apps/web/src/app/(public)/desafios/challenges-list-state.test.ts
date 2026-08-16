@@ -116,6 +116,25 @@ describe("challenges-list-state", () => {
     ]);
   });
 
+  it("coloca revisões de React antes dos demais desafios", () => {
+    const visibleChallenges = getVisibleChallenges(
+      [
+        makeChallenge({ id: "react-ready", evaluationAvailable: true }),
+        makeChallenge({ id: "typescript-unavailable", language: "typescript", evaluationAvailable: false }),
+        makeChallenge({ id: "react-review", evaluationAvailable: false }),
+      ],
+      "",
+      "ALL",
+      "ALL",
+    );
+
+    expect(visibleChallenges.map((challenge) => challenge.id)).toEqual([
+      "react-review",
+      "react-ready",
+      "typescript-unavailable",
+    ]);
+  });
+
   it("resolve o desafio ativo mantendo o atual quando ele ainda esta visível", () => {
     const visibleChallenges = [
       makeChallenge({ id: "1", recommendedElo: 900 }),

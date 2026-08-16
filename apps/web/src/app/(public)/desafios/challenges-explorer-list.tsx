@@ -16,7 +16,7 @@ import {
   SlidersHorizontal,
   Zap,
 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useState, type KeyboardEvent, type ReactNode } from "react";
 
 import { cn } from "@kodan/ui/lib/utils";
 import { ChallengeEditorialReview } from "@/components/challenge-editorial-review";
@@ -36,6 +36,8 @@ import {
   getDifficultyColor,
   getDifficultyLabel,
   getStatusPresentation,
+  isEditorialLockedChallenge,
+  isReactGhostChallenge,
 } from "./ema-challenge-card-helpers";
 
 const TYPE_OPTIONS: readonly ChallengeKind[] = [
@@ -388,20 +390,51 @@ function ChallengeTableRow({
   const kind = getChallengeKind(challenge);
   const progress = getChallengeProgress(challenge.attempts);
   const statusPresentation = getStatusPresentation(challenge.attempts);
-  const challengeHref = getChallengeRoute(challenge.id);
-  const locked = !challenge.evaluationAvailable;
+  const locked = isEditorialLockedChallenge(challenge);
+  const ghost = isReactGhostChallenge(challenge);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const handleRowActivate = () => {
+    if (locked) {
+      setReviewOpen((open) => !open);
+    } else if (!ghost) {
+      onOpenChallenge(challenge.id);
+    }
+  };
+  const handleRowKeyDown = (event: KeyboardEvent<HTMLTableRowElement>) => {
+    if (event.target !== event.currentTarget) {
+      return;
+    }
+
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      handleRowActivate();
+    }
+  };
 
   return (
     <>
       <tr
         className={cn(
-          "challengers-row cursor-pointer border-t text-[0.82rem] transition-colors",
+          "challengers-row border-t text-[0.82rem] transition-colors",
+          !ghost && "cursor-pointer",
+          ghost && "cursor-not-allowed opacity-50 grayscale",
           active && "challengers-row-active",
         )}
+        role={ghost || locked ? "button" : undefined}
+        tabIndex={ghost || locked ? 0 : undefined}
+        aria-label={
+          locked
+            ? `Abrir informações sobre a revisão de ${challenge.title}`
+            : ghost
+              ? `${challenge.title} estará disponível em breve`
+            : `Abrir desafio ${challenge.title}`
+        }
+        aria-disabled={ghost || undefined}
+        aria-expanded={locked ? reviewOpen : undefined}
         onMouseEnter={() => onFocusChallenge(challenge.id)}
         onFocus={() => onFocusChallenge(challenge.id)}
-        onClick={() => locked ? setReviewOpen((open) => !open) : onOpenChallenge(challenge.id)}
+        onKeyDown={ghost ? undefined : handleRowKeyDown}
+        onClick={handleRowActivate}
       >
       <td className="px-4 py-5">
         <div className="flex items-center gap-3">
@@ -414,28 +447,14 @@ function ChallengeTableRow({
       <td className="px-4 py-5">
         <div className="min-w-0">
           {locked ? (
-            <button
-              type="button"
-              aria-expanded={reviewOpen}
-              aria-label={`Abrir informações sobre a revisão de ${challenge.title}`}
-              className="flex w-full items-center gap-2 truncate text-left font-serif text-[0.96rem] font-bold text-[var(--challengers-ink)] outline-none transition-colors hover:text-[var(--challengers-blue)] focus-visible:text-[var(--challengers-blue)]"
-              onClick={(event) => {
-                event.stopPropagation();
-                setReviewOpen((open) => !open);
-              }}
-            >
+            <span className="flex w-full items-center gap-2 truncate text-left font-serif text-[0.96rem] font-bold text-[var(--challengers-ink)]">
               <LockKeyhole className="size-3.5 shrink-0" aria-hidden="true" />
               {challenge.title}
-            </button>
+            </span>
           ) : (
-            <Link
-              href={challengeHref}
-              aria-label={`Abrir desafio ${challenge.title}`}
-              className="block truncate font-serif text-[0.96rem] font-bold text-[var(--challengers-ink)] outline-none transition-colors hover:text-[var(--challengers-blue)] focus-visible:text-[var(--challengers-blue)]"
-              onClick={(event) => event.stopPropagation()}
-            >
+          <span className={cn("block truncate font-serif text-[0.96rem] font-bold", ghost ? "text-[var(--challengers-muted)]" : "text-[var(--challengers-ink)]")}>
               {challenge.title}
-            </Link>
+            </span>
           )}
           <p className="mt-1 line-clamp-2 text-[0.76rem] leading-5 text-[var(--challengers-muted)]">
             {getChallengeDescription(challenge)}
@@ -458,6 +477,8 @@ function ChallengeTableRow({
       <td className="px-4 py-5">
         {locked
           ? <EditorialReviewStatus />
+          : ghost
+            ? <GhostStatus />
           : <StatusIndicator label={statusPresentation.label} status={statusPresentation.status} />}
       </td>
       <td className="px-4 py-5">
@@ -492,7 +513,8 @@ function ChallengeCard({
   const progress = getChallengeProgress(challenge.attempts);
   const statusPresentation = getStatusPresentation(challenge.attempts);
   const challengeHref = getChallengeRoute(challenge.id);
-  const locked = !challenge.evaluationAvailable;
+  const locked = isEditorialLockedChallenge(challenge);
+  const ghost = isReactGhostChallenge(challenge);
   const [reviewOpen, setReviewOpen] = useState(false);
 
   const content = (
@@ -519,7 +541,7 @@ function ChallengeCard({
         <span className="challengers-badge px-2 py-1 text-[0.64rem]">{kind}</span>
       </div>
       <div className="mt-3 flex items-center gap-3">
-        {locked ? <EditorialReviewStatus /> : <StatusIndicator label={statusPresentation.label} status={statusPresentation.status} />}
+        {locked ? <EditorialReviewStatus /> : ghost ? <GhostStatus /> : <StatusIndicator label={statusPresentation.label} status={statusPresentation.status} />}
       </div>
       {!locked ? <div className="mt-2"><ProgressBar percent={progress.percent} className={progress.barClassName} /></div> : null}
     </>
@@ -529,6 +551,7 @@ function ChallengeCard({
     <article
       className={cn(
         "challengers-row rounded-[12px] border px-4 py-4",
+        ghost && "cursor-not-allowed opacity-50 grayscale",
         active && "challengers-row-active",
       )}
       onMouseEnter={() => onFocusChallenge(challenge.id)}
@@ -544,6 +567,10 @@ function ChallengeCard({
         >
           {content}
         </button>
+      ) : ghost ? (
+        <div aria-disabled="true" className="w-full text-left">
+          {content}
+        </div>
       ) : (
         <Link href={challengeHref} aria-label={`Abrir desafio ${challenge.title}`} className="block w-full text-left">
           {content}
@@ -559,6 +586,15 @@ function EditorialReviewStatus() {
     <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-[0.76rem] font-medium text-[var(--challengers-muted)]">
       <LockKeyhole className="size-3.5" aria-hidden="true" />
       Em revisão
+    </span>
+  );
+}
+
+function GhostStatus() {
+  return (
+    <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-[0.76rem] font-medium text-[var(--challengers-muted)]">
+      <Hourglass className="size-3.5" aria-hidden="true" />
+      Disponível em breve
     </span>
   );
 }

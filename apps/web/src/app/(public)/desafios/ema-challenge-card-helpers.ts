@@ -29,6 +29,22 @@ export interface Challenge {
   attempts: Attempt[];
 }
 
+export function isReactChallenge(challenge: Pick<Challenge, "language">) {
+  return challenge.language === "react";
+}
+
+export function isEditorialLockedChallenge(
+  challenge: Pick<Challenge, "language" | "evaluationAvailable">,
+) {
+  return isReactChallenge(challenge) && !challenge.evaluationAvailable;
+}
+
+export function isReactGhostChallenge(
+  challenge: Pick<Challenge, "language" | "evaluationAvailable">,
+) {
+  return isReactChallenge(challenge) && challenge.evaluationAvailable;
+}
+
 type DifficultyPresentation = {
   className: string;
   label: Difficulty;

@@ -6,6 +6,7 @@ import {
 import {
   getChallengeKind,
   getStatusFromAttempts,
+  isEditorialLockedChallenge,
   type Challenge,
   type ChallengeKind,
   type ChallengeLanguage,
@@ -257,7 +258,10 @@ export function getVisibleChallenges(
         languageFilter,
       ),
     )
-    .toSorted((left, right) => sortChallenges(left, right, sortBy));
+    .toSorted((left, right) => {
+      const editorialOrder = Number(isEditorialLockedChallenge(right)) - Number(isEditorialLockedChallenge(left));
+      return editorialOrder || sortChallenges(left, right, sortBy);
+    });
 }
 
 export function getPaginatedChallenges(
