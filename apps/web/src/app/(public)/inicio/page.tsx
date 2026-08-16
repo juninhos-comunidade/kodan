@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 
+import {
+  highlightCode,
+  normalizeSupportedCodeLanguage,
+} from "@/lib/code-highlighting";
 import { selectFeaturedChallenge } from "@/lib/featured-challenge";
 import {
   getCurrentUser,
@@ -40,6 +44,11 @@ export default async function DashboardPage() {
     throw new Error("Nenhum desafio jogável disponível.");
   }
 
+  const language = normalizeSupportedCodeLanguage(featuredChallenge.language);
+  const highlightedCode = featuredChallenge.code
+    ? await highlightCode(featuredChallenge.code, language)
+    : null;
+
   const user = userResult.success && userResult.data
     ? userResult.data
     : { name: "Kodan", image: null, elo: 1200 };
@@ -49,6 +58,7 @@ export default async function DashboardPage() {
         id: featuredChallenge.id,
         title: featuredChallenge.title,
         difficulty: featuredChallenge.difficulty,
+        language,
         tags: featuredChallenge.tags
           .split(",")
           .map((tag) => tag.trim())
@@ -56,6 +66,7 @@ export default async function DashboardPage() {
         code: featuredChallenge.code,
         question: featuredChallenge.question,
       }}
+      highlightedCode={highlightedCode}
       challengeCount={challengesResult.success && challengesResult.data
         ? challengesResult.data.total
         : challenges.length}

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, BarChart3, Clock3, Trophy } from "lucide-react";
 
+import type { HighlightedCode } from "@/lib/code-highlighting";
 import { ChallengeCodePreview } from "./challenge-code-preview";
 import type { DashboardChallenge } from "../dashboard-home";
 
@@ -26,10 +27,12 @@ export function RecommendedChallengeCard({
   challenge,
   recommendationReason,
   authenticated = true,
+  highlightedCode = null,
 }: {
   challenge: DashboardChallenge;
   recommendationReason: RecommendationReason;
   authenticated?: boolean;
+  highlightedCode?: HighlightedCode | null;
 }) {
   return (
     <article className="overflow-hidden rounded-2xl border border-[color:var(--dojo-border)] bg-transparent">
@@ -69,7 +72,7 @@ export function RecommendedChallengeCard({
         </div>
         <div className="p-4 sm:p-6 xl:pl-8">
           {challenge.code
-            ? <ChallengeCodePreview code={challenge.code} />
+            ? <ChallengeCodePreview code={challenge.code} highlightedCode={highlightedCode} />
             : (
                 <div className="flex min-h-80 items-center rounded-xl border border-[color:var(--dojo-border)] bg-[var(--dojo-surface)] p-8">
                   <p className="font-serif text-2xl leading-relaxed text-[var(--dojo-ink)]">{challenge.question}</p>

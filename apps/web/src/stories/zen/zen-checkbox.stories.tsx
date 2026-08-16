@@ -1,11 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { useEffect, useState } from "react";
 import { ZenCheckbox } from "@kodan/ui/components/zen";
 
 function ZenCheckboxDemo({ checked, label, description, disabled }: { checked: boolean; label: string; description: string; disabled: boolean }) {
-  const [value, setValue] = useState(checked);
-  useEffect(() => setValue(checked), [checked]);
-  return <ZenCheckbox checked={value} onChange={(event) => setValue(event.currentTarget.checked)} label={label} description={description} disabled={disabled} />;
+  return <ZenCheckbox key={String(checked)} defaultChecked={checked} label={label} description={description} disabled={disabled} />;
 }
 
 const meta = {

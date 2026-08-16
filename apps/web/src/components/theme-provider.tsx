@@ -19,15 +19,15 @@ function getSystemTheme(): ResolvedTheme {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = React.useState<Theme>("system");
-  const [resolvedTheme, setResolvedTheme] = React.useState<ResolvedTheme>("light");
+  const [theme, setTheme] = React.useState<Theme>(() => {
+    if (typeof window === "undefined") return "system";
 
-  React.useEffect(() => {
     const savedTheme = window.localStorage.getItem(STORAGE_KEY);
-    if (savedTheme === "light" || savedTheme === "dark" || savedTheme === "system") {
-      setTheme(savedTheme);
-    }
-  }, []);
+    return savedTheme === "light" || savedTheme === "dark" || savedTheme === "system"
+      ? savedTheme
+      : "system";
+  });
+  const [resolvedTheme, setResolvedTheme] = React.useState<ResolvedTheme>("light");
 
   React.useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
@@ -42,10 +42,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return () => mediaQuery.removeEventListener("change", applyTheme);
   }, [theme]);
 
-  const updateTheme = React.useCallback((nextTheme: Theme) => {
+  const updateTheme = (nextTheme: Theme) => {
     window.localStorage.setItem(STORAGE_KEY, nextTheme);
     setTheme(nextTheme);
-  }, []);
+  };
 
   return (
     <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme: updateTheme }}>

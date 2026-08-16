@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 
+import { highlightCode } from "@/lib/code-highlighting";
 import { isMockMode } from "@/lib/mock-mode";
 import { selectFeaturedChallenge } from "@/lib/featured-challenge";
 import { getRuntimeSession } from "@/lib/runtime-data";
@@ -24,6 +25,9 @@ export default async function TrainArenaPage({
     challengeRes.success && challengeRes.data
       ? (serializeChallengeDetail(challengeRes.data) as Challenge)
       : null;
+  const highlightedCode = initialChallenge?.code
+    ? await highlightCode(initialChallenge.code, initialChallenge.language ?? "react")
+    : null;
   const restoredSession = restoreAttemptSession(
     challengeRes.success && challengeRes.data
       ? challengeRes.data.attempts?.[0]
@@ -47,6 +51,7 @@ export default async function TrainArenaPage({
     <TrainArenaClient
       id={id}
       initialChallenge={initialChallenge}
+      initialCodeHighlight={highlightedCode}
       isAuthenticated={isMockMode() || Boolean(session?.user)}
       initialSession={restoredSession.state}
       initialUserAnswer={restoredSession.userAnswer}

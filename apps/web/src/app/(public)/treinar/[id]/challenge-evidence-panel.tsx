@@ -17,6 +17,8 @@ import type {
   ChallengeTerminalArtifact,
 } from "@kodan/content/challenge-schemas";
 import { cn } from "@kodan/ui/lib/utils";
+import { ShikiCodeBlock } from "@/components/shiki-code-block";
+import type { HighlightedCode } from "@/lib/code-highlighting";
 
 type EvidenceView = "code" | "terminal";
 type Language = "react" | "typescript" | "python" | "java" | "go";
@@ -42,10 +44,12 @@ export function ChallengeEvidencePanel({
   challenge,
   difficulty,
   onCopyCode,
+  highlightedCode = null,
 }: {
   challenge: ChallengeEvidence;
   difficulty: string;
   onCopyCode: () => void;
+  highlightedCode?: HighlightedCode | null;
 }) {
   const presentation = challenge.presentation ?? "code";
   const tabs = presentation === "code-terminal"
@@ -135,6 +139,7 @@ export function ChallengeEvidencePanel({
         <CodeEvidence
           code={challenge.code ?? ""}
           difficulty={difficulty}
+          highlightedCode={highlightedCode}
         />
       ) : (
         <TerminalEvidence terminal={challenge.terminal} />
@@ -143,7 +148,15 @@ export function ChallengeEvidencePanel({
   );
 }
 
-function CodeEvidence({ code, difficulty }: { code: string; difficulty: string }) {
+function CodeEvidence({
+  code,
+  difficulty,
+  highlightedCode,
+}: {
+  code: string;
+  difficulty: string;
+  highlightedCode?: HighlightedCode | null;
+}) {
   const lines = code.split("\n");
   return (
     <>
@@ -151,16 +164,11 @@ function CodeEvidence({ code, difficulty }: { code: string; difficulty: string }
         id="evidence-panel-code"
         role="tabpanel"
         aria-labelledby="evidence-tab-code"
-        className="min-h-0 flex-1 overflow-auto bg-[var(--challengers-surface)] font-mono text-[0.82rem] leading-6"
+        className="min-h-0 flex-1 overflow-auto bg-[#282c34] font-mono text-[0.82rem] leading-6"
       >
-        <div className="flex min-w-max">
-          <div aria-hidden="true" className="select-none border-r border-[color:var(--challengers-border)] bg-[var(--challengers-panel)] px-3 py-4 text-right text-[0.72rem] font-medium leading-6 text-[var(--challengers-faint)]">
-            {lines.map((_, index) => <div key={index} className="h-[1.45rem] min-w-5 tabular-nums">{index + 1}</div>)}
-          </div>
-          <pre className="flex-1 overflow-visible p-4 text-[var(--challengers-ink)]">
-            {lines.map((line, index) => <CodeLine key={`${index}:${line}`} line={line} />)}
-          </pre>
-        </div>
+        <pre className="m-0 min-w-0 overflow-visible p-4 text-[#abb2bf]">
+          <ShikiCodeBlock code={code} highlightedCode={highlightedCode} />
+        </pre>
       </div>
       <div className="flex h-9 shrink-0 items-center justify-between border-t border-[color:var(--challengers-border)] bg-[var(--challengers-panel)] px-4 text-[0.72rem] text-[var(--challengers-muted)]">
         <span>{lines.length} {lines.length === 1 ? "linha" : "linhas"}</span>
@@ -170,23 +178,12 @@ function CodeEvidence({ code, difficulty }: { code: string; difficulty: string }
   );
 }
 
-function CodeLine({ line }: { line: string }) {
-  const tokens = line.split(/(\/\/.*|#[^\n]*|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`|\b(?:const|let|var|function|func|class|interface|type|def|return|if|else|for|while|switch|case|package|import|from|public|private|static|new|async|await|go|defer|range|struct|map|true|false|null|None|nil)\b|\b\d+\b)/g);
-  return (
-    <div className="min-h-[1.45rem] whitespace-pre">
-      {tokens.map((token, index) => {
-        let className = "";
-        if (/^(\/\/|#)/.test(token)) className = "italic text-[var(--challengers-faint)]";
-        else if (/^["'`]/.test(token)) className = "text-[oklch(46%_0.13_154)] dark:text-[oklch(78%_0.11_154)]";
-        else if (/^\d+$/.test(token)) className = "text-[var(--challengers-warning)]";
-        else if (/^[A-Za-z]+$/.test(token)) className = "font-semibold text-[var(--challengers-blue)]";
-        return <span key={`${index}:${token}`} className={className}>{token}</span>;
-      })}
-    </div>
-  );
-}
-
 function TerminalEvidence({ terminal }: { terminal?: ChallengeTerminalArtifact | null }) {
+  const blocks = terminal?.blocks.map((block) => ({
+    ...block,
+    id: `${block.label}:${block.tone}:${block.content}`,
+  }));
+
   return (
     <div
       id="evidence-panel-terminal"
@@ -200,8 +197,8 @@ function TerminalEvidence({ terminal }: { terminal?: ChallengeTerminalArtifact |
             <span aria-hidden="true" className="select-none text-[oklch(70%_0.11_155)]">$</span>
             <code>{terminal.command}</code>
           </div>
-          {terminal.blocks.map((block, index) => (
-            <div key={`${block.label}:${index}`} className="border border-[oklch(42%_0.018_250)] bg-[oklch(22%_0.012_255)] p-4">
+          {blocks?.map((block) => (
+            <div key={block.id} className="border border-[oklch(42%_0.018_250)] bg-[oklch(22%_0.012_255)] p-4">
               <p className={cn("mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em]", getTerminalToneClass(block.tone))}>
                 <TerminalToneIcon tone={block.tone} />
                 {block.label}

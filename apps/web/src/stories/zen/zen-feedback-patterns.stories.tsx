@@ -9,7 +9,7 @@ import {
   ZenToast,
   ZenTooltip,
 } from "@kodan/ui/components/zen";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { fn } from "storybook/test";
 
 type FeedbackArgs = {
@@ -48,12 +48,11 @@ export const ZenErrorStateStory: Story = { name: "Zen Error State", render: ({ t
 export const ZenTooltipStory: Story = { name: "Zen Tooltip", render: ({ description }) => <ZenTooltip content={description}><button type="button" className="zen-focus border border-[color:var(--zen-border)] px-4 py-2 text-xs">Passe o cursor ou use Tab</button></ZenTooltip> };
 export const ZenConfirmationModalStory: Story = {
   name: "Zen Confirmation Modal",
-  render: (args) => <ConfirmationDemo {...args} />,
+  render: (args) => <ConfirmationDemo key={String(args.open)} {...args} />,
 };
 
 function ConfirmationDemo({ open, title, description, confirmLabel, cancelLabel }: FeedbackArgs) {
   const [visible, setVisible] = useState(open);
-  useEffect(() => setVisible(open), [open]);
 
   return (
     <>

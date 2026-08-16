@@ -18,22 +18,25 @@ import {
   CheckCircle2,
   ChevronLeft,
   Eye,
-  EyeOff,
   HelpCircle,
   Info,
   Lightbulb,
   Loader2,
-  LockKeyhole,
   PanelRightOpen,
   SendHorizontal,
-  X,
 } from "lucide-react";
 
-import { Button } from "@kodan/ui/components/button";
-import { ZenToast } from "@kodan/ui/components/zen";
+import {
+  ZenButton,
+  ZenConfirmationModal,
+  ZenFeedbackModal,
+  ZenToast,
+  type ZenFeedbackData,
+} from "@kodan/ui/components/zen";
 import { cn } from "@kodan/ui/lib/utils";
 import { ProductEventBeacon } from "@/components/product-event-beacon";
 import { ChallengeEditorialReview } from "@/components/challenge-editorial-review";
+import type { HighlightedCode } from "@/lib/code-highlighting";
 import { getLoginHref } from "@/lib/auth-navigation";
 import {
   ACTIVATION_DAY_STORAGE_KEY,
@@ -223,9 +226,51 @@ function getChallengeNumber(challenge: Challenge) {
   return String(hash).padStart(3, "0");
 }
 
+function toZenFeedbackData(result: ArenaAttemptResult): ZenFeedbackData {
+  const points = result.feedback.points?.map((point) => ({
+    title: point.kind === "HIDDEN" ? "Ponto ainda não identificado" : point.label,
+    description: point.kind === "MATCHED"
+      ? "Este sinal apareceu no seu diagnóstico."
+      : point.kind === "REVEALED"
+        ? "Este ponto deveria ter aparecido no seu diagnóstico, mas não foi identificado."
+      : point.kind === "COMPLEMENT"
+        ? "Este detalhe complementa a causa principal."
+        : point.kind === "HIDDEN"
+          ? "A solução de referência mostra este ponto."
+          : undefined,
+    status: point.kind === "MATCHED"
+      ? "correct" as const
+      : point.kind === "HIDDEN"
+        ? "missing" as const
+        : "wrong" as const,
+  })) ?? [
+    ...result.feedback.strengths.map((title) => ({
+      title,
+      status: "correct" as const,
+    })),
+    ...result.feedback.blindspots.map((title) => ({
+      title,
+      status: "wrong" as const,
+    })),
+    ...(result.feedback.corrections ?? []).map((title) => ({
+      title,
+      status: "missing" as const,
+    })),
+  ];
+
+  return {
+    score: result.score,
+    maxScore: 10,
+    eloVariation: result.eloChange,
+    points,
+    techLeadFeedback: result.feedback.summary,
+  };
+}
+
 interface TrainArenaClientProps {
   id: string;
   initialChallenge: Challenge | null;
+  initialCodeHighlight?: HighlightedCode | null;
   isAuthenticated: boolean;
   initialSession?: AttemptSessionState;
   initialUserAnswer?: string;
@@ -237,12 +282,21 @@ interface TrainArenaClientProps {
 export default function TrainArenaClient({
   id,
   initialChallenge,
+  initialCodeHighlight = null,
   isAuthenticated,
   initialSession = initialAttemptSessionState,
   initialUserAnswer = "",
   nextChallenge = null,
 }: TrainArenaClientProps) {
-  const [userAnswer, setUserAnswer] = useState(initialUserAnswer);
+  const [userAnswer, setUserAnswer] = useState(() => {
+    if (initialUserAnswer || typeof window === "undefined") return initialUserAnswer;
+
+    try {
+      return window.sessionStorage.getItem(`${DRAFT_STORAGE_PREFIX}${id}`) ?? "";
+    } catch {
+      return "";
+    }
+  });
   const [notes, setNotes] = useState("");
   const [supportTab, setSupportTab] = useState<"statement" | "notes">(
     "statement",
@@ -252,6 +306,7 @@ export default function TrainArenaClient({
     initialSession,
   );
   const [showAuthenticationDialog, setShowAuthenticationDialog] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [zenToast, dispatchZenToast] = useReducer(zenToastReducer, {
     open: false,
     tone: "info",
@@ -267,17 +322,6 @@ export default function TrainArenaClient({
   const [firstFeedbackCelebrated, setFirstFeedbackCelebrated] = useState(false);
 
   const draftStorageKey = `${DRAFT_STORAGE_PREFIX}${id}`;
-
-  useEffect(() => {
-    if (initialUserAnswer) return;
-
-    try {
-      const savedDraft = window.sessionStorage.getItem(draftStorageKey);
-      if (savedDraft) setUserAnswer(savedDraft);
-    } catch {
-      // O diagnóstico continua disponível na sessão atual se o storage não estiver acessível.
-    }
-  }, [draftStorageKey, initialUserAnswer]);
 
   useEffect(() => {
     const now = Date.now();
@@ -325,16 +369,22 @@ export default function TrainArenaClient({
       Date.now(),
     );
 
-    let cancelled = false;
+    const controller = new AbortController();
     let retryTimer: number | undefined;
-    const persistFeedbackView = async (attempt = 1) => {
-      try {
-        const response = await recordFeedbackViewed(
-          id,
-          attemptNumber,
-          sessionAgeBucket,
+    const scheduleRetry = (attempt: number) => {
+      if (!controller.signal.aborted && attempt < 3) {
+        retryTimer = window.setTimeout(
+          () => persistFeedbackView(attempt + 1),
+          attempt * 2_000,
         );
-        if (!cancelled && response.success) {
+      }
+    };
+    const persistFeedbackView = (attempt = 1) => {
+      void recordFeedbackViewed(id, attemptNumber, sessionAgeBucket)
+        .then((response) => {
+          if (controller.signal.aborted) return;
+
+          if (response.success) {
           recordedFeedbackRef.current = eventKey;
           if (response.recorded) setFirstFeedbackCelebrated(true);
           try {
@@ -348,23 +398,20 @@ export default function TrainArenaClient({
           } catch {
             // O ref ainda evita duplicação durante a montagem atual.
           }
-          return;
-        }
-      } catch {
-        // Telemetria de produto é best effort e não deve interromper o feedback.
-      }
+            return;
+          }
 
-      if (!cancelled && attempt < 3) {
-        retryTimer = window.setTimeout(
-          () => void persistFeedbackView(attempt + 1),
-          attempt * 2_000,
-        );
-      }
+          scheduleRetry(attempt);
+        })
+        .catch(() => {
+          // Telemetria de produto é best effort e não deve interromper o feedback.
+          scheduleRetry(attempt);
+        });
     };
     void persistFeedbackView();
 
     return () => {
-      cancelled = true;
+      controller.abort();
       if (retryTimer !== undefined) window.clearTimeout(retryTimer);
     };
   }, [attemptSession.phase, attemptSession.result?.attemptNumber, id, isAuthenticated]);
@@ -402,14 +449,10 @@ export default function TrainArenaClient({
                 O item solicitado não está disponível no catálogo atual.
               </p>
               <Link href="/desafios" className="mt-6 inline-flex">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="rounded-[8px] border-[color:var(--challengers-border)] bg-[var(--challengers-surface)] text-[var(--challengers-ink)] hover:bg-[var(--challengers-panel)]"
-                >
+                <ZenButton variant="washi">
                   <ChevronLeft className="size-3.5" />
                   Voltar aos desafios
-                </Button>
+                </ZenButton>
               </Link>
             </div>
           </div>
@@ -493,6 +536,7 @@ export default function TrainArenaClient({
           type: "submit_succeeded",
           result: response.data as ArenaAttemptResult,
         });
+        setShowFeedbackModal(true);
         showZenToast(
           "success",
           "Diagnóstico avaliado",
@@ -528,6 +572,7 @@ export default function TrainArenaClient({
           type: "reveal_succeeded",
           result: response.data as ArenaAttemptResult,
         });
+        setShowFeedbackModal(true);
         showZenToast(
           "info",
           "Solução liberada",
@@ -610,6 +655,7 @@ export default function TrainArenaClient({
                   challenge={challenge}
                   difficulty={challenge.difficulty}
                   onCopyCode={handleCopyCode}
+                  highlightedCode={initialCodeHighlight}
                 />
 
                 <div className="grid min-h-[680px] gap-4 xl:min-h-0 xl:grid-rows-[minmax(280px,0.9fr)_minmax(300px,1.1fr)]">
@@ -651,11 +697,6 @@ export default function TrainArenaClient({
                   ) : (
                     <FeedbackPanel
                       result={result}
-                      userAnswer={userAnswer}
-                      showComparison={showComparison}
-                      onToggleComparison={() =>
-                        dispatchAttemptSession({ type: "comparison_toggled" })
-                      }
                       onRetry={() => {
                         dispatchAttemptSession({ type: "retry_requested" });
                         setUserAnswer("");
@@ -664,6 +705,7 @@ export default function TrainArenaClient({
                       revealing={attemptSession.phase === "revealing"}
                       nextChallenge={nextChallenge}
                       firstFeedbackCelebrated={firstFeedbackCelebrated}
+                      onOpenFeedback={() => setShowFeedbackModal(true)}
                     />
                   )}
                 </div>
@@ -678,6 +720,34 @@ export default function TrainArenaClient({
         onClose={() => setShowAuthenticationDialog(false)}
         onAuthenticate={saveDraftBeforeAuthentication}
       />
+
+      {result ? (
+        <ZenFeedbackModal
+          open={showFeedbackModal}
+          taskName={`${getChallengeNumber(challenge)} - ${challenge.title}`}
+          userAnswer={userAnswer}
+          feedback={toZenFeedbackData(result)}
+          referenceAnswer={result.feedback.seniorSolution || undefined}
+          canViewAnswer={result.canRevealSolution}
+          answerAlreadyRevealed={showComparison}
+          onClose={() => setShowFeedbackModal(false)}
+          onTryAgain={() => {
+            setShowFeedbackModal(false);
+            dispatchAttemptSession({ type: "retry_requested" });
+            setUserAnswer("");
+          }}
+          onViewAnswer={() => void handleRevealSolution()}
+          onNextChallenge={nextChallenge
+            ? () => {
+                void sendProductEvent({
+                  name: "next_challenge_started",
+                  challengeId: nextChallenge.id,
+                });
+                window.location.assign(`/treinar/${nextChallenge.id}`);
+              }
+            : undefined}
+        />
+      ) : null}
 
       <div className="fixed bottom-4 right-4 z-[80]">
         <ZenToast open={zenToast.open} tone={zenToast.tone} title={zenToast.title}>
@@ -732,70 +802,20 @@ function AuthenticationRequiredDialog({
   onClose: () => void;
   onAuthenticate: () => void;
 }) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
-  const primaryActionRef = useRef<HTMLAnchorElement>(null);
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-
-    if (open && !dialog.open) {
-      dialog.showModal();
-      primaryActionRef.current?.focus();
-      return;
-    }
-
-    if (!open && dialog.open) dialog.close();
-  }, [open]);
-
   return (
-    <dialog
-      ref={dialogRef}
-      aria-labelledby="authentication-required-title"
-      aria-describedby="authentication-required-description"
-      className="m-auto w-[calc(100%-2rem)] max-w-md rounded-2xl border border-[color:var(--challengers-border)] bg-[var(--challengers-surface)] p-6 text-[var(--challengers-ink)] shadow-2xl backdrop:bg-black/60 sm:p-8"
-      onCancel={(event) => {
-        event.preventDefault();
-        onClose();
+    <ZenConfirmationModal
+      open={open}
+      title="É necessário fazer login"
+      confirmLabel="Entrar ou criar conta"
+      cancelLabel="Agora não"
+      onCancel={onClose}
+      onConfirm={() => {
+        onAuthenticate();
+        window.location.assign(getLoginHref(callbackURL));
       }}
     >
-        <button
-          type="button"
-          aria-label="Fechar"
-          className="challengers-icon-button absolute right-4 top-4 grid size-11 place-items-center rounded-lg border"
-          onClick={onClose}
-        >
-          <X className="size-4" aria-hidden="true" />
-        </button>
-
-        <span className="grid size-12 place-items-center rounded-full bg-[var(--challengers-blue-soft)] text-[var(--challengers-blue)]">
-          <LockKeyhole className="size-5" aria-hidden="true" />
-        </span>
-        <h2 id="authentication-required-title" className="mt-5 mb-6 pr-10 font-serif text-2xl font-bold text-[var(--challengers-ink)]">
-          É necessário fazer login para enviar seu diagnóstico
-        </h2>
-        <p id="authentication-required-description" className="mt-3 text-sm leading-6 text-[var(--challengers-muted)]">
-          Você pode ler e escrever seu diagnóstico livremente. Para enviá-lo, receber a avaliação e salvar seu progresso, entre ou crie sua conta no Kodan.
-        </p>
-
-        <div className="mt-7">
-          <Link
-            ref={primaryActionRef}
-            href={getLoginHref(callbackURL)}
-            className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-[var(--challengers-blue)] px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-            onClick={onAuthenticate}
-          >
-            Entrar ou criar conta
-          </Link>
-          <button
-            type="button"
-            className="mt-3 w-full text-sm font-medium text-[var(--challengers-muted)] underline-offset-4 hover:text-[var(--challengers-ink)] hover:underline"
-            onClick={onClose}
-          >
-            Agora não, vou entrar depois
-          </button>
-        </div>
-    </dialog>
+      Você pode ler e escrever seu diagnóstico livremente. Para enviá-lo, receber a avaliação e salvar seu progresso, entre ou crie sua conta no Kodan.
+    </ZenConfirmationModal>
   );
 }
 
@@ -1046,23 +1066,20 @@ function HintCallout({
             Revelar uma dica limita o ganho máximo deste desafio para +7 ELO.
           </p>
           <div className="flex flex-wrap gap-2">
-            <Button
+            <ZenButton
+              variant="moss"
               type="button"
-              size="sm"
-              className="rounded-[8px] border-[color:var(--challengers-blue)] bg-[var(--challengers-blue)] text-[oklch(99%_0.003_248)] hover:bg-[var(--challengers-blue-strong)]"
               onClick={onRevealHint}
             >
               Revelar dica
-            </Button>
-            <Button
+            </ZenButton>
+            <ZenButton
+              variant="washi"
               type="button"
-              variant="outline"
-              size="sm"
-              className="rounded-[8px] border-[color:var(--challengers-border)] bg-[var(--challengers-surface)] text-[var(--challengers-ink)] hover:bg-[var(--challengers-panel)]"
               onClick={onCancelHint}
             >
               Cancelar
-            </Button>
+            </ZenButton>
           </div>
         </div>
       ) : (
@@ -1119,16 +1136,14 @@ function DiagnosisPanel({
         <div className="flex shrink-0 items-center gap-3 text-[0.78rem] text-[var(--challengers-muted)]">
           <span className="hidden sm:inline">Markdown suportado</span>
           <Info className="hidden size-3.5 sm:inline" />
-          <Button
+          <ZenButton
+            variant="washi"
             type="button"
-            variant="outline"
-            size="sm"
             disabled={answerLocked || submitting || answer.length === 0}
-            className="rounded-[8px] border-[color:var(--challengers-border)] bg-[var(--challengers-surface)] text-[var(--challengers-ink)] hover:bg-[var(--challengers-panel)]"
             onClick={onClear}
           >
             Limpar
-          </Button>
+          </ZenButton>
         </div>
       </div>
 
@@ -1160,10 +1175,11 @@ function DiagnosisPanel({
             A avaliação deste desafio está em revisão editorial. Você pode preparar seu diagnóstico, mas o envio será liberado após a rubrica ser validada.
           </p>
         ) : null}
-        <Button
+        <ZenButton
+          variant="moss"
           type="submit"
           disabled={!canSubmit}
-          className="h-11 w-full rounded-[9px] border-[color:var(--challengers-blue)] bg-[var(--challengers-blue)] text-sm font-semibold text-[oklch(99%_0.003_248)] hover:bg-[var(--challengers-blue-strong)]"
+          className="h-11 w-full"
         >
           {submitting ? (
             <>
@@ -1176,7 +1192,7 @@ function DiagnosisPanel({
               Enviar Diagnóstico
             </>
           )}
-        </Button>
+        </ZenButton>
       </div>
     </form>
   );
@@ -1187,10 +1203,10 @@ function AnalysisLoadingPanel() {
     <section className="challengers-panel flex min-h-0 flex-col items-center justify-center rounded-[10px] border px-6 py-8 text-center">
       <Loader2 className="size-7 animate-spin text-[var(--challengers-blue)]" />
       <h2 className="mt-4 font-serif text-lg font-bold text-[var(--challengers-ink)]">
-        Analisando sua resposta
+        Estamos analisando seu diagnóstico
       </h2>
       <p className="mt-2 max-w-sm text-sm leading-6 text-[var(--challengers-muted)]">
-        O Tech Lead está cruzando seu diagnóstico com a solução de referência.
+        Beba água enquanto verificamos...
       </p>
     </section>
   );
@@ -1198,9 +1214,7 @@ function AnalysisLoadingPanel() {
 
 function FeedbackPanel({
   result,
-  userAnswer,
-  showComparison,
-  onToggleComparison,
+  onOpenFeedback,
   onRetry,
   onReveal,
   revealing,
@@ -1208,9 +1222,7 @@ function FeedbackPanel({
   firstFeedbackCelebrated,
 }: {
   result: ArenaAttemptResult;
-  userAnswer: string;
-  showComparison: boolean;
-  onToggleComparison: () => void;
+  onOpenFeedback: () => void;
   onRetry: () => void;
   onReveal: () => void;
   revealing: boolean;
@@ -1256,6 +1268,10 @@ function FeedbackPanel({
             <p className="mt-3 rounded-[9px] border border-[color:var(--challengers-border)] bg-[var(--challengers-panel)] px-4 py-3 text-sm italic leading-7 text-[var(--challengers-ink)]">
               "{result.feedback.summary}"
             </p>
+            <ZenButton variant="washi" className="mt-3 w-full" onClick={onOpenFeedback}>
+              <Eye className="size-4" />
+              Abrir resposta completa
+            </ZenButton>
           </section>
 
           {result.feedback.points ? (
@@ -1294,69 +1310,33 @@ function FeedbackPanel({
             </section>
           ) : null}
 
-          {result.feedback.seniorSolution ? (
-            <section className="border-t border-[color:var(--challengers-border)] pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="flex h-9 w-full justify-between rounded-[8px] border-[color:var(--challengers-border)] bg-[var(--challengers-surface)] text-[var(--challengers-ink)] hover:bg-[var(--challengers-panel)]"
-                onClick={onToggleComparison}
-              >
-                <span>
-                  {showComparison
-                    ? "Ocultar solução sênior"
-                    : "Comparar com solução sênior"}
-                </span>
-                {showComparison ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-              </Button>
-
-              {showComparison ? (
-                <div className="mt-3 max-h-56 overflow-y-auto rounded-[9px] border border-[color:var(--challengers-border)] bg-[var(--challengers-panel)] p-4 text-sm leading-6">
-                  <p className="font-semibold text-[var(--challengers-muted)]">
-                    Sua resposta
-                  </p>
-                  <p className="mt-1 whitespace-pre-wrap text-[var(--challengers-muted)]">
-                    {userAnswer}
-                  </p>
-                  <div className="my-4 h-px bg-[var(--challengers-border)]" />
-                  <p className="font-semibold text-[var(--challengers-blue)]">
-                    Solução de referência
-                  </p>
-                  <p className="mt-1 whitespace-pre-wrap text-[var(--challengers-ink)]">
-                    {result.feedback.seniorSolution}
-                  </p>
-                </div>
-              ) : null}
-            </section>
-          ) : null}
         </div>
       </div>
 
       <div className="flex shrink-0 gap-2 border-t border-[color:var(--challengers-border)] px-6 py-4">
         {result.canRetry ? (
-          <Button
+          <ZenButton
+            variant="washi"
             type="button"
-            variant="outline"
-            className="h-10 flex-1 rounded-[8px] border-[color:var(--challengers-border)] bg-[var(--challengers-surface)] text-[var(--challengers-ink)] hover:bg-[var(--challengers-panel)]"
+            className="h-10 flex-1"
             onClick={onRetry}
           >
             {result.status === "SOLVED"
               ? "Tentar melhorar a nota"
               : "Continuar investigando"}
-          </Button>
+          </ZenButton>
         ) : null}
         {result.canRevealSolution ? (
-          <Button
+          <ZenButton
+            variant="moss"
             type="button"
-            variant="outline"
             className="h-10 flex-1 rounded-[8px] border-[color:var(--challengers-border)] bg-[var(--challengers-surface)] text-[var(--challengers-ink)] hover:bg-[var(--challengers-panel)]"
             disabled={revealing}
             onClick={onReveal}
           >
             {revealing ? <Loader2 className="size-4 animate-spin" /> : <Eye className="size-4" />}
             Revelar solução e encerrar
-          </Button>
+          </ZenButton>
         ) : nextChallenge ? (
           <Link
             href={`/treinar/${nextChallenge.id}`}
@@ -1368,15 +1348,15 @@ function FeedbackPanel({
               });
             }}
           >
-            <Button className="h-10 w-full rounded-[8px] border-[color:var(--challengers-blue)] bg-[var(--challengers-blue)] text-[oklch(99%_0.003_248)] hover:bg-[var(--challengers-blue-strong)]">
+            <ZenButton variant="ink" className="h-10 w-full">
               {nextChallenge.title}
-            </Button>
+            </ZenButton>
           </Link>
         ) : (
           <Link href="/desafios" className="flex-1">
-            <Button className="h-10 w-full rounded-[8px] border-[color:var(--challengers-blue)] bg-[var(--challengers-blue)] text-[oklch(99%_0.003_248)] hover:bg-[var(--challengers-blue-strong)]">
+            <ZenButton variant="ink" className="h-10 w-full">
               Explorar catálogo
-            </Button>
+            </ZenButton>
           </Link>
         )}
       </div>
@@ -1459,7 +1439,7 @@ function FeedbackPoints({
     <>
       <section>
         <h3 className="text-[0.76rem] font-semibold uppercase tracking-[0.12em] text-[var(--challengers-muted)]">
-          Você identificou
+          Pontos de atenção
         </h3>
         <ul className="mt-2 space-y-2">
           {primaryPoints.map((point) => (
@@ -1467,8 +1447,16 @@ function FeedbackPoints({
               key={point.kind === "HIDDEN" ? point.slot : point.conceptId}
               className="flex gap-2 text-sm leading-6 text-[var(--challengers-ink)]"
             >
-              <span aria-hidden="true" className="w-4 shrink-0 font-semibold">
-                {point.kind === "MATCHED" ? "✓" : point.kind === "HIDDEN" ? "?" : "•"}
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "w-4 shrink-0 font-semibold",
+                  point.kind === "MATCHED" && "text-[var(--challengers-success)]",
+                  point.kind === "REVEALED" && "text-[var(--challengers-danger)]",
+                  point.kind === "HIDDEN" && "text-[var(--challengers-muted)]",
+                )}
+              >
+                {point.kind === "MATCHED" ? "✓" : point.kind === "REVEALED" ? "×" : "?"}
               </span>
               <span>{point.label}</span>
             </li>

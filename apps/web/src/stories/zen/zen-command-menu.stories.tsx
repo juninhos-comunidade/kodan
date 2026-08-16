@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@kodan/ui/components/button";
 import { ZenCommandMenu, type ZenCommandItem } from "@kodan/ui/components/zen";
 
@@ -7,7 +7,6 @@ const items: ZenCommandItem[] = [{ label: "Abrir desafios", description: "Explor
 
 function CommandMenuDemo({ open, title }: { open: boolean; title: string }) {
   const [visible, setVisible] = useState(open);
-  useEffect(() => setVisible(open), [open]);
   return <><Button onClick={() => setVisible(true)}>Abrir command menu</Button><ZenCommandMenu open={visible} onOpenChange={setVisible} items={items} title={title} /></>;
 }
 
@@ -19,5 +18,10 @@ const meta = {
 } satisfies Meta<typeof CommandMenuDemo>;
 export default meta;
 type Story = StoryObj<typeof meta>;
-export const Playground: Story = {};
-export const Aberto: Story = { args: { open: true } };
+export const Playground: Story = {
+  render: (args) => <CommandMenuDemo key={String(args.open)} {...args} />,
+};
+export const Aberto: Story = {
+  args: { open: true },
+  render: (args) => <CommandMenuDemo key={String(args.open)} {...args} />,
+};

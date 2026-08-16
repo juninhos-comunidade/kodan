@@ -20,15 +20,6 @@ import { getLoginHref } from "@/lib/auth-navigation";
 import { formatRankLabel } from "@/lib/rating";
 import { KodanLogo } from "@/components/kodan-logo";
 
-export const APP_ROUTE_PREFIXES = [
-  "/inicio",
-  "/desafios",
-  "/treinar",
-  "/perfil",
-  "/ajuda",
-  "/configuracoes",
-] as const;
-
 const CHALLENGE_LINKS = [
   { href: "/desafios", label: "Todos os Desafios", dot: "bg-[var(--profile-accent-blue)]" },
   { href: "/desafios?status=in_progress", label: "Em andamento", dot: "bg-[var(--profile-text-muted)]" },

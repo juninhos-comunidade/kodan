@@ -1,6 +1,7 @@
 "use client";
 
 import { ProductEventBeacon } from "@/components/product-event-beacon";
+import type { HighlightedCode } from "@/lib/code-highlighting";
 import { DashboardHomeHeader } from "./dashboard-home/dashboard-home-header";
 import { DashboardNavigation } from "./dashboard-home/dashboard-navigation";
 import { DojoInitiationCard } from "./dashboard-home/dojo-initiation-card";
@@ -14,6 +15,7 @@ type DashboardHomeProps = {
   userName: string;
   userImage: string | null;
   authenticated?: boolean;
+  highlightedCode?: HighlightedCode | null;
 };
 
 export type DashboardChallenge = {
@@ -22,10 +24,11 @@ export type DashboardChallenge = {
   difficulty: string;
   tags: string[];
   code: string | null;
+  language?: "react" | "typescript" | "python" | "java" | "go";
   question: string;
 };
 
-export default function DashboardHome({ challenge, challengeCount, recommendationReason, userName, userImage, authenticated = true }: DashboardHomeProps) {
+export default function DashboardHome({ challenge, challengeCount, recommendationReason, userName, userImage, authenticated = true, highlightedCode = null }: DashboardHomeProps) {
   const themeAssets = useDashboardThemeAssets();
 
   return (
@@ -41,6 +44,7 @@ export default function DashboardHome({ challenge, challengeCount, recommendatio
             challenge={challenge}
             recommendationReason={recommendationReason}
             authenticated={authenticated}
+            highlightedCode={highlightedCode}
           />
           <DojoInitiationCard icon={themeAssets.initiation} />
         </section>

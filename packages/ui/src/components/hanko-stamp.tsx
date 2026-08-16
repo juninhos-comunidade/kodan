@@ -1,10 +1,10 @@
 
 export function HankoStamp() {
   return (
-    <span className="pointer-events-none absolute inset-0 z-0 flex animate-in items-center justify-center duration-500 fade-in select-none">
+    <span className="pointer-events-none absolute inset-0 z-0 flex animate-hanko-stamp-in items-center justify-center select-none">
       <svg
         viewBox="0 0 40 40"
-        className="size-9 scale-110 text-destructive/40 transition-all duration-500"
+        className="size-9 scale-110 text-destructive/40"
         fill="none"
         stroke="currentColor"
         strokeWidth="1.2"

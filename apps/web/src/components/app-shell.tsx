@@ -6,7 +6,8 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { cn } from "@kodan/ui/lib/utils";
 
-import { AppSidebar, APP_ROUTE_PREFIXES, type SidebarUser } from "@/components/app-sidebar";
+import { AppSidebar, type SidebarUser } from "@/components/app-sidebar";
+import { APP_ROUTE_PREFIXES } from "@/components/app-route-prefixes";
 
 export function AppShell({ children, user }: { children: ReactNode; user: SidebarUser | null }) {
   const pathname = usePathname();

@@ -13,7 +13,8 @@
     "start": "next start",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "test-storybook": "vitest --project=storybook"
+    "test-storybook": "vitest --project=storybook",
+    "doctor": "npx react-doctor@latest"
   },
   "dependencies": {
     "@kodan/auth": "workspace:*",

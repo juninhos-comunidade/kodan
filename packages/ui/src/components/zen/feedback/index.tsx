@@ -9,6 +9,7 @@ import type { ReactNode } from "react";
 import { paperSlide, sealImpact, zenEase } from "../motion/presets";
 import { ZenMotionProvider } from "../motion/runtime";
 import { AnimatePresence, m } from "../motion/primitives";
+import { ZenButton } from "../zen-button";
 
 type ZenTone = "success" | "warning" | "error" | "info";
 
@@ -218,14 +219,11 @@ export function ZenConfirmationModal({
                 </AlertDialogPrimitive.Description>
               ) : null}
               <div className="mt-5 flex justify-end gap-2">
-                <AlertDialogPrimitive.Cancel className="zen-focus border border-[color:var(--zen-border)] px-3 py-2 text-xs">
-                  {cancelLabel}
+                <AlertDialogPrimitive.Cancel asChild>
+                  <ZenButton variant="washi">{cancelLabel}</ZenButton>
                 </AlertDialogPrimitive.Cancel>
-                <AlertDialogPrimitive.Action
-                  className="zen-focus border border-[color:var(--zen-hanko)] bg-[color:var(--zen-hanko)] px-3 py-2 text-xs text-white"
-                  onClick={onConfirm}
-                >
-                  {confirmLabel}
+                <AlertDialogPrimitive.Action asChild>
+                  <ZenButton variant="hanko" onClick={onConfirm}>{confirmLabel}</ZenButton>
                 </AlertDialogPrimitive.Action>
               </div>
             </m.div>
