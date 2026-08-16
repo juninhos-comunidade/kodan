@@ -67,6 +67,54 @@ test("oferece o próximo desafio avaliável depois do feedback", () => {
   expect(markup).not.toContain("Este componente apresenta comportamento incorreto");
 });
 
+test("volta ao catálogo sem chamar um item editorial de próximo desafio", () => {
+  const markup = renderToStaticMarkup(
+    <TrainArenaClient
+      id="unico-avaliavel"
+      initialChallenge={{
+        id: "unico-avaliavel",
+        title: "Único diagnóstico avaliável",
+        difficulty: "EASY",
+        recommendedElo: 1000,
+        code: "const unico = true;",
+        question: "Explique.",
+        evaluationAvailable: true,
+        tags: "react",
+      }}
+      nextChallenge={null}
+      isAuthenticated
+      initialSession={{
+        phase: "feedback",
+        showComparison: false,
+        result: {
+          score: 8,
+          eloChange: 12,
+          isFirstAttempt: true,
+          attemptNumber: 1,
+          status: "SOLVED",
+          canRetry: false,
+          canRevealSolution: false,
+          remainingEvaluatedAttempts: 0,
+          nextEloPotentialPercent: 0,
+          eloFinalized: true,
+          feedback: {
+            score: 8,
+            summary: "Bom diagnóstico.",
+            strengths: ["Identificou a causa."],
+            blindspots: [],
+            seniorSolution: "",
+          },
+        },
+      }}
+      initialUserAnswer="A causa é o efeito."
+    />,
+  );
+
+  expect(markup).toContain('href="/desafios"');
+  expect(markup).toContain("Explorar catálogo");
+  expect(markup).not.toContain("Escolher próximo desafio");
+});
+
 test("bloqueia acesso direto a um desafio em revisão sem registrar início", () => {
   const markup = renderToStaticMarkup(
     <TrainArenaClient

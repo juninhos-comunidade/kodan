@@ -1220,7 +1220,9 @@ function FeedbackPanel({
   return (
     <section className="challengers-panel flex min-h-0 flex-col overflow-hidden rounded-[10px] border">
       <div className="min-h-0 flex-1 overflow-auto px-6 py-5">
-        {firstFeedbackCelebrated ? <FirstFeedbackCelebration /> : null}
+        {firstFeedbackCelebrated ? (
+          <FirstFeedbackCelebration hasNextChallenge={Boolean(nextChallenge)} />
+        ) : null}
         <div className="grid gap-3 sm:grid-cols-2">
           <FeedbackMetric
             label="Avaliação final"
@@ -1373,7 +1375,7 @@ function FeedbackPanel({
         ) : (
           <Link href="/desafios" className="flex-1">
             <Button className="h-10 w-full rounded-[8px] border-[color:var(--challengers-blue)] bg-[var(--challengers-blue)] text-[oklch(99%_0.003_248)] hover:bg-[var(--challengers-blue-strong)]">
-              Escolher próximo desafio
+              Explorar catálogo
             </Button>
           </Link>
         )}
