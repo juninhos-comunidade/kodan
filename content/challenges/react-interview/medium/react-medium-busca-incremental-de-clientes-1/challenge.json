@@ -4,6 +4,7 @@
   "difficulty": "MEDIUM",
   "recommendedElo": 1350,
   "question": "Cenário de entrevista: a busca incremental de clientes dispara requisições continuamente e a lista apresenta inconsistências depois de reordenações.\nExplique a causa do ciclo de requisições e identifique pelo menos três problemas independentes no código.\nCubra a dependência instável do efeito, a mutação durante a ordenação e a chave usada na lista.\nDepois proponha uma ordem de correção com justificativa técnica.",
+  "rubricFile": "rubric.json",
   "tags": [
     "interview",
     "react",

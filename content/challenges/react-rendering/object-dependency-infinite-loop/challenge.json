@@ -4,6 +4,7 @@
   "difficulty": "EASY",
   "recommendedElo": 1200,
   "question": "Por que este componente entra em um loop infinito de requisições de rede? Mapeie a causa base e forneça a solução.",
+  "rubricFile": "rubric.json",
   "tags": [
     "useEffect",
     "infinite-loop",

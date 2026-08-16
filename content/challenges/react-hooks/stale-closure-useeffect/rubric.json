@@ -1,9 +1,9 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "questionKind": "debugging",
-  "centralAnswer": "O callback do intervalo foi criado pelo efeito da montagem e mantém o count inicial em sua closure. Como o efeito não é recriado, cada tick executa setCount(0 + 1). A correção deve ler o estado atual com uma atualização funcional ou recriar corretamente o intervalo quando count mudar, sempre preservando o cleanup.",
+  "centralAnswer": "O callback do intervalo foi criado pelo efeito da montagem e mantém o count inicial em sua closure. Como o efeito não é recriado, cada tick executa setCount(0 + 1). A resposta completa deve apresentar as duas correções pedidas: ler o estado atual com uma atualização funcional e, como alternativa, recriar corretamente o intervalo quando count mudar, sempre preservando o cleanup.",
   "evaluatorNotes": [
-    "Aceite tanto a atualização funcional quanto a dependência count com cleanup como soluções válidas.",
+    "Para aprovação, exija as duas formas pedidas no enunciado: atualização funcional e dependência count com cleanup.",
     "Não exija o termo literal stale closure se a captura do valor inicial for explicada corretamente.",
     "Uma correção sem explicação da captura obsoleta não demonstra a causa raiz."
   ],
@@ -31,7 +31,7 @@
     },
     {
       "id": "dependency-with-cleanup",
-      "importance": "complementary",
+      "importance": "critical",
       "internalDescription": "Adicionar count às dependências também funciona se cada intervalo anterior for limpo antes da recriação.",
       "publicLabel": "A recriação controlada do intervalo com cleanup."
     }

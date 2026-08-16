@@ -15,7 +15,7 @@ Problemas de base:
 ### Exemplo de correções críticas
 ```tsx
 useEffect(() => {
-  const socket = new WebSocket(`wss://example.com/${item.api}/${workspaceId}`);
+  const socket = new WebSocket(`wss://example.com/operations/${workspaceId}`);
   const onMessage = (event: MessageEvent) => {
     const payload = JSON.parse(event.data) as { type: string; row?: Row };
     setRows(prev => {
