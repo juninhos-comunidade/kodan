@@ -7,23 +7,15 @@ import * as pageModule from "./page";
 const HomePage = pageModule.default;
 
 describe("landing pública", () => {
-  test("contextualiza o produto antes de entrar no dojo", () => {
-    const markup = renderToStaticMarkup(<HomePage />);
-
-    expect(markup).toContain("Treine o raciocínio");
-    expect(markup).toContain("Começar diagnóstico");
-    expect(markup).toContain("Explorar desafios");
-    expect(markup).toContain("data-landing-cta");
-    expect(markup).not.toContain("NEXT_REDIRECT");
+  test("redireciona diretamente para a entrada do produto", () => {
+    expect(() => renderToStaticMarkup(<HomePage />)).toThrow("NEXT_REDIRECT");
   });
 
-  test("publica metadados sociais completos", () => {
+  test("mantém metadados básicos na rota de entrada", () => {
     expect(pageModule.metadata).toBeTruthy();
     if (!("metadata" in pageModule) || !pageModule.metadata) return;
     expect(pageModule.metadata.title).toBeTruthy();
     expect(pageModule.metadata.description).toBeTruthy();
-    expect(pageModule.metadata.openGraph).toBeTruthy();
-    expect(pageModule.metadata.twitter).toBeTruthy();
   });
 });
 
