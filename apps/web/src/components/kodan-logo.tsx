@@ -1,8 +1,9 @@
 import Image from "next/image";
 
-import logoLight from "@/assets/kodan_icone_claro.svg";
-import logoDark from "@/assets/kodan_icone_escuro.svg";
 import { cn } from "@kodan/ui/lib/utils";
+
+const logoLight = "/brand/kodan_icone_claro.svg";
+const logoDark = "/brand/kodan_icone_escuro.svg";
 
 const MARK_SIZE = {
   sm: "size-8",

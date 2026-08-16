@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 
 import { ZenButton } from "@kodan/ui/components/zen";
 
+const logoLight = "/brand/kodan_icone_claro.svg";
+
 export default function AuthLayout({
   children,
 }: {
@@ -84,7 +86,7 @@ export default function AuthLayout({
           className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
         >
           <Image
-            src="/brand/kodan_claro.svg"
+            src={logoLight}
             alt=""
             width={330}
             height={320}
