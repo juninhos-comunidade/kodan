@@ -1,7 +1,9 @@
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { parseAuthCompletionParams } from "@/lib/auth-navigation";
-import { AuthCompletionClient } from "./auth-completion-client";
+import { getRuntimeSession } from "@/lib/runtime-data";
+import { recordAnonymousProductEvent } from "@/server/api/service";
 
 export default async function AuthCompletedPage({
   searchParams,
@@ -17,12 +19,11 @@ export default async function AuthCompletedPage({
   });
   if (!parsed) redirect("/inicio");
 
-  return (
-    <AuthCompletionClient
-      callbackURL={parsed.callbackURL}
-      event={parsed.event}
-    />
-  );
+  const session = await getRuntimeSession(await headers());
+  if (!session?.user) redirect("/inicio");
+
+  await recordAnonymousProductEvent(parsed.event);
+  redirect(parsed.callbackURL);
 }
 
 function readParam(value: string | string[] | undefined) {
