@@ -4,11 +4,20 @@ import "../index.css";
 import { AppShell } from "../components/app-shell";
 import Providers from "../components/providers";
 import { APP_DESCRIPTION, APP_LOCALE } from "../content/public-promises";
+import { siteUrl } from "../lib/site-url";
 import { getCurrentUser } from "../server/api/service";
 
 export const metadata: Metadata = {
-  title: "Kodan",
+  metadataBase: siteUrl,
+  title: {
+    default: "Kodan",
+    template: "%s | Kodan",
+  },
   description: APP_DESCRIPTION,
+  applicationName: "Kodan",
+  authors: [{ name: "Kodan" }],
+  creator: "Kodan",
+  category: "education",
 };
 
 export default async function RootLayout({
