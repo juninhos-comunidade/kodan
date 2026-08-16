@@ -21,7 +21,7 @@ import {
   getSafeCallbackPath,
   requiresEmailVerification,
 } from "@/lib/auth-navigation";
-import { rememberPendingVerificationEmail } from "../verificar-email/verification-email-form";
+import { rememberPendingVerificationEmail } from "../verificar-email/verification-email-utils";
 import { SocialLoginSection } from "./social-login-section";
 
 const loginSchema = z.object({

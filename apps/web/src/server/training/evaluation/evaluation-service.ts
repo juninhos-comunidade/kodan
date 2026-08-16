@@ -53,11 +53,12 @@ export function finalizeEvaluation(
     return invalidEvaluation();
   }
 
-  const criticalMisconceptionIds = new Set(
-    input.rubric.misconceptions
-      ?.filter((misconception) => misconception.severity === "critical")
-      .map((misconception) => misconception.id) ?? [],
-  );
+  const criticalMisconceptionIds = new Set<string>();
+  for (const misconception of input.rubric.misconceptions ?? []) {
+    if (misconception.severity === "critical") {
+      criticalMisconceptionIds.add(misconception.id);
+    }
+  }
   const score = calculateEvaluationScore({
     status: evaluation.status,
     centralCorrectness: evaluation.centralCorrectness,

@@ -8,8 +8,7 @@ import { Button } from "@/components/button";
 import { Input } from "@/components/input";
 import { Label } from "@/components/label";
 import { authClient } from "@/lib/auth-client";
-
-const PENDING_VERIFICATION_EMAIL_KEY = "kodan:pending-verification-email";
+import { PENDING_VERIFICATION_EMAIL_KEY } from "./verification-email-utils";
 
 export function VerificationEmailForm({
   enabled,
@@ -86,12 +85,4 @@ export function VerificationEmailForm({
       <Link href="/login" className="block text-center text-sm text-gray-500 hover:text-gray-800">Voltar ao login</Link>
     </div>
   );
-}
-
-export function rememberPendingVerificationEmail(email: string) {
-  try {
-    window.sessionStorage.setItem(PENDING_VERIFICATION_EMAIL_KEY, email);
-  } catch {
-    // A tela de verificação permite informar o endereço novamente.
-  }
 }

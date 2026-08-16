@@ -1,22 +1,12 @@
 "use client";
 
-import { createContext } from "react";
 import type { ReactNode } from "react";
-
-type Session = {
-  user: {
-    id: string;
-    name: string;
-    email: string;
-  };
-} | null;
+import { SessionContext, type Session } from "./session-context";
 
 type SessionProviderProps = {
   children: ReactNode;
   session: Session;
 };
-
-export const SessionContext = createContext<Session>(null);
 
 export function SessionProvider({
   children,

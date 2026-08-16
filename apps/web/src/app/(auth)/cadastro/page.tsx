@@ -23,7 +23,7 @@ import {
   getPostSignupPath,
   getSafeCallbackPath,
 } from "@/lib/auth-navigation";
-import { rememberPendingVerificationEmail } from "../verificar-email/verification-email-form";
+import { rememberPendingVerificationEmail } from "../verificar-email/verification-email-utils";
 
 const registerSchema = z
   .object({

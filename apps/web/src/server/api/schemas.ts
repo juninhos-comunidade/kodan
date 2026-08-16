@@ -21,7 +21,7 @@ export {
   difficultySchema,
 } from "./challenge-contract";
 
-export const apiErrorSchema = z.object({
+const apiErrorSchema = z.object({
   success: z.literal(false),
   error: z.string(),
   code: z.literal("EVALUATION_UNAVAILABLE").optional(),
@@ -135,12 +135,12 @@ export const attemptSchema = z.object({
   challenge: challengeSummarySchema.omit({ attempts: true }).optional(),
 });
 
-export const currentUserResponseSchema = z.object({
+const currentUserResponseSchema = z.object({
   success: z.literal(true),
   data: userSchema,
 });
 
-export const challengesResponseSchema = z.object({
+const challengesResponseSchema = z.object({
   success: z.literal(true),
   data: z.object({
     items: z.array(challengeSummarySchema),
@@ -152,12 +152,12 @@ export const challengesResponseSchema = z.object({
   }),
 });
 
-export const challengeResponseSchema = z.object({
+const challengeResponseSchema = z.object({
   success: z.literal(true),
   data: challengeDetailSchema,
 });
 
-export const submitAttemptResponseSchema = z.object({
+const submitAttemptResponseSchema = z.object({
   success: z.literal(true),
   data: z.object({
     score: z.number().min(0).max(10),
@@ -180,7 +180,7 @@ export const submitAttemptResponseSchema = z.object({
   }),
 });
 
-export const attemptsResponseSchema = z.object({
+const attemptsResponseSchema = z.object({
   success: z.literal(true),
   data: z.array(attemptSchema),
 });

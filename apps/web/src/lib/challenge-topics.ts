@@ -63,14 +63,6 @@ export function getChallengeTopic(topicKey: ChallengeTopicKey) {
   return CHALLENGE_TOPICS.find((topic) => topic.key === topicKey) ?? CHALLENGE_TOPICS[0]!;
 }
 
-export function getChallengeTopicLabel(topicKey: ChallengeTopicKey) {
-  return getChallengeTopic(topicKey).label;
-}
-
-export function getChallengeTopicDescription(topicKey: ChallengeTopicKey) {
-  return getChallengeTopic(topicKey).description;
-}
-
 function matchesAnyTopicToken(searchable: string[], tokens: readonly string[]) {
   return searchable.some((entry) => tokens.some((token) => entry.includes(token)));
 }

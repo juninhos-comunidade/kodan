@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { parseAuthCompletionParams } from "@/lib/auth-navigation";
+import { getSafeCallbackPath, parseAuthCompletionParams } from "@/lib/auth-navigation";
 import { getRuntimeSession } from "@/lib/runtime-data";
 import { recordAnonymousProductEvent } from "@/server/api/service";
 
@@ -18,12 +18,13 @@ export default async function AuthCompletedPage({
     source: readParam(params.source),
   });
   if (!parsed) redirect("/inicio");
+  const safeCallbackURL = getSafeCallbackPath(parsed.callbackURL, "/inicio");
 
   const session = await getRuntimeSession(await headers());
   if (!session?.user) redirect("/inicio");
 
   await recordAnonymousProductEvent(parsed.event);
-  redirect(parsed.callbackURL);
+  redirect(safeCallbackURL);
 }
 
 function readParam(value: string | string[] | undefined) {

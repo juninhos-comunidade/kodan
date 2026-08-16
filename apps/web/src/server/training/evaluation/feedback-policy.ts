@@ -24,20 +24,17 @@ export function buildPublicFeedback({
       assessment.state,
     ]),
   );
-  const strengths = rubric.concepts
-    .filter(
-      (concept) =>
-        concept.importance !== "complementary" &&
-        assessmentByConceptId.get(concept.id) === "MATCHED",
-    )
-    .map((concept) => concept.publicLabel);
-  const blindspots = rubric.concepts
-    .filter(
-      (concept) =>
-        concept.importance !== "complementary" &&
-        assessmentByConceptId.get(concept.id) !== "MATCHED",
-    )
-    .map(() => "???");
+  const strengths: string[] = [];
+  const blindspots: string[] = [];
+  for (const concept of rubric.concepts) {
+    if (concept.importance === "complementary") continue;
+
+    if (assessmentByConceptId.get(concept.id) === "MATCHED") {
+      strengths.push(concept.publicLabel);
+    } else {
+      blindspots.push("???");
+    }
+  }
   const points: NonNullable<PublicAttemptFeedback["points"]> = [];
   for (const concept of rubric.concepts) {
     const state = assessmentByConceptId.get(concept.id);
@@ -51,16 +48,23 @@ export function buildPublicFeedback({
       points.push({ kind: "HIDDEN", slot: `hidden-${points.length + 1}`, label: "???" });
     }
   }
-  const reflectionPrompt = rubric.concepts
-    .filter((concept) => concept.importance !== "complementary")
-    .sort((left, right) =>
-      importancePriority(left.importance) - importancePriority(right.importance),
-    )
-    .find(
-      (concept) =>
-        assessmentByConceptId.get(concept.id) !== "MATCHED" &&
-        concept.reflectionPrompt,
-    )?.reflectionPrompt;
+  let reflectionPrompt: string | undefined;
+  let reflectionPriority = Number.POSITIVE_INFINITY;
+  for (const concept of rubric.concepts) {
+    if (
+      concept.importance === "complementary" ||
+      assessmentByConceptId.get(concept.id) === "MATCHED" ||
+      !concept.reflectionPrompt
+    ) {
+      continue;
+    }
+
+    const priority = importancePriority(concept.importance);
+    if (priority < reflectionPriority) {
+      reflectionPriority = priority;
+      reflectionPrompt = concept.reflectionPrompt;
+    }
+  }
 
   return {
     schemaVersion: 2,
@@ -93,6 +97,12 @@ export function buildDetailedReview({
   const requiredConcepts = rubric.concepts.filter(
     (concept) => concept.importance !== "complementary",
   );
+  const blindspots: string[] = [];
+  for (const concept of requiredConcepts) {
+    if (assessmentByConceptId.get(concept.id) !== "MATCHED") {
+      blindspots.push(concept.publicLabel);
+    }
+  }
   const points: DetailedAttemptReview["points"] = requiredConcepts.map(
     (concept) => ({
       kind: assessmentByConceptId.get(concept.id) === "MATCHED"
@@ -102,28 +112,35 @@ export function buildDetailedReview({
       label: concept.publicLabel,
     }),
   );
-  points.push(
-    ...rubric.concepts
-      .filter((concept) => concept.importance === "complementary")
-      .map((concept) => ({
-        kind: "COMPLEMENT" as const,
+  for (const concept of rubric.concepts) {
+    if (concept.importance === "complementary") {
+      points.push({
+        kind: "COMPLEMENT",
         conceptId: concept.id,
         label: concept.publicLabel,
-      })),
-  );
+      });
+    }
+  }
 
   const misconceptionIds = new Set(evaluation.misconceptionIds);
   return {
     points,
-    blindspots: requiredConcepts
-      .filter((concept) => assessmentByConceptId.get(concept.id) !== "MATCHED")
-      .map((concept) => concept.publicLabel),
-    corrections: (rubric.misconceptions ?? [])
-      .filter((misconception) => misconceptionIds.has(misconception.id))
-      .flatMap((misconception) =>
-        misconception.publicCorrection ? [misconception.publicCorrection] : []
-      ),
+    blindspots,
+    corrections: getCorrections(rubric.misconceptions ?? [], misconceptionIds),
   };
+}
+
+function getCorrections(
+  misconceptions: NonNullable<ChallengeEvaluationRubric["misconceptions"]>,
+  misconceptionIds: Set<string>,
+) {
+  const corrections: string[] = [];
+  for (const misconception of misconceptions) {
+    if (misconceptionIds.has(misconception.id) && misconception.publicCorrection) {
+      corrections.push(misconception.publicCorrection);
+    }
+  }
+  return corrections;
 }
 
 function importancePriority(
