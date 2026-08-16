@@ -9,11 +9,14 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { ZenButton } from "@kodan/ui/components/zen";
+import { recordAuthCompleted } from "@/app/actions";
 import { useAuthActionFeedback } from "@/components/auth-action-feedback";
 import { AuthInput } from "@/components/auth-input";
 import { AuthPage } from "@/components/auth-page";
 import { authClient } from "@/lib/auth-client";
 import {
+  getAuthCompletionHref,
+  getAuthEventSource,
   getRegisterHref,
   getSafeCallbackPath,
   requiresEmailVerification,
@@ -36,6 +39,10 @@ export function LoginForm() {
     searchParams.get("callbackURL"),
     "/inicio",
   );
+  const authSource = getAuthEventSource(
+    searchParams.get("source"),
+    callbackURL,
+  );
   const { startAuthAction, finishAuthAction, showAuthError } =
     useAuthActionFeedback();
   const {
@@ -51,7 +58,11 @@ export function LoginForm() {
       {
         onSuccess: () => {
           finishAuthAction();
-          router.replace(callbackURL);
+          void recordAuthCompleted("EMAIL", "LOGIN", authSource)
+            .catch(() => {
+              // A autenticação concluída não depende da telemetria agregada.
+            })
+            .finally(() => router.replace(callbackURL));
         },
         onError: (context) => {
           finishAuthAction();
@@ -79,8 +90,14 @@ export function LoginForm() {
   async function signInWithProvider(provider: "github" | "google") {
     const providerName = provider === "github" ? "GitHub" : "Google";
     startAuthAction(`Redirecionando para o ${providerName}…`);
+    const completionURL = getAuthCompletionHref({
+      callbackURL,
+      provider,
+      journey: "login",
+      source: authSource.toLowerCase() as Lowercase<typeof authSource>,
+    });
     await authClient.signIn.social(
-      { provider, callbackURL },
+      { provider, callbackURL: completionURL },
       {
         onError: (context) => {
           finishAuthAction();
@@ -94,7 +111,11 @@ export function LoginForm() {
   }
 
   return (
-    <AuthPage view="login" callbackURL={callbackURL}>
+    <AuthPage
+      view="login"
+      callbackURL={callbackURL}
+      source={authSource === "LANDING" ? "landing" : undefined}
+    >
       <div className="mx-auto grid max-w-[45rem] items-center gap-5 md:grid-cols-[1fr_2rem_1fr]">
         <form
           className="space-y-3"
@@ -179,7 +200,10 @@ export function LoginForm() {
       <p className="mt-3.5 text-center font-mono text-[0.78125rem] text-[#f5f0e6]/55">
         Ainda não é Praticante?{" "}
         <Link
-          href={getRegisterHref(callbackURL)}
+          href={getRegisterHref(
+            callbackURL,
+            authSource === "LANDING" ? "landing" : undefined,
+          )}
           className="text-[#c7a45d] underline underline-offset-3"
         >
           Criar conta

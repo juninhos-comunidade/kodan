@@ -3,6 +3,10 @@ import { beforeEach, describe, expect, mock, test } from "bun:test";
 const serviceCalls = {
   getCurrentUser: mock(async () => ({ success: true })),
   listCurrentUserAttempts: mock(async () => ({ success: true })),
+  recordAnonymousProductEvent: mock(async () => ({
+    success: true,
+    recorded: true,
+  })),
   recordChallengeFeedbackViewed: mock(async () => ({ success: true })),
   revealChallengeSolution: mock(async () => ({ success: true })),
   submitChallengeAttempt: mock(async () => ({ success: true })),
@@ -24,6 +28,7 @@ const actionsModule = await import("./actions");
 const {
   getAttemptsHistory,
   getLocalUser,
+  recordAuthCompleted,
   recordFeedbackViewed,
   revealSolution,
   submitAttempt,
@@ -44,6 +49,7 @@ describe("dashboard server actions", () => {
       () => submitAttempt("challenge-1", "Uma resposta suficientemente detalhada."),
       () => revealSolution("challenge-1"),
       () => recordFeedbackViewed("challenge-1", 1, "UNDER_10_MIN"),
+      () => recordAuthCompleted("GITHUB", "LOGIN", "LANDING"),
       () => getAttemptsHistory(),
     ];
 
@@ -57,7 +63,25 @@ describe("dashboard server actions", () => {
     expect(serviceCalls.submitChallengeAttempt).not.toHaveBeenCalled();
     expect(serviceCalls.revealChallengeSolution).not.toHaveBeenCalled();
     expect(serviceCalls.recordChallengeFeedbackViewed).not.toHaveBeenCalled();
+    expect(serviceCalls.recordAnonymousProductEvent).not.toHaveBeenCalled();
     expect(serviceCalls.listCurrentUserAttempts).not.toHaveBeenCalled();
+  });
+
+  test("registra a conclusão da autenticação somente com sessão válida", async () => {
+    getRuntimeSession.mockResolvedValueOnce({
+      user: { id: "user-1" },
+    } as never);
+
+    await expect(
+      recordAuthCompleted("GOOGLE", "SIGNUP", "CHALLENGE"),
+    ).resolves.toEqual({ success: true, recorded: true });
+
+    expect(serviceCalls.recordAnonymousProductEvent).toHaveBeenCalledWith({
+      name: "auth_completed",
+      provider: "GOOGLE",
+      journey: "SIGNUP",
+      source: "CHALLENGE",
+    });
   });
 
   test("does not treat the local Dojo gate as an authenticated session", async () => {

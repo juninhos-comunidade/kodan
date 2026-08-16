@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
+import * as authNavigation from "./auth-navigation";
 import {
   getLoginHref,
   getPostSignupPath,
@@ -54,5 +55,62 @@ describe("auth navigation", () => {
   test("reconhece a resposta de login que exige verificação", () => {
     expect(requiresEmailVerification(403)).toBe(true);
     expect(requiresEmailVerification(401)).toBe(false);
+  });
+
+  test("monta callback social intermediário sem aceitar retorno externo", () => {
+    expect(typeof authNavigation.getAuthCompletionHref).toBe("function");
+    if (typeof authNavigation.getAuthCompletionHref !== "function") return;
+
+    expect(String(authNavigation.getAuthCompletionHref({
+      callbackURL: "/treinar/challenge-1",
+      provider: "github",
+      journey: "login",
+      source: "challenge",
+    }))).toBe(
+      "/auth/concluido?callbackURL=%2Ftreinar%2Fchallenge-1&provider=GITHUB&journey=LOGIN&source=CHALLENGE",
+    );
+    expect(String(authNavigation.getAuthCompletionHref({
+      callbackURL: "https://evil.example",
+      provider: "google",
+      journey: "signup",
+      source: "landing",
+    }))).toContain("callbackURL=%2Finicio");
+  });
+
+  test("classifica a origem da autenticação com vocabulário fechado", () => {
+    expect(typeof authNavigation.getAuthEventSource).toBe("function");
+    if (typeof authNavigation.getAuthEventSource !== "function") return;
+
+    expect(authNavigation.getAuthEventSource("landing", "/inicio")).toBe("LANDING");
+    expect(authNavigation.getAuthEventSource(null, "/treinar/challenge-1"))
+      .toBe("CHALLENGE");
+    expect(authNavigation.getAuthEventSource("anything", "/inicio"))
+      .toBe("DIRECT");
+  });
+
+  test("valida o retorno OAuth antes de registrar o evento", () => {
+    expect(typeof authNavigation.parseAuthCompletionParams).toBe("function");
+    if (typeof authNavigation.parseAuthCompletionParams !== "function") return;
+
+    expect(authNavigation.parseAuthCompletionParams({
+      callbackURL: "/inicio",
+      provider: "GOOGLE",
+      journey: "SIGNUP",
+      source: "LANDING",
+    })).toEqual({
+      callbackURL: "/inicio",
+      event: {
+        name: "auth_completed",
+        provider: "GOOGLE",
+        journey: "SIGNUP",
+        source: "LANDING",
+      },
+    });
+    expect(authNavigation.parseAuthCompletionParams({
+      callbackURL: "https://evil.example",
+      provider: "custom",
+      journey: "LOGIN",
+      source: "DIRECT",
+    })).toBeNull();
   });
 });

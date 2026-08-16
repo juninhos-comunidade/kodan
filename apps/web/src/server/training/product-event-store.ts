@@ -8,7 +8,20 @@ type FeedbackViewedInput = {
 };
 
 export type ProductEventInput =
-  | { name: "home_viewed" }
+  | { name: "home_viewed" | "landing_viewed" }
+  | {
+      name: "landing_cta_clicked";
+      contextBucket:
+        | "START_DIAGNOSIS"
+        | "EXPLORE_CATALOG"
+        | "CREATE_ACCOUNT";
+    }
+  | {
+      name: "auth_completed";
+      provider: "EMAIL" | "GITHUB" | "GOOGLE";
+      journey: "LOGIN" | "SIGNUP";
+      source: "LANDING" | "CHALLENGE" | "DIRECT";
+    }
   | {
       name:
         | "challenge_viewed"
@@ -69,6 +82,15 @@ const evaluationFailureBuckets = [
 ] as const satisfies readonly EvaluationFailureReason[];
 
 const productEventPolicy = {
+  landing_viewed: { requiresChallenge: false, contextBuckets: ["NONE"] },
+  landing_cta_clicked: {
+    requiresChallenge: false,
+    contextBuckets: [
+      "START_DIAGNOSIS",
+      "EXPLORE_CATALOG",
+      "CREATE_ACCOUNT",
+    ],
+  },
   home_viewed: { requiresChallenge: false, contextBuckets: ["NONE"] },
   challenge_viewed: { requiresChallenge: true, contextBuckets: ["NONE"] },
   diagnosis_started: { requiresChallenge: true, contextBuckets: ["NONE"] },
@@ -86,7 +108,22 @@ const productEventPolicy = {
     requiresChallenge: false,
     contextBuckets: ["D1", "D2_TO_D6", "D7_PLUS"],
   },
+  auth_completed: {
+    requiresChallenge: false,
+    contextBuckets: [
+      "LOGIN_EMAIL",
+      "LOGIN_GITHUB",
+      "LOGIN_GOOGLE",
+      "SIGNUP_EMAIL",
+      "SIGNUP_GITHUB",
+      "SIGNUP_GOOGLE",
+    ],
+  },
 } as const;
+
+const authProviders = ["EMAIL", "GITHUB", "GOOGLE"] as const;
+const authJourneys = ["LOGIN", "SIGNUP"] as const;
+const authSources = ["LANDING", "CHALLENGE", "DIRECT"] as const;
 
 type ProductEventPersistence = {
   $transaction<T>(operation: (transaction: ProductEventTransaction) => Promise<T>): Promise<T>;
@@ -172,9 +209,21 @@ export async function recordProductEvent(
   if (typeof name !== "string" || !(name in productEventPolicy)) return false;
   const eventName = name as keyof typeof productEventPolicy;
   const policy = productEventPolicy[eventName];
-  const contextBucket = typeof rawInput.contextBucket === "string"
+  let scopeKey = "global";
+  let contextBucket = typeof rawInput.contextBucket === "string"
     ? rawInput.contextBucket
     : "NONE";
+  if (eventName === "auth_completed") {
+    if (
+      !includes(authProviders, rawInput.provider) ||
+      !includes(authJourneys, rawInput.journey) ||
+      !includes(authSources, rawInput.source)
+    ) {
+      return false;
+    }
+    scopeKey = rawInput.source;
+    contextBucket = `${rawInput.journey}_${rawInput.provider}`;
+  }
   if (!(policy.contextBuckets as readonly string[]).includes(contextBucket)) {
     return false;
   }
@@ -191,11 +240,12 @@ export async function recordProductEvent(
       where: { id: challengeId, promoted: true },
     });
     if (challengeExists !== 1) return false;
+    scopeKey = challengeId;
   }
 
   const aggregate = {
     name: eventName,
-    scopeKey: challengeId ?? "global",
+    scopeKey,
     contextBucket,
     day: toUtcDay(now),
   } satisfies AggregateIdentity;
@@ -205,6 +255,92 @@ export async function recordProductEvent(
     update: { count: { increment: 1 } },
   });
   return true;
+}
+
+const funnelStepNames = [
+  "landing_viewed",
+  "landing_cta_clicked",
+  "home_viewed",
+  "challenge_viewed",
+  "diagnosis_started",
+  "auth_gate_viewed",
+  "auth_completed",
+  "first_feedback_viewed",
+  "next_challenge_started",
+] as const;
+
+type FunnelStepName = typeof funnelStepNames[number];
+
+export function buildProductFunnelReport(
+  rows: ReadonlyArray<{ name: string; count: number }>,
+) {
+  const counts = new Map<FunnelStepName, number>(
+    funnelStepNames.map((name) => [name, 0]),
+  );
+  for (const row of rows) {
+    if (!includes(funnelStepNames, row.name)) continue;
+    counts.set(row.name, (counts.get(row.name) ?? 0) + row.count);
+  }
+
+  let previousCount: number | null = null;
+  const steps = funnelStepNames.map((name) => {
+    const count = counts.get(name) ?? 0;
+    const conversionFromPrevious = previousCount && previousCount > 0
+      ? Math.round((count / previousCount) * 10_000) / 100
+      : null;
+    previousCount = count;
+    return { name, count, conversionFromPrevious };
+  });
+
+  return {
+    kind: "DIRECTIONAL_EVENT_VOLUME" as const,
+    note:
+      "Este relatório usa volumes agregados de eventos e não representa uma coorte de usuários únicos.",
+    steps,
+  };
+}
+
+export function formatProductFunnelReport(
+  report: ReturnType<typeof buildProductFunnelReport>,
+) {
+  const header = ["evento", "contagem", "conversão anterior"].join("\t");
+  const lines = report.steps.map((step) => [
+    step.name,
+    String(step.count),
+    step.conversionFromPrevious === null
+      ? "n/a"
+      : `${step.conversionFromPrevious.toFixed(2)}%`,
+  ].join("\t"));
+  return [header, ...lines, "", report.note].join("\n");
+}
+
+type ProductFunnelPersistence = {
+  productEventAggregate: {
+    findMany(input: {
+      where: {
+        name: { in: readonly string[] };
+        day: { gte: Date; lt: Date };
+      };
+      select: { name: true; count: true };
+    }): Promise<Array<{ name: string; count: number }>>;
+  };
+};
+
+export async function queryProductFunnel(
+  persistence: ProductFunnelPersistence,
+  period: { from: Date; to: Date },
+) {
+  if (period.from >= period.to) {
+    throw new Error("O início do período deve ser anterior ao fim.");
+  }
+  const rows = await persistence.productEventAggregate.findMany({
+    where: {
+      name: { in: funnelStepNames },
+      day: { gte: period.from, lt: period.to },
+    },
+    select: { name: true, count: true },
+  });
+  return buildProductFunnelReport(rows);
 }
 
 export function toEvaluationLatencyBucket(latencyMs: number) {
@@ -219,4 +355,11 @@ function toUtcDay(now: Date) {
     now.getUTCMonth(),
     now.getUTCDate(),
   ));
+}
+
+function includes<const T extends readonly string[]>(
+  values: T,
+  value: unknown,
+): value is T[number] {
+  return typeof value === "string" && (values as readonly string[]).includes(value);
 }

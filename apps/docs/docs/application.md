@@ -186,3 +186,15 @@ As rotas `/api/*` não são páginas. Elas são interfaces HTTP para integraçõ
 - `/api/auth/*` é fornecida pelo Better Auth.
 
 > O contrato público de detalhe não expõe a solução de referência. Ela só aparece no resultado quando a sessão é resolvida ou quando o praticante escolhe revelá-la.
+
+## Leitura do funil de produto
+
+O relatório operacional usa somente os agregados de baixa cardinalidade já gravados no banco. Para consultar os últimos 30 dias:
+
+```bash
+bun run product-events:funnel --days=30
+```
+
+O resultado separa entrada pela landing, CTAs, início, abertura e início de desafio, bloqueio de autenticação, autenticação concluída, primeiro feedback e próximo desafio. `auth_completed` é registrado por uma ação protegida por sessão; ele não é aceito pelo endpoint público de eventos.
+
+As contagens representam volume direcional de eventos, não conversão por coorte nem usuários únicos. Para uma taxa de conversão real, será necessário definir uma política de identidade consentida antes de ampliar a coleta.

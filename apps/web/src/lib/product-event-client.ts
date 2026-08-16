@@ -13,6 +13,7 @@ export async function sendProductEvent(
 ) {
   const response = await fetchImplementation("/api/product-events", {
     method: "POST",
+    keepalive: true,
     headers: { "content-type": "application/json" },
     body: JSON.stringify(event),
   });

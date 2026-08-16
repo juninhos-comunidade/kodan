@@ -1,6 +1,7 @@
 "use server";
 
 import { headers } from "next/headers";
+import { z } from "zod";
 
 import { isMockMode } from "@/lib/mock-mode";
 import { getRuntimeSession } from "@/lib/runtime-data";
@@ -8,11 +9,18 @@ import type { SessionAgeBucket } from "@/server/training/training-adapter";
 import {
   getCurrentUser,
   listCurrentUserAttempts,
+  recordAnonymousProductEvent,
   recordChallengeFeedbackViewed,
   revealChallengeSolution,
   submitChallengeAttempt,
   updateCurrentUserProfile,
 } from "@/server/api/service";
+
+const authCompletedSchema = z.strictObject({
+  provider: z.enum(["EMAIL", "GITHUB", "GOOGLE"]),
+  journey: z.enum(["LOGIN", "SIGNUP"]),
+  source: z.enum(["LANDING", "CHALLENGE", "DIRECT"]),
+});
 
 async function requireAuth() {
   if (isMockMode()) return;
@@ -61,6 +69,16 @@ export async function recordFeedbackViewed(
     attemptNumber,
     sessionAgeBucket,
   );
+}
+
+export async function recordAuthCompleted(
+  provider: "EMAIL" | "GITHUB" | "GOOGLE",
+  journey: "LOGIN" | "SIGNUP",
+  source: "LANDING" | "CHALLENGE" | "DIRECT",
+) {
+  await requireAuth();
+  const event = authCompletedSchema.parse({ provider, journey, source });
+  return recordAnonymousProductEvent({ name: "auth_completed", ...event });
 }
 
 export async function getAttemptsHistory() {

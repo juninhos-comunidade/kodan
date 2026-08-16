@@ -14,7 +14,7 @@ const copy: Record<
     eyebrow: "Dojo de leitura de código",
     headline: "Entre na sua conta",
     description:
-      "Centenas de exercícios de leitura, diagnóstico e explicação de código, com novos katas toda semana.",
+      "Continue seus exercícios de leitura, diagnóstico e explicação de código.",
   },
   signup: {
     eyebrow: "Novo praticante",
@@ -33,10 +33,12 @@ const copy: Record<
 export function AuthPage({
   view,
   callbackURL = "/inicio",
+  source,
   children,
 }: {
   view: AuthView;
   callbackURL?: string;
+  source?: "landing";
   children: ReactNode;
 }) {
   const content = copy[view];
@@ -44,12 +46,12 @@ export function AuthPage({
     {
       id: "login" as const,
       label: "Entrar",
-      href: getLoginHref(callbackURL) as Route,
+      href: getLoginHref(callbackURL, "login", source) as Route,
     },
     {
       id: "signup" as const,
       label: "Criar conta",
-      href: getRegisterHref(callbackURL) as Route,
+      href: getRegisterHref(callbackURL, source) as Route,
     },
     {
       id: "recover" as const,

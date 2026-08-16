@@ -53,7 +53,7 @@ export const listChallengesQuerySchema = z.object({
   offset: z.coerce.number().int().min(0).default(0),
 });
 
-const challengeProductEventSchema = z.object({
+const challengeProductEventSchema = z.strictObject({
   name: z.enum([
     "challenge_viewed",
     "diagnosis_started",
@@ -61,15 +61,24 @@ const challengeProductEventSchema = z.object({
     "next_challenge_started",
   ]),
   challengeId: z.string().trim().min(1).max(128),
-}).strict();
+});
 
 export const productEventSchema = z.discriminatedUnion("name", [
-  z.object({ name: z.literal("home_viewed") }).strict(),
+  z.strictObject({ name: z.literal("home_viewed") }),
+  z.strictObject({ name: z.literal("landing_viewed") }),
+  z.strictObject({
+    name: z.literal("landing_cta_clicked"),
+    contextBucket: z.enum([
+      "START_DIAGNOSIS",
+      "EXPLORE_CATALOG",
+      "CREATE_ACCOUNT",
+    ]),
+  }),
   challengeProductEventSchema,
-  z.object({
+  z.strictObject({
     name: z.literal("active_day"),
     contextBucket: z.enum(["D1", "D2_TO_D6", "D7_PLUS"]),
-  }).strict(),
+  }),
 ]);
 
 export const feedbackSchema = z.object({

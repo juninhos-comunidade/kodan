@@ -36,6 +36,7 @@ describe("sendProductEvent", () => {
 
     expect(fetchImplementation).toHaveBeenCalledWith("/api/product-events", {
       method: "POST",
+      keepalive: true,
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         name: "challenge_viewed",

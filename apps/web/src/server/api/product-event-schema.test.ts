@@ -12,6 +12,13 @@ describe("productEventSchema", () => {
       name: "active_day",
       contextBucket: "D7_PLUS",
     })).toEqual({ name: "active_day", contextBucket: "D7_PLUS" });
+    expect(productEventSchema.parse({
+      name: "landing_cta_clicked",
+      contextBucket: "START_DIAGNOSIS",
+    })).toEqual({
+      name: "landing_cta_clicked",
+      contextBucket: "START_DIAGNOSIS",
+    });
   });
 
   test("bloqueia saúde do avaliador e dimensões arbitrárias no endpoint público", () => {
@@ -23,6 +30,12 @@ describe("productEventSchema", () => {
     expect(productEventSchema.safeParse({
       name: "home_viewed",
       email: "user@example.com",
+    }).success).toBe(false);
+    expect(productEventSchema.safeParse({
+      name: "auth_completed",
+      provider: "GITHUB",
+      journey: "LOGIN",
+      source: "LANDING",
     }).success).toBe(false);
   });
 });

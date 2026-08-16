@@ -1029,6 +1029,45 @@
               "name": {
                 "type": "string",
                 "enum": [
+                  "landing_viewed"
+                ]
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "enum": [
+                  "landing_cta_clicked"
+                ]
+              },
+              "contextBucket": {
+                "type": "string",
+                "enum": [
+                  "START_DIAGNOSIS",
+                  "EXPLORE_CATALOG",
+                  "CREATE_ACCOUNT"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "contextBucket"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "enum": [
                   "challenge_viewed",
                   "diagnosis_started",
                   "auth_gate_viewed",

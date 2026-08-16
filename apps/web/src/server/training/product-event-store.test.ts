@@ -1,5 +1,6 @@
 import { describe, expect, mock, test } from "bun:test";
 
+import * as productEventStore from "./product-event-store";
 import {
   recordFeedbackViewed,
   recordProductEvent,
@@ -203,5 +204,114 @@ describe("recordProductEvent", () => {
       { name: "arbitrary_event", contextBucket: "user@example.com" } as never,
     )).resolves.toBe(false);
     expect(upsert).not.toHaveBeenCalled();
+  });
+
+  test("agrega autenticação concluída por origem, jornada e provedor", async () => {
+    const upsert = mock(async () => ({ count: 1 }));
+    const persistence = {
+      challenge: { count: mock(async () => 0) },
+      productEventAggregate: { upsert },
+    };
+
+    const recorded = await recordProductEvent(persistence, {
+      name: "auth_completed",
+      provider: "GOOGLE",
+      journey: "SIGNUP",
+      source: "LANDING",
+    });
+
+    expect(recorded).toBe(true);
+    expect(upsert).toHaveBeenCalledWith(expect.objectContaining({
+      create: expect.objectContaining({
+        name: "auth_completed",
+        scopeKey: "LANDING",
+        contextBucket: "SIGNUP_GOOGLE",
+      }),
+    }));
+    expect(JSON.stringify(upsert.mock.calls)).not.toContain("userId");
+    expect(JSON.stringify(upsert.mock.calls)).not.toContain("email");
+  });
+
+  test("agrega a intenção do CTA da landing sem identificadores", async () => {
+    const upsert = mock(async () => ({ count: 1 }));
+    const persistence = {
+      challenge: { count: mock(async () => 0) },
+      productEventAggregate: { upsert },
+    };
+
+    const recorded = await recordProductEvent(persistence, {
+      name: "landing_cta_clicked",
+      contextBucket: "EXPLORE_CATALOG",
+    });
+
+    expect(recorded).toBe(true);
+    expect(upsert).toHaveBeenCalledWith(expect.objectContaining({
+      create: expect.objectContaining({
+        name: "landing_cta_clicked",
+        scopeKey: "global",
+        contextBucket: "EXPLORE_CATALOG",
+      }),
+    }));
+  });
+});
+
+describe("buildProductFunnelReport", () => {
+  test("soma os agregados e explicita que o funil é direcional", () => {
+    expect(typeof productEventStore.buildProductFunnelReport).toBe("function");
+    if (typeof productEventStore.buildProductFunnelReport !== "function") return;
+    const report = productEventStore.buildProductFunnelReport([
+      { name: "landing_viewed", count: 10 },
+      { name: "landing_viewed", count: 5 },
+      { name: "landing_cta_clicked", count: 6 },
+      { name: "auth_completed", count: 3 },
+      { name: "first_feedback_viewed", count: 2 },
+    ]);
+
+    expect(report.kind).toBe("DIRECTIONAL_EVENT_VOLUME");
+    expect(report.steps.find((step) => step.name === "landing_viewed")?.count)
+      .toBe(15);
+    expect(report.steps.find((step) => step.name === "auth_completed")?.count)
+      .toBe(3);
+    expect(report.note).toContain("não representa uma coorte");
+  });
+
+  test("consulta o período solicitado sem ler usuários ou tentativas", async () => {
+    expect(typeof productEventStore.queryProductFunnel).toBe("function");
+    if (typeof productEventStore.queryProductFunnel !== "function") return;
+    const findMany = mock(async () => [
+      { name: "landing_viewed", count: 4 },
+      { name: "auth_completed", count: 1 },
+    ]);
+    const from = new Date("2026-08-01T00:00:00.000Z");
+    const to = new Date("2026-08-17T00:00:00.000Z");
+
+    const report = await productEventStore.queryProductFunnel(
+      { productEventAggregate: { findMany } },
+      { from, to },
+    );
+
+    expect(findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ day: { gte: from, lt: to } }),
+    }));
+    expect(report.steps.find((step) => step.name === "auth_completed")?.count)
+      .toBe(1);
+    expect(JSON.stringify(findMany.mock.calls)).not.toContain("user");
+    expect(JSON.stringify(findMany.mock.calls)).not.toContain("attempt");
+  });
+
+  test("formata uma leitura de terminal com a ressalva metodológica", () => {
+    expect(typeof productEventStore.formatProductFunnelReport).toBe("function");
+    if (typeof productEventStore.formatProductFunnelReport !== "function") return;
+
+    const output = productEventStore.formatProductFunnelReport(
+      productEventStore.buildProductFunnelReport([
+        { name: "landing_viewed", count: 15 },
+        { name: "landing_cta_clicked", count: 6 },
+      ]),
+    );
+
+    expect(output).toContain("landing_viewed");
+    expect(output).toContain("15");
+    expect(output).toContain("não representa uma coorte");
   });
 });

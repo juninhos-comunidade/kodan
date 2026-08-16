@@ -11,11 +11,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
 import { ZenButton } from "@kodan/ui/components/zen";
+import { recordAuthCompleted } from "@/app/actions";
 import { useAuthActionFeedback } from "@/components/auth-action-feedback";
 import { AuthInput } from "@/components/auth-input";
 import { AuthPage } from "@/components/auth-page";
 import { authClient } from "@/lib/auth-client";
 import {
+  getAuthCompletionHref,
+  getAuthEventSource,
   getLoginHref,
   getPostSignupPath,
   getSafeCallbackPath,
@@ -44,6 +47,10 @@ function CadastroForm() {
     searchParams.get("callbackURL"),
     "/inicio",
   );
+  const authSource = getAuthEventSource(
+    searchParams.get("source"),
+    callbackURL,
+  );
   const { startAuthAction, finishAuthAction, showAuthError } =
     useAuthActionFeedback();
   const {
@@ -69,9 +76,19 @@ function CadastroForm() {
           if (!emailVerified && !sessionCreated) {
             rememberPendingVerificationEmail(formData.email);
           }
-          router.replace(
-            getPostSignupPath({ emailVerified, sessionCreated }, callbackURL),
+          const destination = getPostSignupPath(
+            { emailVerified, sessionCreated },
+            callbackURL,
           );
+          if (sessionCreated) {
+            void recordAuthCompleted("EMAIL", "SIGNUP", authSource)
+              .catch(() => {
+                // A autenticação concluída não depende da telemetria agregada.
+              })
+              .finally(() => router.replace(destination));
+            return;
+          }
+          router.replace(destination);
         },
         onError: (ctx) => {
           finishAuthAction();
@@ -94,8 +111,14 @@ function CadastroForm() {
   async function signInWithProvider(provider: "github" | "google") {
     const providerName = provider === "github" ? "GitHub" : "Google";
     startAuthAction(`Redirecionando para o ${providerName}...`);
+    const completionURL = getAuthCompletionHref({
+      callbackURL,
+      provider,
+      journey: "signup",
+      source: authSource.toLowerCase() as Lowercase<typeof authSource>,
+    });
     await authClient.signIn.social(
-      { provider, callbackURL },
+      { provider, callbackURL: completionURL },
       {
         onError: (ctx) => {
           finishAuthAction();
@@ -109,7 +132,11 @@ function CadastroForm() {
   }
 
   return (
-    <AuthPage view="signup" callbackURL={callbackURL}>
+    <AuthPage
+      view="signup"
+      callbackURL={callbackURL}
+      source={authSource === "LANDING" ? "landing" : undefined}
+    >
       <div className="mx-auto grid max-w-[45rem] items-center gap-5 md:grid-cols-[1fr_2rem_1fr]">
         <form
           className="space-y-3"
@@ -234,7 +261,11 @@ function CadastroForm() {
       <p className="mt-6.5 text-center font-mono text-[0.78125rem] text-[#f5f0e6]/55">
         Já treina por aqui?{" "}
         <Link
-          href={getLoginHref(callbackURL)}
+          href={getLoginHref(
+            callbackURL,
+            "login",
+            authSource === "LANDING" ? "landing" : undefined,
+          )}
           className="text-[#c7a45d] underline underline-offset-3"
         >
           Entrar
