@@ -109,7 +109,7 @@ export default function AuthLayout({
 
       <footer className="relative z-10 flex items-center justify-between px-[clamp(1.25rem,5vw,4rem)] py-4.5 font-mono text-[0.71875rem] tracking-[0.03em] text-[#f5f0e6]/35">
         <Link
-          href="/ajuda"
+          href="/privacidade"
           className="transition-colors hover:text-[#f5f0e6]/70"
         >
           Política de Privacidade
