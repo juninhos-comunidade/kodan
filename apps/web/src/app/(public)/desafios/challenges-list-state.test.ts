@@ -116,7 +116,7 @@ describe("challenges-list-state", () => {
     ]);
   });
 
-  it("coloca revisões de React antes dos demais desafios", () => {
+  it("coloca desafios disponíveis antes das revisões de React", () => {
     const visibleChallenges = getVisibleChallenges(
       [
         makeChallenge({ id: "react-ready", evaluationAvailable: true }),
@@ -129,9 +129,9 @@ describe("challenges-list-state", () => {
     );
 
     expect(visibleChallenges.map((challenge) => challenge.id)).toEqual([
-      "react-review",
       "react-ready",
       "typescript-unavailable",
+      "react-review",
     ]);
   });
 

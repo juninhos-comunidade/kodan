@@ -42,7 +42,7 @@ export function isEditorialLockedChallenge(
 export function isReactGhostChallenge(
   challenge: Pick<Challenge, "language" | "evaluationAvailable">,
 ) {
-  return isReactChallenge(challenge) && challenge.evaluationAvailable;
+  return isEditorialLockedChallenge(challenge);
 }
 
 type DifficultyPresentation = {

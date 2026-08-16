@@ -259,7 +259,7 @@ export function getVisibleChallenges(
       ),
     )
     .toSorted((left, right) => {
-      const editorialOrder = Number(isEditorialLockedChallenge(right)) - Number(isEditorialLockedChallenge(left));
+      const editorialOrder = Number(isEditorialLockedChallenge(left)) - Number(isEditorialLockedChallenge(right));
       return editorialOrder || sortChallenges(left, right, sortBy);
     });
 }

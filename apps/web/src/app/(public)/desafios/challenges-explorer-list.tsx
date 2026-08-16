@@ -416,8 +416,8 @@ function ChallengeTableRow({
       <tr
         className={cn(
           "challengers-row border-t text-[0.82rem] transition-colors",
-          !ghost && "cursor-pointer",
-          ghost && "cursor-not-allowed opacity-50 grayscale",
+          "cursor-pointer",
+          ghost && "opacity-50 grayscale",
           active && "challengers-row-active",
         )}
         role={ghost || locked ? "button" : undefined}
@@ -433,7 +433,7 @@ function ChallengeTableRow({
         aria-expanded={locked ? reviewOpen : undefined}
         onMouseEnter={() => onFocusChallenge(challenge.id)}
         onFocus={() => onFocusChallenge(challenge.id)}
-        onKeyDown={ghost ? undefined : handleRowKeyDown}
+        onKeyDown={handleRowKeyDown}
         onClick={handleRowActivate}
       >
       <td className="px-4 py-5">
