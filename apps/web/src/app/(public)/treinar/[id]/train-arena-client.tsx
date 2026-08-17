@@ -1269,9 +1269,14 @@ function FeedbackPanel({
             <p className="mt-3 rounded-[9px] border border-[color:var(--challengers-border)] bg-[var(--challengers-panel)] px-4 py-3 text-sm italic leading-7 text-[var(--challengers-ink)]">
               "{result.feedback.summary}"
             </p>
-            <ZenButton variant="washi" className="mt-3 w-full" onClick={onOpenFeedback}>
+            <ZenButton
+              variant="washi"
+              className="mt-3 w-full"
+              disabled={revealing}
+              onClick={result.canRevealSolution ? onReveal : onOpenFeedback}
+            >
               <Eye className="size-4" />
-              Abrir resposta completa
+              {result.canRevealSolution ? "Ver resposta e pontos" : "Abrir resposta completa"}
             </ZenButton>
           </section>
 

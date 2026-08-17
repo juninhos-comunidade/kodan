@@ -115,6 +115,53 @@ test("volta ao catálogo sem chamar um item editorial de próximo desafio", () =
   expect(markup).not.toContain("Escolher próximo desafio");
 });
 
+test("oferece revelar resposta e pontos quando a análise ainda está oculta", () => {
+  const markup = renderToStaticMarkup(
+    <TrainArenaClient
+      id="desafio-com-resposta-oculta"
+      initialChallenge={{
+        id: "desafio-com-resposta-oculta",
+        title: "Desafio com resposta oculta",
+        difficulty: "EASY",
+        recommendedElo: 1000,
+        code: "const value = true;",
+        question: "Explique.",
+        evaluationAvailable: true,
+        tags: "react",
+      }}
+      nextChallenge={null}
+      isAuthenticated
+      initialSession={{
+        phase: "feedback",
+        showComparison: false,
+        result: {
+          score: 4,
+          eloChange: 0,
+          isFirstAttempt: true,
+          attemptNumber: 1,
+          status: "RETRY_AVAILABLE",
+          canRetry: true,
+          canRevealSolution: true,
+          remainingEvaluatedAttempts: 2,
+          nextEloPotentialPercent: 100,
+          eloFinalized: false,
+          feedback: {
+            score: 4,
+            summary: "Ainda há pontos a investigar.",
+            strengths: [],
+            blindspots: [],
+            seniorSolution: "",
+          },
+        },
+      }}
+      initialUserAnswer="A causa é o efeito."
+    />,
+  );
+
+  expect(markup).toContain("Ver resposta e pontos");
+  expect(markup).not.toContain("Abrir resposta completa");
+});
+
 test("bloqueia acesso direto a um desafio em revisão sem registrar início", () => {
   const markup = renderToStaticMarkup(
     <TrainArenaClient
