@@ -97,6 +97,8 @@ describe("createMockTrainingStore", () => {
 
     expect(revealed).toMatchObject({ status: "REVEALED", eloChange: 0, newElo: 1200 });
     expect(revealed.feedback.seniorSolution.length).toBeGreaterThan(0);
+    expect(revealed.feedback.points?.some((point) => point.kind === "REVEALED")).toBe(true);
+    expect(revealed.feedback.points?.some((point) => point.label === "???")).toBe(false);
     expect(() => store.submitAttempt(challengeId, {
       userAnswer: "tentativa depois de revelar a solução",
     })).toThrow("Tentativa encerrada");

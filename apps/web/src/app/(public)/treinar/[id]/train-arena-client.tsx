@@ -461,7 +461,7 @@ export default function TrainArenaClient({
     );
   }
 
-  if (!initialChallenge.evaluationAvailable) {
+  if (initialChallenge.language === "react" && !initialChallenge.evaluationAvailable) {
     return (
       <main
         data-challengers-screen="true"
@@ -473,6 +473,7 @@ export default function TrainArenaClient({
   }
 
   const challenge = initialChallenge;
+  const evaluationAvailable = challenge.language !== "react" || challenge.evaluationAvailable;
   const { result, showComparison } = attemptSession;
   const submitting =
     attemptSession.phase === "submitting" ||
@@ -487,7 +488,7 @@ export default function TrainArenaClient({
       : userAnswer.trim().split(/\s+/).length;
   // Visitantes também podem acionar o botão: nesse caso exibimos o convite de login.
   const canSubmit =
-    challenge.evaluationAvailable &&
+    evaluationAvailable &&
     !submitting &&
     !answerLocked &&
     (!isAuthenticated || answerValidation.valid);
@@ -504,7 +505,7 @@ export default function TrainArenaClient({
       event.preventDefault();
     }
 
-    if (!challenge.evaluationAvailable || submitting || answerLocked) {
+    if (!evaluationAvailable || submitting || answerLocked) {
       return;
     }
 
@@ -685,7 +686,7 @@ export default function TrainArenaClient({
                       answerLength={answerLength}
                       wordCount={wordCount}
                       canSubmit={canSubmit}
-                      evaluationAvailable={challenge.evaluationAvailable}
+                      evaluationAvailable={evaluationAvailable}
                       submitting={submitting}
                       answerLocked={answerLocked}
                       guidance={answerGuidance}

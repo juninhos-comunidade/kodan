@@ -124,6 +124,7 @@ test("bloqueia acesso direto a um desafio em revisão sem registrar início", ()
         title: "Desafio em revisão",
         difficulty: "EASY",
         recommendedElo: 1000,
+        language: "react",
         code: "const value = true;",
         question: "Explique.",
         evaluationAvailable: false,
@@ -140,4 +141,31 @@ test("bloqueia acesso direto a um desafio em revisão sem registrar início", ()
   expect(markup).toContain("não afeta seu resultado nem seu ELO");
   expect(markup).not.toContain('data-product-event="challenge_viewed"');
   expect(markup).not.toContain("Enviar diagnóstico");
+});
+
+test("mantém desafios de outras linguagens acessíveis sem rubrica", () => {
+  const markup = renderToStaticMarkup(
+    <TrainArenaClient
+      id="desafio-java"
+      initialChallenge={{
+        id: "desafio-java",
+        title: "Desafio Java",
+        difficulty: "EASY",
+        recommendedElo: 1000,
+        language: "java",
+        code: "class Main { public static void main(String[] args) {} }",
+        question: "Explique.",
+        evaluationAvailable: false,
+        tags: "java",
+      }}
+      nextChallenge={null}
+      isAuthenticated
+      initialSession={{ phase: "answering", showComparison: false, result: null }}
+      initialUserAnswer=""
+    />,
+  );
+
+  expect(markup).toContain("Seu diagnóstico");
+  expect(markup).toContain("Enviar Diagnóstico");
+  expect(markup).not.toContain("Desafio em revisão editorial");
 });

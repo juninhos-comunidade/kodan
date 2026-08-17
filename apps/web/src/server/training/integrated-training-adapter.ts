@@ -181,19 +181,22 @@ export const integratedTrainingAdapter: TrainingAdapter = {
 
         const publicFeedback = parseStoredPublicFeedback(latestAttempt.feedbackJson);
         if (!publicFeedback) throw new Error("Feedback persistido inválido");
+        const revealedFeedbackJson = revealStoredFeedback(
+          latestAttempt.feedbackJson,
+          challenge.solution,
+        );
+        const revealedFeedback = parseStoredPublicFeedback(revealedFeedbackJson);
+        if (!revealedFeedback) throw new Error("Feedback revelado inválido");
         const revealed = buildRevealedAttempt({
           currentElo: user.elo,
           attemptNumber: latestAttempt.attemptNumber,
           solution: challenge.solution,
-          feedback: publicFeedback,
+          feedback: revealedFeedback,
         });
         await tx.attempt.update({
           where: { id: latestAttempt.id },
           data: {
-            feedbackJson: revealStoredFeedback(
-              latestAttempt.feedbackJson,
-              challenge.solution,
-            ),
+            feedbackJson: revealedFeedbackJson,
             sessionStatus: revealed.status,
           },
         });
