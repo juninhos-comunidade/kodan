@@ -113,7 +113,7 @@ export function ZenFeedbackModal({
   return (
     <DialogPrimitive.Root open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-[color:color-mix(in_oklch,var(--zen-ink)_66%,transparent)] backdrop-blur-[2px]" />
+        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-[color:color-mix(in_oklch,var(--zen-washi)_66%,transparent)] backdrop-blur-[2px]" />
         <ZenMotionProvider>
           <DialogPrimitive.Content asChild>
             <m.section
